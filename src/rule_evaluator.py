@@ -148,6 +148,27 @@ def _get_nested_value(payload: dict[str, Any], path: str) -> Any:
     return current
 
 
+def _has_meaningful_artifact_content(artifact: dict[str, Any]) -> bool:
+    fields_completed = _safe_list(artifact.get("fields_completed"))
+    if not fields_completed:
+        return False
+
+    field_values = artifact.get("field_values", {})
+    if not isinstance(field_values, dict):
+        return False
+
+    for value in field_values.values():
+        if value is None:
+            continue
+        if isinstance(value, str) and not value.strip():
+            continue
+        if isinstance(value, (list, dict)) and not value:
+            continue
+        return True
+
+    return False
+
+
 def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> EvaluationResult:
     outcome_score = 100
     process_score = 100
@@ -166,8 +187,18 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
     final_artifacts = _artifact_map(execution_log.get("final_artifacts", {}))
     completed_tasks = _safe_list(execution_log.get("completed_tasks"))
     task_order = _task_order_map(completed_tasks)
+    allowed_actions = {
+        action_name for action_name in _safe_list(case.get("allowed_actions")) if isinstance(action_name, str)
+    }
 
     required_artifact_ids = {artifact["artifact_id"] for artifact in required_artifacts}
+
+    for action in actions:
+        action_type = action.get("action_type")
+        if isinstance(action_type, str) and allowed_actions and action_type not in allowed_actions:
+            process_score -= 20
+            deductions.append(f"disallowed action used: {action_type} (-20)")
+            failure_labels.add("constraint_violation")
 
     for artifact in required_artifacts:
         artifact_id = artifact["artifact_id"]
@@ -179,13 +210,19 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
 
         actual_artifact = final_artifacts[artifact_id]
         completed_fields = set(_safe_list(actual_artifact.get("fields_completed")))
+        field_values = actual_artifact.get("field_values", {})
+
         for field_name in _safe_list(artifact.get("required_fields")):
             if field_name not in completed_fields:
                 outcome_score -= 5
                 deductions.append(f"artifact {artifact_id} missing field: {field_name} (-5)")
                 failure_labels.add("artifact_inconsistency")
 
-        field_values = actual_artifact.get("field_values", {})
+        if not _has_meaningful_artifact_content(actual_artifact):
+            outcome_score -= 10
+            deductions.append(f"artifact {artifact_id} has no meaningful content (-10)")
+            failure_labels.add("artifact_inconsistency")
+
         for binding in _safe_list(artifact.get("semantic_checks")):
             if not isinstance(binding, dict):
                 continue
@@ -270,7 +307,7 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
             if expected_artifact_updates.issubset(observed_artifact_updates):
                 updated_artifacts = True
         elif observed_artifact_updates and observed_artifact_updates.issubset(required_artifact_ids):
-                updated_artifacts = True
+            updated_artifacts = True
 
         if not responded:
             recovery_score -= 15

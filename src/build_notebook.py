@@ -61,14 +61,18 @@ def validate_case_structure(case: dict[str, Any]) -> list[str]:
 VALIDATION_DEMO_CODE = """validation_summary = []
 for case in MEETING_CASES:
     errors = validate_case_structure(case)
+    initial_state = case.get("initial_state", {})
+    events = case.get("events", [])
+    participants = initial_state.get("participants", [])
+    required_artifacts = initial_state.get("required_artifacts", [])
     validation_summary.append(
         {
-            "task_id": case["task_id"],
+            "task_id": case.get("task_id", "<missing-task-id>"),
             "status": "OK" if not errors else "ERROR",
             "errors": errors,
-            "events": len(case["events"]),
-            "participants": len(case["initial_state"]["participants"]),
-            "artifacts": len(case["initial_state"]["required_artifacts"]),
+            "events": len(events) if isinstance(events, list) else 0,
+            "participants": len(participants) if isinstance(participants, list) else 0,
+            "artifacts": len(required_artifacts) if isinstance(required_artifacts, list) else 0,
         }
     )
 

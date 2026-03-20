@@ -12,12 +12,24 @@
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["purpose", "agenda_items", "decision_needed"]
+        "required_fields": ["purpose", "agenda_items", "decision_needed"],
+        "semantic_checks": [
+          {
+            "artifact_field": "budget",
+            "state_path": "budget"
+          }
+        ]
       },
       {
         "artifact_id": "one_pager",
         "artifact_type": "document",
-        "required_fields": ["background", "proposal", "open_questions"]
+        "required_fields": ["background", "proposal", "open_questions"],
+        "semantic_checks": [
+          {
+            "artifact_field": "budget",
+            "state_path": "budget"
+          }
+        ]
       }
     ],
     "constraints": [

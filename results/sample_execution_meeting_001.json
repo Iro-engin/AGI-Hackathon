@@ -50,11 +50,17 @@
   "final_artifacts": {
     "agenda": {
       "fields_completed": ["meeting_objective", "agenda_items", "owner", "time_allocation"],
-      "field_values": {}
+      "field_values": {
+        "deadline": "2026-04-09T12:00:00+09:00",
+        "participants": ["A", "B", "C", "D"]
+      }
     },
     "briefing_doc": {
       "fields_completed": ["summary", "decision_points", "risks", "next_actions"],
-      "field_values": {}
+      "field_values": {
+        "deadline": "2026-04-09T12:00:00+09:00",
+        "participants": ["A", "B", "C", "D"]
+      }
     }
   }
 }

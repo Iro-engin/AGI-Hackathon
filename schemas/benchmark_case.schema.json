@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "benchmark_case.schema.json",
+  "title": "Dynamic Agent Correctness Benchmark Case",
+  "description": "Schema for a stateful benchmark case that evaluates planning, replanning, and final artifact correctness.",
+  "type": "object",
+  "required": [
+    "task_id",
+    "domain",
+    "difficulty",
+    "initial_request",
+    "initial_state",
+    "allowed_actions",
+    "events",
+    "goal_condition",
+    "rubric"
+  ],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "meeting_prep",
+        "travel_planning",
+        "research_report",
+        "interview_scheduling",
+        "event_ops"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    },
+    "initial_request": {
+      "type": "string",
+      "minLength": 1
+    },
+    "initial_state": {
+      "$ref": "#/$defs/worldState"
+    },
+    "allowed_actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "ask_clarification",
+          "propose_plan",
+          "update_plan",
+          "create_artifact",
+          "revise_artifact",
+          "confirm_state",
+          "finalize"
+        ]
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    },
+    "goal_condition": {
+      "$ref": "#/$defs/goalCondition"
+    },
+    "rubric": {
+      "$ref": "#/$defs/rubric"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "artifact_type",
+        "required_fields"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "artifact_type": {
+          "type": "string"
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "latest_version_required": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "dependency": {
+      "type": "object",
+      "required": [
+        "before",
+        "after"
+      ],
+      "properties": {
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "worldState": {
+      "type": "object",
+      "required": [
+        "timezone",
+        "deadline",
+        "participants",
+        "budget",
+        "required_artifacts",
+        "constraints"
+      ],
+      "properties": {
+        "timezone": {
+          "type": "string"
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "budget": {
+          "type": "number",
+          "minimum": 0
+        },
+        "required_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "task_dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dependency"
+          }
+        },
+        "reference_data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "turn",
+        "type",
+        "message",
+        "delta"
+      ],
+      "properties": {
+        "turn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "state_change",
+            "new_constraint",
+            "artifact_update",
+            "stakeholder_change"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "delta": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "expected_replan_within_turns": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "goalCondition": {
+      "type": "object",
+      "required": [
+        "must_satisfy_latest_state",
+        "required_artifacts",
+        "no_constraint_violation"
+      ],
+      "properties": {
+        "must_satisfy_latest_state": {
+          "type": "boolean"
+        },
+        "required_artifacts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "no_constraint_violation": {
+          "type": "boolean"
+        },
+        "must_acknowledge_changes": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "rubricCategory": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rubric": {
+      "type": "object",
+      "required": [
+        "outcome",
+        "process",
+        "recovery"
+      ],
+      "properties": {
+        "outcome": {
+          "$ref": "#/$defs/rubricCategory"
+        },
+        "process": {
+          "$ref": "#/$defs/rubricCategory"
+        },
+        "recovery": {
+          "$ref": "#/$defs/rubricCategory"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

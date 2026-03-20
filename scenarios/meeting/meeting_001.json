@@ -1,0 +1,88 @@
+{
+  "task_id": "meeting_001",
+  "domain": "meeting_prep",
+  "difficulty": "easy",
+  "initial_request": "来週の役員会議の準備をしてほしい。日程候補とアジェンダ案、事前説明資料の準備方針をまとめてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-04-10T17:00:00+09:00",
+    "participants": ["A", "B", "C"],
+    "budget": 50000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["meeting_objective", "agenda_items", "owner", "time_allocation"]
+      },
+      {
+        "artifact_id": "briefing_doc",
+        "artifact_type": "document",
+        "required_fields": ["summary", "decision_points", "risks", "next_actions"]
+      }
+    ],
+    "constraints": [
+      "参加者全員が参加可能な時間帯を候補に含める",
+      "議題は3件以上必要",
+      "事前説明資料は会議前日までに完成させる"
+    ],
+    "task_dependencies": [
+      {
+        "before": "collect_availability",
+        "after": "propose_schedule",
+        "reason": "参加可能時間を確認してから候補日程を作る"
+      },
+      {
+        "before": "define_agenda",
+        "after": "write_briefing_doc",
+        "reason": "議題を固めてから説明資料を書く"
+      }
+    ],
+    "reference_data": {
+      "meeting_type": "executive",
+      "agenda_min_items": 3
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 3,
+      "type": "state_change",
+      "message": "役員Dの参加が必須になりました。締切は明日正午です。",
+      "delta": {
+        "participants_added": ["D"],
+        "deadline": "2026-04-09T12:00:00+09:00"
+      },
+      "expected_replan_within_turns": 2
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "briefing_doc"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "最終成果物が参加者Dを反映している",
+      "更新後の締切に整合している",
+      "agenda と briefing_doc の必須項目が埋まっている"
+    ],
+    "process": [
+      "変更後に旧日程案を前提とせず再評価した",
+      "資料更新の優先度を引き上げた"
+    ],
+    "recovery": [
+      "2ターン以内に再計画を表明した",
+      "影響を受ける成果物を特定した"
+    ]
+  },
+  "notes": "基本ケース。参加者追加と締切前倒しに対する標準的な再計画能力を評価する。"
+}

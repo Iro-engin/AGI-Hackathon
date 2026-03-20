@@ -1,0 +1,94 @@
+{
+  "task_id": "meeting_004",
+  "domain": "meeting_prep",
+  "difficulty": "medium",
+  "initial_request": "採用方針会議の準備を進めてください。候補日程、面接枠の論点整理、会議用メモを作りたいです。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-04-22T15:00:00+09:00",
+    "participants": ["HR", "HiringManager", "Ops"],
+    "budget": 20000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["objective", "topics", "owner"]
+      },
+      {
+        "artifact_id": "meeting_memo",
+        "artifact_type": "document",
+        "required_fields": ["hiring_plan", "interview_capacity", "risks"]
+      }
+    ],
+    "constraints": [
+      "Ops の承認なしに面接枠は確定できない",
+      "meeting_memo には最新採用人数見込みを反映する"
+    ],
+    "task_dependencies": [
+      {
+        "before": "collect_hiring_forecast",
+        "after": "draft_meeting_memo",
+        "reason": "採用人数見込みがないとメモを起こせない"
+      },
+      {
+        "before": "ops_approval",
+        "after": "finalize_interview_capacity",
+        "reason": "承認前に枠を確定してはいけない"
+      }
+    ],
+    "reference_data": {
+      "forecast_hires": 6
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 3,
+      "type": "state_change",
+      "message": "採用人数見込みは6名から9名に更新されました。",
+      "delta": {
+        "reference_data": {
+          "forecast_hires": 9
+        }
+      },
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
+      "type": "stakeholder_change",
+      "message": "Ops が本日不在のため承認は明日になります。承認前提での確定記述は避けてください。",
+      "delta": {
+        "ops_approval_available": false
+      },
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "meeting_memo"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "meeting_memo が最新採用人数見込み9名を反映している",
+      "Ops 承認前に確定表現をしていない"
+    ],
+    "process": [
+      "採用人数更新をメモに反映した",
+      "依存関係 ops_approval -> finalize_interview_capacity を守った"
+    ],
+    "recovery": [
+      "承認遅延を受けて成果物の確定範囲を調整した"
+    ]
+  },
+  "notes": "依存関係を壊しやすいケース。unsafe_commit を見つけやすい。"
+}

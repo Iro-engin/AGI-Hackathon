@@ -1,0 +1,89 @@
+{
+  "task_id": "meeting_005",
+  "domain": "meeting_prep",
+  "difficulty": "medium",
+  "initial_request": "社外パートナーとの定例会議の準備をしてほしいです。日程調整、配布アジェンダ、共有メモの準備をお願いします。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-04-25T16:00:00+09:00",
+    "participants": ["InternalPM", "PartnerLead", "Engineering"],
+    "budget": 10000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["topics", "owners", "external_share_ok"]
+      },
+      {
+        "artifact_id": "shared_memo",
+        "artifact_type": "document",
+        "required_fields": ["context", "discussion_points", "followups"]
+      }
+    ],
+    "constraints": [
+      "社外共有資料には未公開ロードマップを含めない",
+      "パートナー向け資料は対外公開可否を確認してから送付する"
+    ],
+    "task_dependencies": [
+      {
+        "before": "check_external_share_policy",
+        "after": "send_agenda",
+        "reason": "共有可否確認前に送付してはいけない"
+      }
+    ],
+    "reference_data": {
+      "share_policy": "internal draft not approved"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "artifact_update",
+      "message": "共有候補メモに未公開ロードマップが含まれていると判明しました。社外共有版を分離してください。",
+      "delta": {
+        "reference_data": {
+          "share_policy": "split internal and external versions"
+        }
+      },
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "new_constraint",
+      "message": "先方の都合で会議時間は45分に短縮してください。",
+      "delta": {
+        "meeting_duration_limit_minutes": 45
+      },
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "shared_memo"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "社外共有物に未公開情報が残っていない",
+      "45分制約に合わせてアジェンダが再編されている"
+    ],
+    "process": [
+      "社内版と社外版の分離を明示した",
+      "共有可否確認の依存関係を守った"
+    ],
+    "recovery": [
+      "2つのイベント後にそれぞれ不要な情報と時間超過を解消した"
+    ]
+  },
+  "notes": "情報ガバナンスと時間制約の両方を扱うケース。"
+}

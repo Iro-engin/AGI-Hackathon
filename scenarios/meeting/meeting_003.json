@@ -1,0 +1,97 @@
+{
+  "task_id": "meeting_003",
+  "domain": "meeting_prep",
+  "difficulty": "medium",
+  "initial_request": "四半期レビュー会議の準備をお願いします。参加者調整、アジェンダ案、レビュー資料の完成まで段取りしたいです。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-04-20T10:00:00+09:00",
+    "participants": ["CEO", "COO", "CFO", "Sales"],
+    "budget": 80000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["agenda_items", "decision_points", "timebox"]
+      },
+      {
+        "artifact_id": "review_deck",
+        "artifact_type": "slides",
+        "required_fields": ["revenue_summary", "forecast", "issues", "asks"]
+      }
+    ],
+    "constraints": [
+      "レビュー資料には最新売上数値を使う",
+      "会議は90分以内",
+      "参加者全員の出席を優先する"
+    ],
+    "task_dependencies": [
+      {
+        "before": "fetch_latest_sales",
+        "after": "draft_review_deck",
+        "reason": "売上数値取得後に資料を起こす必要がある"
+      },
+      {
+        "before": "draft_review_deck",
+        "after": "final_review_deck",
+        "reason": "ドラフトなしに最終化できない"
+      }
+    ],
+    "reference_data": {
+      "deck_version": "v1",
+      "sales_snapshot_date": "2026-04-18"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "artifact_update",
+      "message": "売上データの最新版が届きました。以前の数字は古いので差し替えが必要です。",
+      "delta": {
+        "reference_data": {
+          "deck_version": "v2",
+          "sales_snapshot_date": "2026-04-19"
+        }
+      },
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "stakeholder_change",
+      "message": "CFOは会議冒頭30分しか参加できません。意思決定が必要な議題を前半に寄せてください。",
+      "delta": {
+        "participant_availability_note": "CFO available first 30 minutes only"
+      },
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "review_deck"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "review_deck が最新売上数値に基づいている",
+      "アジェンダ前半に意思決定項目が配置されている"
+    ],
+    "process": [
+      "v1 データを使い続けず v2 へ更新した",
+      "CFO の制約を受けて議題順を調整した"
+    ],
+    "recovery": [
+      "2 回のイベントに対してそれぞれ即時に再計画した"
+    ]
+  },
+  "notes": "データ更新と参加制約変更が連続する中難度ケース。"
+}

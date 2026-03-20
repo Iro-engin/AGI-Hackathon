@@ -1,0 +1,78 @@
+{
+  "task_id": "meeting_002",
+  "domain": "meeting_prep",
+  "difficulty": "easy",
+  "initial_request": "新規事業会議の準備をしてください。会議の候補日程、アジェンダ、参加者向けの1ページ要約を用意したいです。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-04-15T18:00:00+09:00",
+    "participants": ["PM", "Finance", "Legal"],
+    "budget": 30000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["purpose", "agenda_items", "decision_needed"]
+      },
+      {
+        "artifact_id": "one_pager",
+        "artifact_type": "document",
+        "required_fields": ["background", "proposal", "open_questions"]
+      }
+    ],
+    "constraints": [
+      "法務レビュー後でないと配布資料を確定できない",
+      "予算3万円以内で会議運営する"
+    ],
+    "task_dependencies": [
+      {
+        "before": "legal_review",
+        "after": "finalize_one_pager",
+        "reason": "法務レビュー後に要約資料を確定する必要がある"
+      }
+    ],
+    "reference_data": {
+      "room_type": "hybrid"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "会場費が上がるので、会議運営予算は2万円までに変更してください。",
+      "delta": {
+        "budget": 20000
+      },
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "one_pager"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "最新予算制約の範囲で計画されている",
+      "one_pager が法務レビュー前提を壊していない"
+    ],
+    "process": [
+      "予算変更を受けてコスト前提を更新した",
+      "依存関係 legal_review -> finalize_one_pager を維持した"
+    ],
+    "recovery": [
+      "1ターン以内に予算変更への対応を表明した"
+    ]
+  },
+  "notes": "予算制約と依存関係維持を確認するケース。"
+}

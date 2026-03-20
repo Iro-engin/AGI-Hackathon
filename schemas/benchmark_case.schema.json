@@ -211,6 +211,12 @@
         "expected_replan_within_turns": {
           "type": "integer",
           "minimum": 0
+        },
+        "expected_artifact_updates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false

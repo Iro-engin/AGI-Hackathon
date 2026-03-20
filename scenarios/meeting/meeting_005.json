@@ -54,6 +54,7 @@
           "share_policy": "split internal and external versions"
         }
       },
+      "expected_artifact_updates": ["agenda", "shared_memo"],
       "expected_replan_within_turns": 1
     },
     {
@@ -63,6 +64,7 @@
       "delta": {
         "meeting_duration_limit_minutes": 45
       },
+      "expected_artifact_updates": ["agenda"],
       "expected_replan_within_turns": 1
     }
   ],

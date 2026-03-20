@@ -42,6 +42,97 @@ def _artifact_map(final_artifacts: dict[str, Any]) -> dict[str, dict[str, Any]]:
     }
 
 
+def _merge_state_delta(expected_state: dict[str, Any], delta: dict[str, Any]) -> None:
+    for key, value in delta.items():
+        if key == "participants_added":
+            participants = _safe_list(expected_state.get("participants"))
+            expected_state["participants"] = participants + [
+                participant for participant in _safe_list(value) if participant not in participants
+            ]
+            continue
+
+        if isinstance(value, dict):
+            current_value = expected_state.get(key, {})
+            if not isinstance(current_value, dict):
+                current_value = {}
+            merged_value = dict(current_value)
+            _merge_state_delta(merged_value, value)
+            expected_state[key] = merged_value
+            continue
+
+        expected_state[key] = value
+
+
+def _compare_expected_state(
+    expected_state: dict[str, Any],
+    actual_state: dict[str, Any],
+    deductions: list[str],
+    failure_labels: set[str],
+    path_prefix: str = "",
+) -> int:
+    penalty = 0
+    for key, expected_value in expected_state.items():
+        if key not in actual_state:
+            penalty += 10
+            deductions.append(f"final state missing key: {path_prefix}{key} (-10)")
+            failure_labels.add("state_staleness")
+            continue
+
+        actual_value = actual_state[key]
+        if isinstance(expected_value, dict):
+            if not isinstance(actual_value, dict):
+                penalty += 10
+                deductions.append(f"final state type mismatch for {path_prefix}{key} (-10)")
+                failure_labels.add("state_staleness")
+                continue
+            penalty += _compare_expected_state(
+                expected_value,
+                actual_value,
+                deductions,
+                failure_labels,
+                path_prefix=f"{path_prefix}{key}.",
+            )
+            continue
+
+        if isinstance(expected_value, list):
+            if actual_value != expected_value:
+                penalty += 10
+                deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")
+                failure_labels.add("state_staleness")
+            continue
+
+        if actual_value != expected_value:
+            penalty += 10
+            deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")
+            failure_labels.add("state_staleness")
+
+    return penalty
+
+
+def _task_order_map(completed_tasks: list[Any]) -> dict[str, int]:
+    order_map: dict[str, int] = {}
+    for index, task_name in enumerate(completed_tasks):
+        if isinstance(task_name, str) and task_name not in order_map:
+            order_map[task_name] = index
+    return order_map
+
+
+def _build_tracked_expected_state(initial_state: dict[str, Any], events: list[Any]) -> dict[str, Any]:
+    tracked_state: dict[str, Any] = {}
+
+    for key in ["deadline", "participants", "budget", "reference_data"]:
+        if key in initial_state:
+            value = initial_state[key]
+            tracked_state[key] = dict(value) if isinstance(value, dict) else value
+
+    for event in events:
+        delta = event.get("delta", {})
+        if isinstance(delta, dict):
+            _merge_state_delta(tracked_state, delta)
+
+    return tracked_state
+
+
 def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> EvaluationResult:
     outcome_score = 100
     process_score = 100
@@ -58,7 +149,8 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
     actions = _safe_list(execution_log.get("actions"))
     final_state = execution_log.get("final_state", {})
     final_artifacts = _artifact_map(execution_log.get("final_artifacts", {}))
-    completed_tasks = set(_safe_list(execution_log.get("completed_tasks")))
+    completed_tasks = _safe_list(execution_log.get("completed_tasks"))
+    task_order = _task_order_map(completed_tasks)
 
     required_artifact_ids = {artifact["artifact_id"] for artifact in required_artifacts}
 
@@ -79,45 +171,13 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
                 failure_labels.add("artifact_inconsistency")
 
     if goal_condition.get("must_satisfy_latest_state"):
-        expected_deadline = initial_state.get("deadline")
-        expected_participants = set(_safe_list(initial_state.get("participants")))
-        expected_budget = initial_state.get("budget")
-        expected_reference_data = dict(initial_state.get("reference_data", {}))
-
-        for event in events:
-            delta = event.get("delta", {})
-            if "deadline" in delta:
-                expected_deadline = delta["deadline"]
-            if "participants_added" in delta:
-                expected_participants.update(_safe_list(delta["participants_added"]))
-            if "budget" in delta:
-                expected_budget = delta["budget"]
-            if "reference_data" in delta and isinstance(delta["reference_data"], dict):
-                expected_reference_data.update(delta["reference_data"])
-
-        if final_state.get("deadline") != expected_deadline:
-            outcome_score -= 20
-            deductions.append("final deadline does not match latest state (-20)")
-            failure_labels.add("state_staleness")
-
-        actual_participants = set(_safe_list(final_state.get("participants")))
-        if expected_participants and actual_participants != expected_participants:
-            outcome_score -= 20
-            deductions.append("final participants do not match latest state (-20)")
-            failure_labels.add("state_staleness")
-
-        if expected_budget is not None and final_state.get("budget") != expected_budget:
-            outcome_score -= 20
-            deductions.append("final budget does not match latest state (-20)")
-            failure_labels.add("constraint_violation")
-
-        if expected_reference_data:
-            actual_reference_data = final_state.get("reference_data", {})
-            for key, value in expected_reference_data.items():
-                if actual_reference_data.get(key) != value:
-                    outcome_score -= 10
-                    deductions.append(f"reference_data mismatch for {key} (-10)")
-                    failure_labels.add("state_staleness")
+        expected_state = _build_tracked_expected_state(initial_state, events)
+        outcome_score -= _compare_expected_state(
+            expected_state,
+            final_state,
+            deductions,
+            failure_labels,
+        )
 
     if goal_condition.get("no_constraint_violation"):
         if _safe_list(execution_log.get("constraint_violations")):
@@ -129,10 +189,19 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
     for dependency in dependencies:
         after_task = dependency.get("after")
         before_task = dependency.get("before")
-        if after_task in completed_tasks and before_task not in completed_tasks:
+        if after_task not in task_order:
+            continue
+        if before_task not in task_order:
             process_score -= 20
             deductions.append(
                 f"dependency violated: {before_task} must happen before {after_task} (-20)"
+            )
+            failure_labels.add("invalid_dependency")
+            continue
+        if task_order[before_task] > task_order[after_task]:
+            process_score -= 20
+            deductions.append(
+                f"dependency order violated: {before_task} after {after_task} (-20)"
             )
             failure_labels.add("invalid_dependency")
 
@@ -148,6 +217,7 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
         responded = False
         updated_artifacts = False
         acknowledged = False
+        expected_artifact_updates = set(_safe_list(event.get("expected_artifact_updates")))
         for action in actions:
             action_turn = action.get("turn")
             if not isinstance(action_turn, int) or not isinstance(turn, int):
@@ -160,7 +230,11 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
                 responded = True
             if turn in _safe_list(action.get("acknowledged_event_turns")):
                 acknowledged = True
-            if _safe_list(action.get("artifact_updates")):
+            artifact_updates = set(_safe_list(action.get("artifact_updates")))
+            if expected_artifact_updates:
+                if expected_artifact_updates.issubset(artifact_updates):
+                    updated_artifacts = True
+            elif artifact_updates and artifact_updates.issubset(required_artifact_ids):
                 updated_artifacts = True
 
         if not responded:

@@ -52,6 +52,7 @@
       "delta": {
         "budget": 20000
       },
+      "expected_artifact_updates": ["agenda", "one_pager"],
       "expected_replan_within_turns": 1
     }
   ],

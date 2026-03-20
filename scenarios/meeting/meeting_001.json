@@ -60,6 +60,7 @@
         "participants_added": ["D"],
         "deadline": "2026-04-09T12:00:00+09:00"
       },
+      "expected_artifact_updates": ["agenda", "briefing_doc"],
       "expected_replan_within_turns": 2
     }
   ],

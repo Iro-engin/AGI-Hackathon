@@ -59,6 +59,7 @@
           "forecast_hires": 9
         }
       },
+      "expected_artifact_updates": ["meeting_memo"],
       "expected_replan_within_turns": 1
     },
     {
@@ -68,6 +69,7 @@
       "delta": {
         "ops_approval_available": false
       },
+      "expected_artifact_updates": ["agenda", "meeting_memo"],
       "expected_replan_within_turns": 1
     }
   ],

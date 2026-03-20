@@ -1,0 +1,6 @@
+.git
+.venv
+__pycache__
+.pytest_cache
+.mypy_cache
+results/meeting_001_evaluation.json

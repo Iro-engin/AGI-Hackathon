@@ -17,7 +17,13 @@
       {
         "artifact_id": "review_deck",
         "artifact_type": "slides",
-        "required_fields": ["revenue_summary", "forecast", "issues", "asks"]
+        "required_fields": ["revenue_summary", "forecast", "issues", "asks"],
+        "semantic_checks": [
+          {
+            "artifact_field": "sales_snapshot_date",
+            "state_path": "reference_data.sales_snapshot_date"
+          }
+        ]
       }
     ],
     "constraints": [

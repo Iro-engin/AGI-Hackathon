@@ -49,10 +49,12 @@
   },
   "final_artifacts": {
     "agenda": {
-      "fields_completed": ["meeting_objective", "agenda_items", "owner", "time_allocation"]
+      "fields_completed": ["meeting_objective", "agenda_items", "owner", "time_allocation"],
+      "field_values": {}
     },
     "briefing_doc": {
-      "fields_completed": ["summary", "decision_points", "risks", "next_actions"]
+      "fields_completed": ["summary", "decision_points", "risks", "next_actions"],
+      "field_values": {}
     }
   }
 }

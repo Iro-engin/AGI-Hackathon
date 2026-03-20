@@ -12,12 +12,24 @@
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["topics", "owners", "external_share_ok"]
+        "required_fields": ["topics", "owners", "external_share_ok"],
+        "semantic_checks": [
+          {
+            "artifact_field": "meeting_duration_limit_minutes",
+            "state_path": "meeting_duration_limit_minutes"
+          }
+        ]
       },
       {
         "artifact_id": "shared_memo",
         "artifact_type": "document",
-        "required_fields": ["context", "discussion_points", "followups"]
+        "required_fields": ["context", "discussion_points", "followups"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
       }
     ],
     "constraints": [

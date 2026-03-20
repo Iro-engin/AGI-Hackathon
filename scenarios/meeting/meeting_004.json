@@ -17,7 +17,13 @@
       {
         "artifact_id": "meeting_memo",
         "artifact_type": "document",
-        "required_fields": ["hiring_plan", "interview_capacity", "risks"]
+        "required_fields": ["hiring_plan", "interview_capacity", "risks"],
+        "semantic_checks": [
+          {
+            "artifact_field": "forecast_hires",
+            "state_path": "reference_data.forecast_hires"
+          }
+        ]
       }
     ],
     "constraints": [

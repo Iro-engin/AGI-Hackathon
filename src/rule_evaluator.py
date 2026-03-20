@@ -95,6 +95,12 @@ def _compare_expected_state(
             continue
 
         if isinstance(expected_value, list):
+            if f"{path_prefix}{key}" == "participants":
+                if set(_safe_list(actual_value)) != set(expected_value):
+                    penalty += 10
+                    deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")
+                    failure_labels.add("state_staleness")
+                continue
             if actual_value != expected_value:
                 penalty += 10
                 deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")
@@ -133,6 +139,15 @@ def _build_tracked_expected_state(initial_state: dict[str, Any], events: list[An
     return tracked_state
 
 
+def _get_nested_value(payload: dict[str, Any], path: str) -> Any:
+    current: Any = payload
+    for key in path.split("."):
+        if not isinstance(current, dict) or key not in current:
+            return None
+        current = current[key]
+    return current
+
+
 def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> EvaluationResult:
     outcome_score = 100
     process_score = 100
@@ -168,6 +183,24 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
             if field_name not in completed_fields:
                 outcome_score -= 5
                 deductions.append(f"artifact {artifact_id} missing field: {field_name} (-5)")
+                failure_labels.add("artifact_inconsistency")
+
+        field_values = actual_artifact.get("field_values", {})
+        for binding in _safe_list(artifact.get("semantic_checks")):
+            if not isinstance(binding, dict):
+                continue
+            artifact_field = binding.get("artifact_field")
+            state_path = binding.get("state_path")
+            if not isinstance(artifact_field, str) or not isinstance(state_path, str):
+                continue
+
+            expected_value = _get_nested_value(final_state, state_path)
+            actual_value = field_values.get(artifact_field) if isinstance(field_values, dict) else None
+            if actual_value != expected_value:
+                outcome_score -= 10
+                deductions.append(
+                    f"artifact {artifact_id} field {artifact_field} does not reflect {state_path} (-10)"
+                )
                 failure_labels.add("artifact_inconsistency")
 
     if goal_condition.get("must_satisfy_latest_state"):
@@ -218,6 +251,7 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
         updated_artifacts = False
         acknowledged = False
         expected_artifact_updates = set(_safe_list(event.get("expected_artifact_updates")))
+        observed_artifact_updates: set[str] = set()
         for action in actions:
             action_turn = action.get("turn")
             if not isinstance(action_turn, int) or not isinstance(turn, int):
@@ -230,11 +264,12 @@ def evaluate_case(case: dict[str, Any], execution_log: dict[str, Any]) -> Evalua
                 responded = True
             if turn in _safe_list(action.get("acknowledged_event_turns")):
                 acknowledged = True
-            artifact_updates = set(_safe_list(action.get("artifact_updates")))
-            if expected_artifact_updates:
-                if expected_artifact_updates.issubset(artifact_updates):
-                    updated_artifacts = True
-            elif artifact_updates and artifact_updates.issubset(required_artifact_ids):
+            observed_artifact_updates.update(_safe_list(action.get("artifact_updates")))
+
+        if expected_artifact_updates:
+            if expected_artifact_updates.issubset(observed_artifact_updates):
+                updated_artifacts = True
+        elif observed_artifact_updates and observed_artifact_updates.issubset(required_artifact_ids):
                 updated_artifacts = True
 
         if not responded:

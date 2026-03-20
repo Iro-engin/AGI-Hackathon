@@ -99,6 +99,25 @@
             "type": "string"
           }
         },
+        "semantic_checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "artifact_field",
+              "state_path"
+            ],
+            "properties": {
+              "artifact_field": {
+                "type": "string"
+              },
+              "state_path": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
         "latest_version_required": {
           "type": "boolean",
           "default": true

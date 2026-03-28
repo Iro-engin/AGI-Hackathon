@@ -198,6 +198,14 @@ Kaggle 提出や説明用の notebook です。
 make setup
 ```
 
+これは内部的に `uv sync` を実行し、依存関係は `pyproject.toml` から解決します。
+
+`requirements.txt` も必要な場合は、次で `uv` 定義から再生成できます。
+
+```bash
+make export-requirements
+```
+
 ### notebook を再生成する
 
 ```bash
@@ -241,7 +249,7 @@ print(result)
 
 ```bash
 OPENAI_API_KEY=... make inspect-case
-OPENAI_API_KEY=... ./.venv/bin/python -m src.openai_case_inspector \
+OPENAI_API_KEY=... uv run python -m src.openai_case_inspector \
   --case scenarios/meeting/meeting_001.json \
   --execution-log results/sample_execution_meeting_001.json
 ```
@@ -252,6 +260,7 @@ OPENAI_API_KEY=... ./.venv/bin/python -m src.openai_case_inspector \
 
 - JSON はそのまま資産として残す
 - Python 側では Pydantic で型安全に扱う
+- `uv` を標準の環境管理として使い、必要なら `requirements.txt` へ書き出せるようにする
 - 最小変更で notebook と evaluator の両方を維持する
 - 最終成果物だけでなく、質問、順序、分解、再計画も評価する
 - ローカルで試しやすいように `.venv` と `make` を前提にする

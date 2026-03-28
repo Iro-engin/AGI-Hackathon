@@ -1,21 +1,23 @@
-VENV_PYTHON := .venv/bin/python
+UV := uv
 
-.PHONY: setup lint build-notebook eval-sample inspect-case
+.PHONY: setup export-requirements lint build-notebook eval-sample inspect-case
 
 setup:
-	python3 -m venv .venv
-	$(VENV_PYTHON) -m pip install -r requirements.txt
+	$(UV) sync
+
+export-requirements:
+	$(UV) export --format requirements-txt --no-hashes -o requirements.txt
 
 lint:
-	$(VENV_PYTHON) -m ruff check src
+	$(UV) run ruff check src
 
 build-notebook:
-	$(VENV_PYTHON) -m src.build_notebook
+	$(UV) run python -m src.build_notebook
 
 eval-sample:
-	$(VENV_PYTHON) -m src.evaluate_sample
+	$(UV) run python -m src.evaluate_sample
 
 inspect-case:
-	$(VENV_PYTHON) -m src.openai_case_inspector \
+	$(UV) run python -m src.openai_case_inspector \
 		--case scenarios/meeting/meeting_001.json \
 		--execution-log results/sample_execution_meeting_001.json

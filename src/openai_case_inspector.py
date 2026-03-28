@@ -7,10 +7,12 @@ import json
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from src.models import Case, ExecutionLog
 
+load_dotenv()
 DEFAULT_MODEL = "gpt-4.1-mini"
 
 

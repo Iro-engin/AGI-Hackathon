@@ -36,6 +36,33 @@
     "define_agenda",
     "write_briefing_doc"
   ],
+  "task_breakdown": [
+    {
+      "task_id": "collect_availability",
+      "description": "参加者の参加可能時間を整理する",
+      "depends_on": [],
+      "status": "completed"
+    },
+    {
+      "task_id": "propose_schedule",
+      "description": "参加可能時間を元に候補日程を提示する",
+      "depends_on": ["collect_availability"],
+      "status": "completed"
+    },
+    {
+      "task_id": "define_agenda",
+      "description": "会議の目的と議題を構造化する",
+      "depends_on": [],
+      "status": "completed"
+    },
+    {
+      "task_id": "write_briefing_doc",
+      "description": "アジェンダ確定後に事前説明資料を作成する",
+      "depends_on": ["define_agenda"],
+      "status": "completed"
+    }
+  ],
+  "questions_asked": [],
   "constraint_violations": [],
   "unsafe_commit": false,
   "final_state": {

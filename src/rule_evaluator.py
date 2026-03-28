@@ -10,8 +10,8 @@ from typing import Any
 
 from src.models import (
     ActionLog,
-    BenchmarkCase,
     BenchmarkEvent,
+    Case,
     ExecutionLog,
     TaskBreakdownItem,
 )
@@ -53,24 +53,15 @@ class RuleBasedEvaluator:
 
     def evaluate(
         self,
-        case: BenchmarkCase | dict[str, Any],
-        execution_log: ExecutionLog | dict[str, Any],
+        case: Case,
+        execution_log: ExecutionLog,
     ) -> EvaluationResult:
-        """検証済みの case と execution log の組を採点する。"""
-
-        normalized_case = (
-            case if isinstance(case, BenchmarkCase) else BenchmarkCase.model_validate(case)
-        )
-        normalized_log = (
-            execution_log
-            if isinstance(execution_log, ExecutionLog)
-            else ExecutionLog.model_validate(execution_log)
-        )
+        """検証済みの Case と ExecutionLog の組を採点する。"""
         logger.info(
             "評価を開始します: task_id=%s actions=%s events=%s",
-            normalized_case.task_id,
-            len(normalized_log.actions),
-            len(normalized_case.events),
+            case.task_id,
+            len(execution_log.actions),
+            len(case.events),
         )
 
         outcome_score = 100
@@ -79,17 +70,17 @@ class RuleBasedEvaluator:
         deductions: list[str] = []
         failure_labels: set[str] = set()
 
-        initial_state = normalized_case.initial_state
+        initial_state = case.initial_state
         required_artifacts = initial_state.required_artifacts
         dependencies = initial_state.task_dependencies
-        events = normalized_case.events
-        goal_condition = normalized_case.goal_condition
-        actions = normalized_log.actions
-        final_state = normalized_log.final_state
-        final_artifacts = normalized_log.final_artifacts
-        completed_tasks = normalized_log.completed_tasks
+        events = case.events
+        goal_condition = case.goal_condition
+        actions = execution_log.actions
+        final_state = execution_log.final_state
+        final_artifacts = execution_log.final_artifacts
+        completed_tasks = execution_log.completed_tasks
         task_order = self._task_order_map(completed_tasks)
-        allowed_actions = set(normalized_case.allowed_actions)
+        allowed_actions = set(case.allowed_actions)
         required_artifact_ids = {artifact.artifact_id for artifact in required_artifacts}
 
         process_score -= self._score_action_constraints(
@@ -119,7 +110,7 @@ class RuleBasedEvaluator:
             )
 
         if goal_condition.no_constraint_violation:
-            for violation in normalized_log.constraint_violations:
+            for violation in execution_log.constraint_violations:
                 outcome_score -= 20
                 deductions.append(f"constraint violation: {violation} (-20)")
                 failure_labels.add("constraint_violation")
@@ -131,13 +122,13 @@ class RuleBasedEvaluator:
             failure_labels=failure_labels,
         )
         process_score -= self._score_task_breakdown(
-            task_breakdown=normalized_log.task_breakdown,
+            task_breakdown=execution_log.task_breakdown,
             completed_tasks=completed_tasks,
             deductions=deductions,
             failure_labels=failure_labels,
         )
         process_score -= self._score_questions(
-            questions_asked=normalized_log.questions_asked,
+            questions_asked=execution_log.questions_asked,
             task_order=task_order,
             deductions=deductions,
             failure_labels=failure_labels,
@@ -153,7 +144,7 @@ class RuleBasedEvaluator:
             failure_labels=failure_labels,
         )
 
-        if normalized_log.unsafe_commit:
+        if execution_log.unsafe_commit:
             process_score -= 20
             deductions.append("unsafe commit detected (-20)")
             failure_labels.add("unsafe_commit")
@@ -169,7 +160,7 @@ class RuleBasedEvaluator:
 
         logger.info(
             "評価が完了しました: task_id=%s total_score=%s failures=%s",
-            normalized_case.task_id,
+            case.task_id,
             total_score,
             sorted(label for label in failure_labels if label in FAILURE_LABELS),
         )
@@ -534,8 +525,8 @@ class RuleBasedEvaluator:
 
 
 def evaluate_case(
-    case: BenchmarkCase | dict[str, Any],
-    execution_log: ExecutionLog | dict[str, Any],
+    case: Case,
+    execution_log: ExecutionLog,
 ) -> EvaluationResult:
     """クラスベース evaluator を呼ぶ後方互換用ラッパー。"""
 

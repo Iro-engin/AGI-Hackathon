@@ -36,12 +36,13 @@
 
 現時点で、このリポジトリでできることは次のとおりです。
 
-- benchmark case を Pydantic で検証付き読み込みできる
+- `Case` を Pydantic で検証付き読み込みできる
 - execution log を Pydantic で検証付き読み込みできる
 - ルールベース evaluator で sample を採点できる
+- OpenAI API で case / execution log を検査できる
 - notebook を再生成できる
 - `LOG_LEVEL` でログレベルを切り替えながら実行できる
-- `make` と `runner/` のスクリプトでローカル実行できる
+- `make` でローカル実行できる
 
 ## ディレクトリ構成
 
@@ -61,8 +62,6 @@
   case 用 JSON Schema
 - [`schemas/execution_log.schema.json`](/Users/iro/Git/AGI-Hackathon/schemas/execution_log.schema.json)
   execution log 用 JSON Schema
-- [`runner/`](/Users/iro/Git/AGI-Hackathon/runner)
-  実行用スクリプト
 - [`Makefile`](/Users/iro/Git/AGI-Hackathon/Makefile)
   実行ショートカット
 
@@ -199,8 +198,6 @@ Kaggle 提出や説明用の notebook です。
 make setup
 ```
 
-これは内部的に [`runner/bootstrap.sh`](/Users/iro/Git/AGI-Hackathon/runner/bootstrap.sh) を呼びます。
-
 ### notebook を再生成する
 
 ```bash
@@ -226,17 +223,30 @@ LOG_LEVEL=DEBUG make eval-sample
 from pathlib import Path
 
 from src.logging_config import configure_logging
-from src.models import BenchmarkCase, ExecutionLog
+from src.models import Case, ExecutionLog
 from src.rule_evaluator import RuleBasedEvaluator
 
 configure_logging()
 
-case = BenchmarkCase.from_path(Path("scenarios/meeting/meeting_001.json"))
+case = Case.from_path(Path("scenarios/meeting/meeting_001.json"))
 log = ExecutionLog.from_path(Path("results/sample_execution_meeting_001.json"))
 result = RuleBasedEvaluator().evaluate(case, log)
 
 print(result)
 ```
+
+## OpenAI API で検査する
+
+`OPENAI_API_KEY` を設定したうえで、case 単体または execution log 付きで検査できます。
+
+```bash
+OPENAI_API_KEY=... make inspect-case
+OPENAI_API_KEY=... ./.venv/bin/python -m src.openai_case_inspector \
+  --case scenarios/meeting/meeting_001.json \
+  --execution-log results/sample_execution_meeting_001.json
+```
+
+必要に応じて `OPENAI_MODEL` か `--model` で使用モデルを上書きできます。
 
 ## 現状の設計方針
 

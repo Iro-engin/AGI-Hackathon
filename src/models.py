@@ -84,8 +84,8 @@ class Rubric(BaseModel):
     recovery: list[str]
 
 
-class BenchmarkCase(BaseModel):
-    """evaluator が受け取る benchmark case のトップレベル定義。"""
+class Case(BaseModel):
+    """evaluator が受け取る case のトップレベル定義。"""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -101,8 +101,8 @@ class BenchmarkCase(BaseModel):
     notes: str | None = None
 
     @classmethod
-    def from_path(cls, path: Path) -> BenchmarkCase:
-        """JSON ファイルから benchmark case を読み込み、検証する。"""
+    def from_path(cls, path: Path) -> Case:
+        """JSON ファイルから case を読み込み、検証する。"""
 
         return cls.model_validate_json(path.read_text(encoding="utf-8"))
 
@@ -119,6 +119,9 @@ class BenchmarkCase(BaseModel):
             dependency_count=len(self.initial_state.task_dependencies),
             constraint_count=len(self.initial_state.constraints),
         )
+
+
+BenchmarkCase = Case
 
 
 class ArtifactSnapshot(BaseModel):
@@ -192,11 +195,11 @@ class JsonFileRepository:
     def __init__(self, root: Path) -> None:
         self.root = root
 
-    def load_cases(self, relative_dir: str) -> list[BenchmarkCase]:
-        """ディレクトリ配下の benchmark case をファイル名順に読み込む。"""
+    def load_cases(self, relative_dir: str) -> list[Case]:
+        """ディレクトリ配下の case をファイル名順に読み込む。"""
 
         case_dir = self.root / relative_dir
-        return [BenchmarkCase.from_path(path) for path in sorted(case_dir.glob("*.json"))]
+        return [Case.from_path(path) for path in sorted(case_dir.glob("*.json"))]
 
     def load_execution_log(self, relative_path: str) -> ExecutionLog:
         """リポジトリルートからの相対パスで execution log を 1 件読み込む。"""
@@ -219,7 +222,7 @@ class CaseSummary:
 class CaseCatalog:
     """複数 case を見やすく扱うためのカタログ。"""
 
-    def __init__(self, cases: list[BenchmarkCase]) -> None:
+    def __init__(self, cases: list[Case]) -> None:
         self.cases = cases
 
     @classmethod

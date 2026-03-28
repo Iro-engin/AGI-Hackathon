@@ -149,11 +149,12 @@ print(json.dumps(validation_summary, ensure_ascii=False, indent=2))
 EVALUATION_DEMO_CODE = """demo_case = next(
     case for case in MEETING_CASES if case["task_id"] == "meeting_001"
 )
-demo_execution_log = SAMPLE_EXECUTION_LOGS["meeting_001"]
-demo_result = evaluate_case(demo_case, demo_execution_log)
+demo_case_model = Case.model_validate(demo_case)
+demo_execution_log = ExecutionLog.model_validate(SAMPLE_EXECUTION_LOGS["meeting_001"])
+demo_result = evaluate_case(demo_case_model, demo_execution_log)
 
 evaluation_payload = {
-    "task_id": demo_case["task_id"],
+    "task_id": demo_case_model.task_id,
     "outcome_score": demo_result.outcome_score,
     "process_score": demo_result.process_score,
     "recovery_score": demo_result.recovery_score,

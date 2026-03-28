@@ -1,186 +1,235 @@
 # AGI Hackathon Benchmark
 
-Kaggle の `Measuring AGI` を意識しつつ、特に「AIエージェントが動的な状況変化に対して正しく再計画し、成果物を最新状態に合わせて更新できるか」を評価するための最小ベンチマーク実装です。
+## これは何か
 
-このリポジトリでは、会議準備ドメインを題材に以下を一体で管理します。
+このリポジトリは、Kaggle の `Measuring AGI` を意識して、
+「AI エージェントが途中の状況変化に対して、正しく質問し、正しくタスク分解し、
+正しい順番で実行し、必要に応じて再計画できるか」を評価するための
+最小ベンチマーク実装です。
 
-- ベンチマークケース定義
-- 実行ログ定義
-- ルールベース evaluator
-- Kaggle 提出向け notebook 生成
+題材としては、まず `meeting_prep` ドメインを使っています。
 
-## 何を評価するか
+想定している流れは次のようなものです。
 
-本ベンチマークの中心は、単なる最終成果物の出来だけではなく、途中の意思決定プロセスまで含めて評価することです。
+1. 会議準備を依頼する
+2. エージェントが質問やタスク分解を行う
+3. 資料やアジェンダを作り始める
+4. 途中で参加者や締切などの条件が変わる
+5. エージェントが変更を認識して再計画する
+6. 最終成果物が最新状態に追従しているかを評価する
 
-- 質問
-  初期情報が不足しているときに、必要な確認を先に行えているかを見ます。`questions_asked` で、何を、なぜ、どのタスクを止める質問として聞いたかを記録できます。
-- タスクの実行順番
-  `initial_state.task_dependencies` と `completed_tasks` を比較し、依存関係を壊していないかを評価します。
-- 適切なタスク分解
-  `task_breakdown` により、作業をどの粒度で分解し、どの依存を持つかを明示します。evaluator は、実際に完了したタスクがこの分解に現れているかを確認します。
-- 状態変化への追従
-  `events` の内容を認識し、指定ターン内に `confirm_state` または `update_plan` で再計画したかを見ます。
-- 成果物の整合性
-  `required_artifacts` と `semantic_checks` に基づき、最終成果物が最新 state を反映しているかを見ます。
+## このリポジトリでやりたいこと
 
-## コード概要
+この実装でやりたいことは、単に最終成果物の良し悪しを採点することではありません。
+途中の意思決定プロセスまで含めて、エージェントの挙動の正当性を見たい、というのが主目的です。
 
-### `src/models.py`
+特に見たい観点は次のとおりです。
 
-Pydantic による入出力モデル定義です。
+- 必要な質問ができているか
+- タスクを適切に分解できているか
+- 依存関係を守った順番で実行しているか
+- 状態変化に対して再計画できているか
+- 最終成果物が最新 state を反映しているか
+- 制約違反や unsafe な振る舞いをしていないか
 
-- `BenchmarkCase`
-  ケース入力全体のトップレベルモデル
-- `ExecutionLog`
-  実行ログ入力全体のトップレベルモデル
-- `CaseCatalog`
-  case 一覧を要約表示するための補助クラス
-- `JsonFileRepository`
-  ケースと execution log をファイルから読み込む小さなリポジトリクラス
+## 現状できること
 
-これにより、`case` と `execution_log` は `dict[str, Any]` 前提ではなく、読み込み時点で検証済みオブジェクトとして扱えます。
+現時点で、このリポジトリでできることは次のとおりです。
 
-### `src/rule_evaluator.py`
+- benchmark case を Pydantic で検証付き読み込みできる
+- execution log を Pydantic で検証付き読み込みできる
+- ルールベース evaluator で sample を採点できる
+- notebook を再生成できる
+- `LOG_LEVEL` でログレベルを切り替えながら実行できる
+- `make` と `runner/` のスクリプトでローカル実行できる
 
-ルールベース評価器です。
+## ディレクトリ構成
 
-- `RuleBasedEvaluator`
-  評価ロジック本体を持つクラス
-- `EvaluationResult`
-  採点結果を返す dataclass
-- `evaluate_case`
-  既存コード互換のための薄いラッパー関数
+- [`src/models.py`](/Users/iro/Git/AGI-Hackathon/src/models.py)
+  case / execution log の型定義
+- [`src/rule_evaluator.py`](/Users/iro/Git/AGI-Hackathon/src/rule_evaluator.py)
+  ルールベース採点ロジック
+- [`src/build_notebook.py`](/Users/iro/Git/AGI-Hackathon/src/build_notebook.py)
+  Kaggle 提出用 notebook 生成
+- [`src/logging_config.py`](/Users/iro/Git/AGI-Hackathon/src/logging_config.py)
+  共通ログ設定
+- [`scenarios/meeting/`](/Users/iro/Git/AGI-Hackathon/scenarios/meeting)
+  benchmark case の JSON
+- [`results/sample_execution_meeting_001.json`](/Users/iro/Git/AGI-Hackathon/results/sample_execution_meeting_001.json)
+  sample execution log
+- [`schemas/benchmark_case.schema.json`](/Users/iro/Git/AGI-Hackathon/schemas/benchmark_case.schema.json)
+  case 用 JSON Schema
+- [`schemas/execution_log.schema.json`](/Users/iro/Git/AGI-Hackathon/schemas/execution_log.schema.json)
+  execution log 用 JSON Schema
+- [`runner/`](/Users/iro/Git/AGI-Hackathon/runner)
+  実行用スクリプト
+- [`Makefile`](/Users/iro/Git/AGI-Hackathon/Makefile)
+  実行ショートカット
 
-評価スコアは以下の3軸です。
+## 評価の考え方
+
+### 1. 質問
+
+初期情報が足りないときに、確認が必要な事項を先に質問できているかを見ます。
+
+execution log では `questions_asked` を使います。
+ここには次を入れる想定です。
+
+- 何を質問したか
+- なぜ質問したか
+- その質問によって停止しているタスクは何か
+
+### 2. タスク分解
+
+仕事を適切な粒度で分解できているかを見ます。
+
+execution log では `task_breakdown` を使います。
+ここには次を入れる想定です。
+
+- タスク ID
+- タスク説明
+- 依存先
+- ステータス
+
+### 3. タスクの実行順番
+
+分解しただけでなく、依存関係に従って正しい順番で進められているかを見ます。
+
+case 側では `initial_state.task_dependencies` を使い、
+execution log 側では `completed_tasks` を使います。
+
+### 4. 状態変化への追従
+
+途中イベントが起きたときに、変更を認識し、一定ターン以内で再計画できるかを見ます。
+
+case 側では `events` に次のような情報を入れます。
+
+- 何ターン目に変化したか
+- どんな変化か
+- state にどう効くか
+- 何ターン以内に再計画すべきか
+- どの成果物に影響するか
+
+### 5. 最終成果物の整合性
+
+最終的に出した成果物が、最新の state を正しく反映しているかを見ます。
+
+case 側では `required_artifacts` と `semantic_checks` を使い、
+execution log 側では `final_artifacts` を使います。
+
+## 入力データの考え方
+
+### Benchmark case
+
+case は「問題設定」です。
+
+主な要素:
+
+- `task_id`
+- `domain`
+- `difficulty`
+- `initial_request`
+- `initial_state`
+- `allowed_actions`
+- `events`
+- `goal_condition`
+- `rubric`
+
+特に重要なのは `initial_state` と `events` です。
+
+- `initial_state`
+  初期の参加者、締切、予算、制約、依存関係、必要成果物を持つ
+- `events`
+  途中で起きる変化を持つ
+
+### Execution log
+
+execution log は「エージェントがどう動いたか」の記録です。
+
+主な要素:
+
+- `actions`
+- `questions_asked`
+- `task_breakdown`
+- `completed_tasks`
+- `constraint_violations`
+- `unsafe_commit`
+- `final_state`
+- `final_artifacts`
+
+## 採点ロジックの考え方
+
+[`src/rule_evaluator.py`](/Users/iro/Git/AGI-Hackathon/src/rule_evaluator.py) では、主に次の3軸で採点します。
 
 - `outcome_score`
   最終成果物と最終 state の整合性
 - `process_score`
-  許可アクション、質問、タスク分解、タスク順序などのプロセス品質
+  質問、タスク分解、依存順、許可 action などのプロセス品質
 - `recovery_score`
-  イベント発生後の再計画と回復の速さ
+  状態変化後の再計画と回復の品質
 
-### `src/build_notebook.py`
+補助的に `failure_labels` と `deductions` も返します。
 
-Kaggle 提出用 notebook の生成器です。
+## notebook の位置づけ
 
-- `NotebookCellFactory`
-  notebook cell を安定した ID 付きで生成
-- `BenchmarkNotebookBuilder`
-  Pydantic models、evaluator、JSON 読込 helper をまとめて notebook 化
+[`src/kaggle_submission_benchmark.ipynb`](/Users/iro/Git/AGI-Hackathon/src/kaggle_submission_benchmark.ipynb) は、
+Kaggle 提出や説明用の notebook です。
 
-notebook では巨大な `MEETING_CASES = [...]` を埋め込まず、`scenarios/meeting/*.json` と
-`results/sample_execution_meeting_001.json` を実行時に読み込みます。
+この notebook は次を含みます。
 
-### `src/logging_config.py`
+- helper
+- case summary
+- case 読み込み
+- sample execution log 読み込み
+- Pydantic models
+- evaluator
+- validation demo
+- evaluation demo
 
-リポジトリ共通のログ設定です。`LOG_LEVEL` 環境変数でログレベルを切り替えられます。
+注意点:
 
-### `scenarios/meeting/*.json`
+- notebook は巨大な `MEETING_CASES = [...]` を埋め込んでいません
+- 実行時に `scenarios/meeting/*.json` と `results/sample_execution_meeting_001.json` を読み込みます
 
-会議準備ドメインのベンチマークケース群です。ケースは以下を持ちます。
+## ローカル実行方法
 
-- 初期依頼
-- 初期状態
-- 許可アクション
-- イベント
-- ゴール条件
-- ルーブリック
-
-### `results/sample_execution_meeting_001.json`
-
-評価デモ用のサンプル execution log です。  
-質問、タスク分解、アクション列、完了タスク、最終 state、最終成果物を含める想定です。
-
-### `schemas/*.json`
-
-JSON Schema 定義です。
-
-- `benchmark_case.schema.json`
-  benchmark case のスキーマ
-- `execution_log.schema.json`
-  execution log のスキーマ
-
-## 入力フォーマット
-
-### Benchmark case
-
-主な要素は以下です。
-
-- `initial_state.required_artifacts`
-  必須成果物と、その必須項目、state との semantic binding
-- `initial_state.task_dependencies`
-  タスクの順序制約
-- `events`
-  状態変化や新しい制約
-- `goal_condition`
-  最新 state を満たすべきか、制約違反を許すかなど
-
-### Execution log
-
-主な要素は以下です。
-
-- `actions`
-  ターンごとのエージェント行動
-- `questions_asked`
-  必要な確認質問の記録
-- `task_breakdown`
-  タスク分解の記録
-- `completed_tasks`
-  実際に完了したタスク列
-- `final_state`
-  最終的に採用した状態
-- `final_artifacts`
-  最終成果物
-
-## 生成フロー
-
-1. `scenarios/meeting/*.json` を Pydantic で読み込む
-2. `results/sample_execution_meeting_001.json` を Pydantic で読み込む
-3. `src/models.py` と `src/rule_evaluator.py` を notebook に埋め込む
-4. 生成された notebook は実行時に JSON ファイルを読み込む
-5. `src/build_notebook.py` で `src/kaggle_submission_benchmark.ipynb` を再生成する
-
-## 使い方
-
-環境構築:
+### まず環境を作る
 
 ```bash
 make setup
 ```
 
-直接スクリプトを使う場合:
+これは内部的に [`runner/bootstrap.sh`](/Users/iro/Git/AGI-Hackathon/runner/bootstrap.sh) を呼びます。
 
-```bash
-./runner/bootstrap.sh
-```
-
-notebook 再生成:
+### notebook を再生成する
 
 ```bash
 make build-notebook
 ```
 
-ログレベルを指定して実行:
-
-```bash
-LOG_LEVEL=DEBUG make build-notebook
-```
-
-sample 評価実行:
+### sample を評価する
 
 ```bash
 make eval-sample
 ```
 
-ローカルで evaluator を使う例:
+### ログレベルを指定して実行する
+
+```bash
+LOG_LEVEL=DEBUG make build-notebook
+LOG_LEVEL=DEBUG make eval-sample
+```
+
+## Python から直接使う例
 
 ```python
 from pathlib import Path
 
+from src.logging_config import configure_logging
 from src.models import BenchmarkCase, ExecutionLog
 from src.rule_evaluator import RuleBasedEvaluator
+
+configure_logging()
 
 case = BenchmarkCase.from_path(Path("scenarios/meeting/meeting_001.json"))
 log = ExecutionLog.from_path(Path("results/sample_execution_meeting_001.json"))
@@ -189,9 +238,32 @@ result = RuleBasedEvaluator().evaluate(case, log)
 print(result)
 ```
 
-## 設計意図
+## 現状の設計方針
 
-- 最小変更で notebook 提出物を維持する
-- JSON をそのまま資産として持ちつつ、Python 側では型安全に扱う
-- 最終成果物だけではなく、質問、順序、分解、再計画まで評価対象に含める
-- ケース追加時に `scenarios/meeting/*.json` を足すだけで notebook 再生成に乗る構造にする
+- JSON はそのまま資産として残す
+- Python 側では Pydantic で型安全に扱う
+- 最小変更で notebook と evaluator の両方を維持する
+- 最終成果物だけでなく、質問、順序、分解、再計画も評価する
+- ローカルで試しやすいように `.venv` と `make` を前提にする
+
+## 今後やりたいこと
+
+今後やりたいことは次です。
+
+- `meeting_prep` 以外のドメイン追加
+- 「質問すべきケース」を case 側でも明示して、質問評価を厳密化
+- rubric と evaluator の対応関係をさらに明確化
+- 複数 sample log を用意して、failure pattern ごとのデモを増やす
+- notebook を説明資料としてもっと見やすくする
+- 評価結果を表や可視化で見られるようにする
+
+## いま見るべきファイル
+
+最初に把握するなら、次の順番が見やすいです。
+
+1. [`README.md`](/Users/iro/Git/AGI-Hackathon/README.md)
+2. [`scenarios/meeting/meeting_001.json`](/Users/iro/Git/AGI-Hackathon/scenarios/meeting/meeting_001.json)
+3. [`results/sample_execution_meeting_001.json`](/Users/iro/Git/AGI-Hackathon/results/sample_execution_meeting_001.json)
+4. [`src/models.py`](/Users/iro/Git/AGI-Hackathon/src/models.py)
+5. [`src/rule_evaluator.py`](/Users/iro/Git/AGI-Hackathon/src/rule_evaluator.py)
+6. [`src/build_notebook.py`](/Users/iro/Git/AGI-Hackathon/src/build_notebook.py)

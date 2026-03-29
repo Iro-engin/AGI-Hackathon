@@ -18,13 +18,11 @@ INTRO_CODE = """from __future__ import annotations
 
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any
 
 
 PROJECT_ROOT = Path(".")
-LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
 
 
 REQUIRED_TOP_LEVEL_FIELDS = [
@@ -66,15 +64,6 @@ def validate_case_structure(case: dict[str, Any]) -> list[str]:
             errors.append(f"missing rubric field: {field_name}")
 
     return errors
-
-
-def configure_logging(log_level: str | None = None) -> int:
-    \"\"\"環境変数または引数に基づいて notebook のログレベルを設定する。\"\"\"
-
-    resolved_level = (log_level or os.getenv("LOG_LEVEL") or "INFO").upper()
-    logging.basicConfig(level=getattr(logging, resolved_level, logging.INFO), format=LOG_FORMAT)
-    logging.getLogger().setLevel(getattr(logging, resolved_level, logging.INFO))
-    return logging.getLogger().level
 
 
 def read_json(path: Path) -> dict[str, Any]:
@@ -147,14 +136,13 @@ print(json.dumps(validation_summary, ensure_ascii=False, indent=2))
 """
 
 EVALUATION_DEMO_CODE = """demo_case = next(
-    case for case in MEETING_CASES if case["task_id"] == "meeting_001"
+    case for case in MEETING_CASE_MODELS if case.task_id == "meeting_001"
 )
-demo_case_model = Case.model_validate(demo_case)
-demo_execution_log = ExecutionLog.model_validate(SAMPLE_EXECUTION_LOGS["meeting_001"])
-demo_result = evaluate_case(demo_case_model, demo_execution_log)
+demo_execution_log = SAMPLE_EXECUTION_LOG_MODELS["meeting_001"]
+demo_result = evaluate_case(demo_case, demo_execution_log)
 
 evaluation_payload = {
-    "task_id": demo_case_model.task_id,
+    "task_id": demo_case.task_id,
     "outcome_score": demo_result.outcome_score,
     "process_score": demo_result.process_score,
     "recovery_score": demo_result.recovery_score,
@@ -164,6 +152,90 @@ evaluation_payload = {
 }
 
 print(json.dumps(evaluation_payload, ensure_ascii=False, indent=2))
+"""
+
+CASE_MODEL_DEMO_CODE = """MEETING_CASE_MODELS = [
+    Case.model_validate(case) for case in MEETING_CASES
+]
+MEETING_CASE_MAP = {case.task_id: case for case in MEETING_CASE_MODELS}
+SAMPLE_EXECUTION_LOG_MODELS = {
+    task_id: ExecutionLog.model_validate(log)
+    for task_id, log in SAMPLE_EXECUTION_LOGS.items()
+}
+
+print([case.task_id for case in MEETING_CASE_MODELS])
+"""
+
+OPENAI_HELPER_CODE = """try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
+
+
+def build_openai_inspection_prompt(
+    case: Case,
+    execution_log: ExecutionLog | None = None,
+) -> str:
+    sections = [
+        "あなたは benchmark case のレビュアーです。",
+        "次の観点で簡潔に検査してください。",
+        "1. case 定義の矛盾や不足",
+        "2. rubric と goal_condition の整合性",
+        "3. events が initial_state / required_artifacts に与える影響",
+        "4. evaluator で見落としそうな観点",
+        "5. execution log がある場合は、case に対して妥当か",
+        "",
+        "出力形式:",
+        "- summary: 2-4文",
+        "- findings: 箇条書き",
+        "- suggested_fixes: 箇条書き",
+        "",
+        "Case JSON:",
+        json.dumps(case.model_dump(mode="json"), ensure_ascii=False, indent=2),
+    ]
+    if execution_log is not None:
+        sections.extend(
+            [
+                "",
+                "ExecutionLog JSON:",
+                json.dumps(execution_log.model_dump(mode="json"), ensure_ascii=False, indent=2),
+            ]
+        )
+    return "\\n".join(sections)
+
+
+def inspect_case_with_openai(
+    case: Case,
+    execution_log: ExecutionLog | None = None,
+    model: str = "gpt-4.1-mini",
+) -> str:
+    if OpenAI is None:
+        raise RuntimeError("openai package is not installed in this notebook environment.")
+    if not os.getenv("OPENAI_API_KEY"):
+        raise RuntimeError("OPENAI_API_KEY is not set.")
+
+    client = OpenAI()
+    response = client.responses.create(
+        model=model,
+        instructions=(
+            "You are a strict benchmark reviewer. Be concrete, concise, and point out "
+            "contradictions, ambiguity, and evaluator gaps."
+        ),
+        input=build_openai_inspection_prompt(case=case, execution_log=execution_log),
+    )
+    return response.output_text
+"""
+
+OPENAI_DEMO_CODE = """demo_case = MEETING_CASE_MAP["meeting_001"]
+demo_execution_log = SAMPLE_EXECUTION_LOG_MODELS["meeting_001"]
+
+if OpenAI is None:
+    print("openai package is not available in this notebook environment.")
+elif not os.getenv("OPENAI_API_KEY"):
+    preview = build_openai_inspection_prompt(demo_case, demo_execution_log)
+    print(preview[:2000])
+else:
+    print(inspect_case_with_openai(demo_case, demo_execution_log))
 """
 
 
@@ -221,12 +293,20 @@ class BenchmarkNotebookBuilder:
                 "1. 共通 helper\n"
                 "2. 会議準備ケース\n"
                 "3. サンプル execution log\n"
-                "4. Pydantic models\n"
-                "5. evaluator\n"
-                "6. validation summary\n"
-                "7. evaluation demo\n"
+                "4. logging setup\n"
+                "5. Pydantic models\n"
+                "6. typed case / log view\n"
+                "7. evaluator\n"
+                "8. validation summary\n"
+                "9. evaluation demo\n"
+                "10. OpenAI inspection\n"
             ),
             self.cell_factory.code(INTRO_CODE),
+            self.cell_factory.markdown(
+                "## Logging Setup\n\n"
+                "`src/logging_config.py` と同じ実装を notebook に埋め込みます。\n"
+            ),
+            self.cell_factory.code(self._read_source("src/logging_config.py")),
             self.cell_factory.markdown(
                 "## Case Summary\n\n"
                 "各 case の難易度、イベント数、成果物数、依存数を先に確認できる一覧です。\n"
@@ -246,6 +326,11 @@ class BenchmarkNotebookBuilder:
             ),
             self.cell_factory.code(self._read_source("src/models.py")),
             self.cell_factory.markdown(
+                "## Typed Cases And Logs\n\n"
+                "`Case` / `ExecutionLog` に正規化した view を用意します。\n"
+            ),
+            self.cell_factory.code(CASE_MODEL_DEMO_CODE),
+            self.cell_factory.markdown(
                 "## Rule-Based Evaluator\n\n"
                 "最終成果物、質問、タスク分解、タスク順序、復帰力を採点します。\n"
             ),
@@ -258,6 +343,13 @@ class BenchmarkNotebookBuilder:
                 "## Evaluation Demo\n\n`meeting_001` をサンプル log で評価します。\n"
             ),
             self.cell_factory.code(EVALUATION_DEMO_CODE),
+            self.cell_factory.markdown(
+                "## OpenAI Inspection\n\n"
+                "OpenAI Responses API を使って case / execution log を検査します。"
+                "`OPENAI_API_KEY` が未設定のときは送信予定プロンプトの冒頭だけを表示します。\n"
+            ),
+            self.cell_factory.code(OPENAI_HELPER_CODE),
+            self.cell_factory.code(OPENAI_DEMO_CODE),
         ]
         return {
             "cells": cells,
@@ -299,7 +391,8 @@ class BenchmarkNotebookBuilder:
         """case 一覧の読みやすいサマリー生成コードを返す。"""
 
         return (
-            "MEETING_CASES = load_meeting_cases()\n"
+            "if \"MEETING_CASES\" not in globals():\n"
+            "    MEETING_CASES = load_meeting_cases()\n"
             "CASE_SUMMARIES = build_case_summaries(MEETING_CASES)\n\n"
             + "print(json.dumps(CASE_SUMMARIES, ensure_ascii=False, indent=2))\n"
         )
@@ -308,7 +401,8 @@ class BenchmarkNotebookBuilder:
         """sample execution log を notebook 実行時に読み込むコードを返す。"""
 
         return (
-            "SAMPLE_EXECUTION_LOGS = load_sample_execution_logs()\n\n"
+            "if \"SAMPLE_EXECUTION_LOGS\" not in globals():\n"
+            "    SAMPLE_EXECUTION_LOGS = load_sample_execution_logs()\n\n"
             + 'print("Available sample execution logs:", list(SAMPLE_EXECUTION_LOGS.keys()))\n'
         )
 
@@ -316,7 +410,15 @@ class BenchmarkNotebookBuilder:
         """リポジトリ依存 import を外した evaluator コードを埋め込む。"""
 
         evaluator_code = self._read_source("src/rule_evaluator.py")
-        return evaluator_code.replace("from src.models import (\n", "from __main__ import (\n")
+        import_start = evaluator_code.find("from src.models import (")
+        if import_start == -1:
+            return evaluator_code
+
+        import_end = evaluator_code.find(")\n\n", import_start)
+        if import_end == -1:
+            return evaluator_code
+
+        return evaluator_code[:import_start] + evaluator_code[import_end + 3 :]
 
 
 def main() -> None:

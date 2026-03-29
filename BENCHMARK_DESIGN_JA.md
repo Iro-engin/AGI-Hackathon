@@ -352,6 +352,7 @@ Total Score
     {
       "turn": 3,
       "type": "state_change",
+      "message": "役員Dの参加が必須になり、締切が翌日正午に前倒しになった",
       "delta": {
         "participants_added": ["D"],
         "deadline": "2026-04-09T12:00:00+09:00"

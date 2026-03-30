@@ -1,0 +1,93 @@
+{
+  "task_id": "meeting_001",
+  "actions": [
+    {
+      "turn": 1,
+      "action_type": "propose_plan",
+      "acknowledged_event_turns": [],
+      "artifact_updates": [],
+      "notes": "参加可能時間確認、議題整理、資料作成の順で進める"
+    },
+    {
+      "turn": 3,
+      "action_type": "confirm_state",
+      "acknowledged_event_turns": [3],
+      "artifact_updates": [],
+      "notes": "参加者D追加と締切前倒しを確認"
+    },
+    {
+      "turn": 4,
+      "action_type": "update_plan",
+      "acknowledged_event_turns": [3],
+      "artifact_updates": ["agenda", "briefing_doc"],
+      "notes": "旧日程案を破棄し、資料修正を優先する"
+    },
+    {
+      "turn": 5,
+      "action_type": "finalize",
+      "acknowledged_event_turns": [],
+      "artifact_updates": ["agenda", "briefing_doc"],
+      "notes": "最新状態に基づいて成果物を確定"
+    }
+  ],
+  "completed_tasks": [
+    "collect_availability",
+    "propose_schedule",
+    "define_agenda",
+    "write_briefing_doc"
+  ],
+  "task_breakdown": [
+    {
+      "task_id": "collect_availability",
+      "description": "参加者の参加可能時間を整理する",
+      "depends_on": [],
+      "status": "completed"
+    },
+    {
+      "task_id": "propose_schedule",
+      "description": "参加可能時間を元に候補日程を提示する",
+      "depends_on": ["collect_availability"],
+      "status": "completed"
+    },
+    {
+      "task_id": "define_agenda",
+      "description": "会議の目的と議題を構造化する",
+      "depends_on": [],
+      "status": "completed"
+    },
+    {
+      "task_id": "write_briefing_doc",
+      "description": "アジェンダ確定後に事前説明資料を作成する",
+      "depends_on": ["define_agenda"],
+      "status": "completed"
+    }
+  ],
+  "questions_asked": [],
+  "constraint_violations": [],
+  "unsafe_commit": false,
+  "final_state": {
+    "deadline": "2026-04-09T12:00:00+09:00",
+    "participants": ["A", "B", "C", "D"],
+    "budget": 50000,
+    "reference_data": {
+      "meeting_type": "executive",
+      "agenda_min_items": 3
+    }
+  },
+  "final_artifacts": {
+    "agenda": {
+      "fields_completed": ["meeting_objective", "agenda_items", "owner", "time_allocation"],
+      "field_values": {
+        "deadline": "2026-04-09T12:00:00+09:00",
+        "participants": ["A", "B", "C", "D"]
+      }
+    },
+    "briefing_doc": {
+      "fields_completed": ["summary", "decision_points", "risks", "next_actions"],
+      "field_values": {
+        "deadline": "2026-04-09T12:00:00+09:00",
+        "participants": ["A", "B", "C", "D"]
+      }
+    }
+  }
+}

@@ -17,7 +17,13 @@
       {
         "artifact_id": "meeting_memo",
         "artifact_type": "document",
-        "required_fields": ["hiring_plan", "interview_capacity", "risks"]
+        "required_fields": ["hiring_plan", "interview_capacity", "risks"],
+        "semantic_checks": [
+          {
+            "artifact_field": "forecast_hires",
+            "state_path": "reference_data.forecast_hires"
+          }
+        ]
       }
     ],
     "constraints": [
@@ -59,6 +65,7 @@
           "forecast_hires": 9
         }
       },
+      "expected_artifact_updates": ["meeting_memo"],
       "expected_replan_within_turns": 1
     },
     {
@@ -68,6 +75,7 @@
       "delta": {
         "ops_approval_available": false
       },
+      "expected_artifact_updates": ["agenda", "meeting_memo"],
       "expected_replan_within_turns": 1
     }
   ],

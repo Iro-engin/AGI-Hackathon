@@ -12,12 +12,32 @@
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_objective", "agenda_items", "owner", "time_allocation"]
+        "required_fields": ["meeting_objective", "agenda_items", "owner", "time_allocation"],
+        "semantic_checks": [
+          {
+            "artifact_field": "deadline",
+            "state_path": "deadline"
+          },
+          {
+            "artifact_field": "participants",
+            "state_path": "participants"
+          }
+        ]
       },
       {
         "artifact_id": "briefing_doc",
         "artifact_type": "document",
-        "required_fields": ["summary", "decision_points", "risks", "next_actions"]
+        "required_fields": ["summary", "decision_points", "risks", "next_actions"],
+        "semantic_checks": [
+          {
+            "artifact_field": "deadline",
+            "state_path": "deadline"
+          },
+          {
+            "artifact_field": "participants",
+            "state_path": "participants"
+          }
+        ]
       }
     ],
     "constraints": [
@@ -60,6 +80,7 @@
         "participants_added": ["D"],
         "deadline": "2026-04-09T12:00:00+09:00"
       },
+      "expected_artifact_updates": ["agenda", "briefing_doc"],
       "expected_replan_within_turns": 2
     }
   ],

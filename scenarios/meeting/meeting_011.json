@@ -1,0 +1,117 @@
+{
+  "task_id": "meeting_011",
+  "domain": "meeting_prep",
+  "difficulty": "hard",
+  "initial_request": "来期の重点顧客向け値上げ方針を決める役員会議の準備をしてください。CEO、CRO、CFO、CustomerSuccessLead が参加し、値上げ対象セグメント、実施時期、顧客説明方針を決めたいです。会議アジェンダと意思決定メモを作って、当日その場で方針確定できる状態にしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-20T17:00:00+09:00",
+    "participants": ["CEO", "CRO", "CFO", "CustomerSuccessLead"],
+    "budget": 50000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["meeting_goal", "agenda_items", "owners", "decision_blocks"],
+        "semantic_checks": [
+          {
+            "artifact_field": "decision_mode",
+            "state_path": "reference_data.decision_mode"
+          },
+          {
+            "artifact_field": "participants",
+            "state_path": "participants"
+          }
+        ]
+      },
+      {
+        "artifact_id": "decision_memo",
+        "artifact_type": "document",
+        "required_fields": ["decision_topics", "options", "customer_risks", "recommended_path"],
+        "semantic_checks": [
+          {
+            "artifact_field": "decision_mode",
+            "state_path": "reference_data.decision_mode"
+          },
+          {
+            "artifact_field": "decision_goal",
+            "state_path": "reference_data.decision_goal"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "CEO が参加しない場合は最終決定を確定しない",
+      "値上げ対象顧客の説明方針は CustomerSuccessLead の確認前に外部前提で確定しない",
+      "会議時間は60分以内にする"
+    ],
+    "task_dependencies": [
+      {
+        "before": "confirm_executive_availability",
+        "after": "lock_decision_mode",
+        "reason": "意思決定会議として成立するかを先に確認する必要がある"
+      },
+      {
+        "before": "define_decision_topics",
+        "after": "draft_decision_memo",
+        "reason": "論点整理後でないと意思決定メモを書けない"
+      }
+    ],
+    "reference_data": {
+      "decision_mode": "final decision in meeting",
+      "topic": "enterprise price increase planning",
+      "decision_goal": "finalize price increase scope and timing",
+      "customer_segments": ["SMB", "mid-market", "enterprise"],
+      "known_options": [
+        "raise enterprise only",
+        "raise mid-market and enterprise",
+        "delay and gather more customer input"
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 3,
+      "type": "state_change",
+      "message": "CEO が急きょ参加できなくなりました。この会議では最終決定ではなく、CFO と CRO 向けの方針レビューまでに切り替えてください。",
+      "delta": {
+        "participants_removed": ["CEO"],
+        "reference_data": {
+          "decision_mode": "review only, no final decision",
+          "decision_goal": "narrow to one recommended option for CEO follow-up"
+        }
+      },
+      "expected_artifact_updates": ["agenda", "decision_memo"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "decision_memo"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "agenda が最終決定会議のままではなく review only に切り替わっている",
+      "decision_memo が CEO 不在を踏まえた推奨案絞り込み用に更新されている"
+    ],
+    "process": [
+      "参加者除外によって意思決定モード自体が変わることを明示的に扱っている",
+      "以前の final decision 前提を残したままにしていない"
+    ],
+    "recovery": [
+      "イベント後1ターン以内に会議目的の取消しと再定義を反映している"
+    ]
+  },
+  "notes": "参加者削除によって会議の目的自体が変わる、前提取消し型のケース。"
+}

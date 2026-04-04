@@ -1,0 +1,120 @@
+{
+  "task_id": "meeting_014",
+  "domain": "meeting_prep",
+  "difficulty": "medium",
+  "initial_request": "オフサイトで行う部門横断ワークショップの準備をお願いします。ProductOps、DesignLead、EngineeringManager、DataLead が参加し、次四半期の実験テーマを3つに絞り込みます。会議アジェンダと参加者ブリーフを作り、会場案内も含めて共有できる状態にしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-30T12:00:00+09:00",
+    "participants": ["ProductOps", "DesignLead", "EngineeringManager", "DataLead"],
+    "budget": 90000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["workshop_goal", "agenda_items", "owners", "format_note"],
+        "semantic_checks": [
+          {
+            "artifact_field": "session_format",
+            "state_path": "reference_data.session_format"
+          }
+        ]
+      },
+      {
+        "artifact_id": "attendee_brief",
+        "artifact_type": "document",
+        "required_fields": ["context", "pre_reads", "logistics", "decision_rules"],
+        "semantic_checks": [
+          {
+            "artifact_field": "session_format",
+            "state_path": "reference_data.session_format"
+          },
+          {
+            "artifact_field": "logistics_mode",
+            "state_path": "reference_data.logistics_mode"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "会議時間は150分以内にする",
+      "会場確定前に詳細な現地案内を確定版として送らない",
+      "開催形式が変わったら logistics を全面的に見直す"
+    ],
+    "task_dependencies": [
+      {
+        "before": "confirm_session_format",
+        "after": "finalize_attendee_brief",
+        "reason": "開催形式が確定しないと参加者ブリーフを固められない"
+      }
+    ],
+    "reference_data": {
+      "session_format": "in-person workshop",
+      "logistics_mode": "venue directions and room setup required",
+      "topic": "cross-functional experiment planning",
+      "decision_goal": "select top 3 experiment bets for next quarter",
+      "candidate_experiments": [
+        "new onboarding flow",
+        "pricing page redesign",
+        "sales-assist prompt library",
+        "self-serve analytics trial"
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "state_change",
+      "message": "会場の都合でオフサイト開催ができなくなりました。完全オンライン開催に切り替えてください。",
+      "delta": {
+        "reference_data": {
+          "session_format": "remote workshop",
+          "logistics_mode": "video link and online facilitation guide required"
+        }
+      },
+      "expected_artifact_updates": ["agenda", "attendee_brief"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "new_constraint",
+      "message": "DataLead は前半45分しか参加できません。実験優先順位づけに必要なデータ前提を前半に寄せてください。",
+      "delta": {
+        "reference_data": {
+          "availability_note": "DataLead available first 45 minutes only"
+        }
+      },
+      "expected_artifact_updates": ["agenda"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "attendee_brief"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "attendee_brief が現地案内ではなくオンライン案内に全面更新されている",
+      "agenda が DataLead の前半制約に合わせて順序調整されている"
+    ],
+    "process": [
+      "in-person 前提の物流情報を残したままにしていない",
+      "開催形式変更を部分修正ではなくロジスティクスの全面見直しとして扱っている"
+    ],
+    "recovery": [
+      "形式変更と参加制約追加の両方に対して必要成果物だけを再計画している"
+    ]
+  },
+  "notes": "会場前提が丸ごと無効化される、ロジスティクス取消し型のケース。"
+}

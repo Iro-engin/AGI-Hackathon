@@ -32,9 +32,20 @@
         ]
       },
       {
-        "artifact_id": "faq_sheet",
+        "artifact_id": "customer_faq_sheet",
         "artifact_type": "document",
         "required_fields": ["expected_questions", "approved_answers", "owners"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      },
+      {
+        "artifact_id": "internal_faq_addendum",
+        "artifact_type": "document",
+        "required_fields": ["expected_questions", "internal_only_answers", "owners", "do_not_share"],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
@@ -103,20 +114,21 @@
           "share_policy": "split customer and internal versions"
         }
       },
-      "expected_artifact_updates": ["faq_sheet", "agenda"],
+      "expected_artifact_updates": ["customer_faq_sheet", "internal_faq_addendum", "agenda"],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "speaker_notes", "faq_sheet"],
+    "required_artifacts": ["agenda", "speaker_notes", "customer_faq_sheet", "internal_faq_addendum"],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },
   "rubric": {
     "outcome": [
       "speaker_notes が最新 messaging_version v2 を反映している",
-      "faq_sheet が最新の share_policy に整合している",
+      "customer_faq_sheet が最新の share_policy に整合している",
+      "internal_faq_addendum が社内限定補足を別成果物として保持している",
       "agenda が顧客向け配布版の前提に合わせて更新されている"
     ],
     "process": [

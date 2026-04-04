@@ -21,9 +21,20 @@
         ]
       },
       {
-        "artifact_id": "shared_memo",
+        "artifact_id": "partner_memo",
         "artifact_type": "document",
         "required_fields": ["context", "discussion_points", "followups"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      },
+      {
+        "artifact_id": "internal_memo",
+        "artifact_type": "document",
+        "required_fields": ["context", "discussion_points", "followups", "internal_notes"],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
@@ -69,7 +80,7 @@
           "share_policy": "split internal and external versions"
         }
       },
-      "expected_artifact_updates": ["agenda", "shared_memo"],
+      "expected_artifact_updates": ["agenda", "partner_memo", "internal_memo"],
       "expected_replan_within_turns": 1
     },
     {
@@ -85,17 +96,18 @@
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "shared_memo"],
+    "required_artifacts": ["agenda", "partner_memo", "internal_memo"],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },
   "rubric": {
     "outcome": [
-      "shared_memo が最新の共有方針を反映している",
+      "partner_memo が最新の共有方針を反映している",
+      "internal_memo が社内版として必要な補足を保持している",
       "agenda が 45 分制約に合わせて整理されている"
     ],
     "process": [
-      "社内版と社外版の切り分けを意識して成果物を更新している",
+      "社内版と社外版の切り分けを明示的に別成果物として扱っている",
       "共有方針確認を送付前の依存関係として扱っている"
     ],
     "recovery": [

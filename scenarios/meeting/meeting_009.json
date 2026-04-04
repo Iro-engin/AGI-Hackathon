@@ -2,7 +2,7 @@
   "task_id": "meeting_009",
   "domain": "meeting_prep",
   "difficulty": "easy",
-  "initial_request": "ベンダー契約更新の交渉準備会議を設定したいです。アジェンダと交渉ブリーフを作成して、更新条件の確認と論点整理ができるようにしてください。",
+  "initial_request": "ベンダー契約更新の交渉準備会議を設定したいです。対象は社内ナレッジ検索ツールの年間契約更新で、Procurement、Finance、Security、ITManager が参加します。アジェンダと交渉ブリーフを作成して、更新条件の確認と論点整理ができるようにしてください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-12T16:30:00+09:00",
@@ -23,11 +23,15 @@
       {
         "artifact_id": "negotiation_brief",
         "artifact_type": "document",
-        "required_fields": ["current_terms", "target_terms", "walkaway_conditions", "risks"],
+        "required_fields": ["current_terms", "target_terms", "walkaway_conditions", "risks", "security_review_mode"],
         "semantic_checks": [
           {
             "artifact_field": "budget",
             "state_path": "budget"
+          },
+          {
+            "artifact_field": "security_review_mode",
+            "state_path": "reference_data.security_review_mode"
           }
         ]
       }
@@ -46,7 +50,11 @@
     ],
     "reference_data": {
       "renewal_type": "annual",
-      "vendor_tier": "strategic"
+      "vendor_tier": "strategic",
+      "tool_summary": "internal knowledge search tool used by support and sales",
+      "decision_goal": "decide target terms before vendor meeting",
+      "known_issues": ["SSO setup takes too long", "security questionnaire needs refresh"],
+      "security_review_mode": "live review in meeting"
     }
   },
   "allowed_actions": [

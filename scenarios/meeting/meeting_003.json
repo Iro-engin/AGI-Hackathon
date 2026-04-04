@@ -2,17 +2,23 @@
   "task_id": "meeting_003",
   "domain": "meeting_prep",
   "difficulty": "medium",
-  "initial_request": "四半期レビュー会議の準備をお願いします。参加者調整、アジェンダ案、レビュー資料の完成まで段取りしたいです。",
+  "initial_request": "月次営業レビュー会議の準備をお願いします。CEO、COO、CFO、営業責任者が参加し、4月の売上進捗と来月の見通しを確認します。会議アジェンダとレビュー用スライドを作り、経営判断に必要な数字と論点を整理してください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-20T10:00:00+09:00",
-    "participants": ["CEO", "COO", "CFO", "Sales"],
+    "participants": ["CEO", "COO", "CFO", "SalesLead"],
     "budget": 80000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["agenda_items", "decision_points", "timebox"]
+        "required_fields": ["agenda_items", "decision_points", "timebox", "participant_availability_note"],
+        "semantic_checks": [
+          {
+            "artifact_field": "participant_availability_note",
+            "state_path": "reference_data.participant_availability_note"
+          }
+        ]
       },
       {
         "artifact_id": "review_deck",
@@ -27,25 +33,29 @@
       }
     ],
     "constraints": [
-      "レビュー資料には最新売上数値を使う",
-      "会議は90分以内",
-      "参加者全員の出席を優先する"
+      "レビュー資料には最新の売上スナップショットを使う",
+      "会議時間は90分以内に収める",
+      "参加者全員が見られる要点サマリを最初に置く"
     ],
     "task_dependencies": [
       {
         "before": "fetch_latest_sales",
         "after": "draft_review_deck",
-        "reason": "売上数値取得後に資料を起こす必要がある"
+        "reason": "最新データを取得してからレビュー資料を作る必要がある"
       },
       {
         "before": "draft_review_deck",
         "after": "final_review_deck",
-        "reason": "ドラフトなしに最終化できない"
+        "reason": "ドラフト確認を経ずに最終版にはできない"
       }
     ],
     "reference_data": {
       "deck_version": "v1",
-      "sales_snapshot_date": "2026-04-18"
+      "sales_snapshot_date": "2026-04-18",
+      "participant_availability_note": "all participants available for full session",
+      "topic": "monthly sales performance",
+      "decision_goal": "confirm April recovery actions and May forecast assumptions",
+      "key_metrics": ["MRR", "new deals", "churn risk"]
     }
   },
   "allowed_actions": [
@@ -61,7 +71,7 @@
     {
       "turn": 2,
       "type": "artifact_update",
-      "message": "売上データの最新版が届きました。以前の数字は古いので差し替えが必要です。",
+      "message": "営業データの最新集計が届き、資料の版が v2 に更新されました。売上見込みも一部修正が必要です。",
       "delta": {
         "reference_data": {
           "deck_version": "v2",
@@ -74,9 +84,11 @@
     {
       "turn": 4,
       "type": "stakeholder_change",
-      "message": "CFOは会議冒頭30分しか参加できません。意思決定が必要な議題を前半に寄せてください。",
+      "message": "CFO は冒頭30分しか参加できなくなりました。利益率に関する論点を前半に移してください。",
       "delta": {
-        "participant_availability_note": "CFO available first 30 minutes only"
+        "reference_data": {
+          "participant_availability_note": "CFO available first 30 minutes only"
+        }
       },
       "expected_artifact_updates": ["agenda"],
       "expected_replan_within_turns": 1
@@ -90,16 +102,16 @@
   },
   "rubric": {
     "outcome": [
-      "review_deck が最新売上数値に基づいている",
-      "アジェンダ前半に意思決定項目が配置されている"
+      "review_deck が最新の sales_snapshot_date を反映している",
+      "agenda が CFO の参加制約に合わせて論点順を調整している"
     ],
     "process": [
-      "v1 データを使い続けず v2 へ更新した",
-      "CFO の制約を受けて議題順を調整した"
+      "v1 のまま固めず、v2 の更新を受けて資料を見直している",
+      "参加可能時間の変化を踏まえて会議構成を更新している"
     ],
     "recovery": [
-      "2 回のイベントに対してそれぞれ即時に再計画した"
+      "2つのイベントの両方に対して適切な成果物更新を行っている"
     ]
   },
-  "notes": "データ更新と参加制約変更が連続する中難度ケース。"
+  "notes": "数字更新と参加者制約の両方が発生する営業レビューケース。"
 }

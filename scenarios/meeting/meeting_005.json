@@ -2,7 +2,7 @@
   "task_id": "meeting_005",
   "domain": "meeting_prep",
   "difficulty": "medium",
-  "initial_request": "社外パートナーとの定例会議の準備をしてほしいです。日程調整、配布アジェンダ、共有メモの準備をお願いします。",
+  "initial_request": "共同パートナーとの月次連携会議を準備してください。社内PM、パートナー窓口、社内エンジニアが参加し、今月の進捗共有と来月の共同施策を話します。アジェンダと共有メモを作り、外部共有可能な情報だけで会議できる状態にしたいです。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-25T16:00:00+09:00",
@@ -33,18 +33,21 @@
       }
     ],
     "constraints": [
-      "社外共有資料には未公開ロードマップを含めない",
-      "パートナー向け資料は対外公開可否を確認してから送付する"
+      "社外共有メモには未公開ロードマップを含めない",
+      "パートナー向け資料は共有可能範囲を確認してから送付する"
     ],
     "task_dependencies": [
       {
         "before": "check_external_share_policy",
         "after": "send_agenda",
-        "reason": "共有可否確認前に送付してはいけない"
+        "reason": "共有可能範囲が決まる前に送ってはいけない"
       }
     ],
     "reference_data": {
-      "share_policy": "internal draft not approved"
+      "share_policy": "internal draft not approved",
+      "topic": "monthly partner sync",
+      "joint_project": "integration marketing campaign",
+      "decision_goal": "confirm next month's external milestones"
     }
   },
   "allowed_actions": [
@@ -60,7 +63,7 @@
     {
       "turn": 2,
       "type": "artifact_update",
-      "message": "共有候補メモに未公開ロードマップが含まれていると判明しました。社外共有版を分離してください。",
+      "message": "広報レビューが入り、社外共有資料は社内版と社外版を分けるよう方針が変わりました。",
       "delta": {
         "reference_data": {
           "share_policy": "split internal and external versions"
@@ -72,7 +75,7 @@
     {
       "turn": 4,
       "type": "new_constraint",
-      "message": "先方の都合で会議時間は45分に短縮してください。",
+      "message": "先方都合で会議時間を 45 分以内に短縮する必要が出ました。",
       "delta": {
         "meeting_duration_limit_minutes": 45
       },
@@ -88,16 +91,16 @@
   },
   "rubric": {
     "outcome": [
-      "社外共有物に未公開情報が残っていない",
-      "45分制約に合わせてアジェンダが再編されている"
+      "shared_memo が最新の共有方針を反映している",
+      "agenda が 45 分制約に合わせて整理されている"
     ],
     "process": [
-      "社内版と社外版の分離を明示した",
-      "共有可否確認の依存関係を守った"
+      "社内版と社外版の切り分けを意識して成果物を更新している",
+      "共有方針確認を送付前の依存関係として扱っている"
     ],
     "recovery": [
-      "2つのイベント後にそれぞれ不要な情報と時間超過を解消した"
+      "共有方針変更と時間短縮の両イベントを1ターン以内に反映している"
     ]
   },
-  "notes": "情報ガバナンスと時間制約の両方を扱うケース。"
+  "notes": "外部共有制約を中心にしたケース。専門知識なしでも扱える。"
 }

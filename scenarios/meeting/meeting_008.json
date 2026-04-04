@@ -2,7 +2,7 @@
   "task_id": "meeting_008",
   "domain": "meeting_prep",
   "difficulty": "hard",
-  "initial_request": "新機能ローンチ判定会議の準備をお願いします。会議アジェンダ、ローンチ判定用の readout、リスク登録表を整備して、GO/NO-GO を決められる状態にしたいです。",
+  "initial_request": "新機能ローンチ判定会議の準備をお願いします。対象は B2B SaaS の管理画面で、複数ユーザーに権限テンプレートを一括適用できる新機能です。PM、EngineeringManager、MarketingLead、SupportManager、QA が参加し、5月のリリースを予定通り進めるかを判断します。会議アジェンダ、ローンチ判定用の readout、リスク登録表を整備して、GO/NO-GO を決められる状態にしてください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-08T14:00:00+09:00",
@@ -68,7 +68,16 @@
     "reference_data": {
       "launch_date": "2026-05-15",
       "release_candidate": "rc1",
-      "qa_signoff": "pending"
+      "qa_signoff": "pending",
+      "product_context": "admin console for mid-market B2B SaaS",
+      "feature_summary": "admins can bulk-apply permission templates to multiple users",
+      "decision_goal": "decide whether to launch on schedule or delay by one week",
+      "known_risks": [
+        "template sync delay on older tenants",
+        "help center article not finalized",
+        "support escalation script pending review"
+      ],
+      "success_metrics": ["adoption rate", "permission update success rate", "support ticket volume"]
     }
   },
   "allowed_actions": [
@@ -128,5 +137,5 @@
       "更新が必要な3成果物を漏れなく見直す"
     ]
   },
-  "notes": "製品ローンチ判定会議。複数成果物にまたがる state 追従を確認しやすい。"
+  "notes": "対象機能、判定基準、既知リスクを明示したローンチ判定会議ケース。"
 }

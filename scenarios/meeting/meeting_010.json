@@ -2,7 +2,7 @@
   "task_id": "meeting_010",
   "domain": "meeting_prep",
   "difficulty": "medium",
-  "initial_request": "顧客諮問委員会の準備を進めたいです。会議アジェンダ、スピーカーノート、想定Q&Aをまとめて、社内レビューに出せる状態にしてください。",
+  "initial_request": "顧客諮問委員会の準備を進めたいです。対象は既存顧客向けの半期アップデート会で、CustomerSuccess、ProductLead、SalesDirector、ExecSponsor が参加します。会議アジェンダ、スピーカーノート、想定Q&Aをまとめて、社内レビューに出せる状態にしてください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-18T13:00:00+09:00",
@@ -63,7 +63,13 @@
     "reference_data": {
       "messaging_version": "v1",
       "share_policy": "customer-safe only",
-      "event_format": "hybrid"
+      "event_format": "hybrid",
+      "session_goal": "share product updates and collect feedback from top customers",
+      "approved_storyline": [
+        "customer wins",
+        "recent product improvements",
+        "next half priorities"
+      ]
     }
   },
   "allowed_actions": [

@@ -2,7 +2,7 @@
   "task_id": "meeting_006",
   "domain": "meeting_prep",
   "difficulty": "hard",
-  "initial_request": "経営合宿の事前準備として、役員向けの会議アジェンダと意思決定メモ、参加者向けブリーフをまとめてください。会場候補、参加者、予算制約を踏まえて、会議直前に使える状態まで整理したいです。",
+  "initial_request": "経営合宿の事前準備として、役員向けの会議アジェンダと意思決定メモ、参加者向けブリーフをまとめてください。テーマは来期の重点投資領域の絞り込みで、会場候補、参加者、予算制約を踏まえて当日すぐ議論に入れる状態にしたいです。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-28T18:00:00+09:00",
@@ -49,7 +49,7 @@
     ],
     "constraints": [
       "会議時間は120分以内に収める",
-      "CFOの予算承認前に会場を確定しない",
+      "CFO の予算承認前に会場を確定しない",
       "外部アドバイザーが参加する場合は機密資料を要約版に差し替える"
     ],
     "task_dependencies": [
@@ -72,7 +72,14 @@
     "reference_data": {
       "share_policy": "internal only",
       "venue_mode": "offsite",
-      "agenda_min_items": 4
+      "agenda_min_items": 4,
+      "topic": "next fiscal year investment priorities",
+      "decision_goal": "rank three investment themes and choose one primary bet",
+      "candidate_themes": [
+        "AI assistant features",
+        "enterprise security",
+        "partner ecosystem expansion"
+      ]
     }
   },
   "allowed_actions": [
@@ -130,5 +137,5 @@
       "共有範囲と予算変更の両方を明示的に認識している"
     ]
   },
-  "notes": "複数成果物と2段階の制約変更を含む、役員会準備の高難度ケース。"
+  "notes": "複数成果物と2段階の制約変更を含む、役員合宿準備の高難度ケース。"
 }

@@ -1,6 +1,6 @@
 UV := uv
 
-.PHONY: setup export-requirements lint build-notebook eval-sample inspect-case
+.PHONY: setup export-requirements lint build-notebook eval-sample inspect-case inspect-case-local
 
 setup:
 	$(UV) sync
@@ -19,5 +19,10 @@ eval-sample:
 
 inspect-case:
 	$(UV) run python -m src.openai_case_inspector \
+		--case scenarios/meeting/meeting_001.json \
+		--execution-log results/sample_execution_meeting_001.json
+
+inspect-case-local:
+	$(UV) run python -m src.local_llm_case_inspectory \
 		--case scenarios/meeting/meeting_001.json \
 		--execution-log results/sample_execution_meeting_001.json

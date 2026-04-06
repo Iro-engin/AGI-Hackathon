@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Minimal benchmark implementation for evaluating agent replanning behavior."
 requires-python = ">=3.10"
 dependencies = [
+    "accelerate>=0.33,<1",
     "jupyterlab>=4.2,<5",
     "nbformat>=5.10,<6",
     "nbconvert>=7.16,<8",
@@ -11,6 +12,9 @@ dependencies = [
     "pydantic>=2.11,<3",
     "ruff>=0.11,<0.12",
     "dotenv>=0.9.9",
+    "safetensors>=0.4,<1",
+    "torch>=2.3,<3",
+    "transformers>=4.43,<5",
 ]
 
 [tool.uv]

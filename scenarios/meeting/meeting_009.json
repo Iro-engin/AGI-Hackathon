@@ -1,0 +1,114 @@
+{
+  "task_id": "meeting_009",
+  "domain": "meeting_prep",
+  "difficulty": "easy",
+  "initial_request": "ベンダー契約更新の交渉準備会議を設定したいです。対象は社内ナレッジ検索ツールの年間契約更新で、Procurement、Finance、Security、ITManager が参加します。アジェンダと交渉ブリーフを作成して、更新条件の確認と論点整理ができるようにしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-12T16:30:00+09:00",
+    "participants": ["Procurement", "Finance", "Security", "ITManager"],
+    "budget": 40000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["objective", "agenda_items", "owners"],
+        "semantic_checks": [
+          {
+            "artifact_field": "participants",
+            "state_path": "participants"
+          }
+        ]
+      },
+      {
+        "artifact_id": "negotiation_brief",
+        "artifact_type": "document",
+        "required_fields": ["current_terms", "target_terms", "walkaway_conditions", "risks", "security_review_mode"],
+        "semantic_checks": [
+          {
+            "artifact_field": "budget",
+            "state_path": "budget"
+          },
+          {
+            "artifact_field": "security_review_mode",
+            "state_path": "reference_data.security_review_mode"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "現行契約の未確認条項を前提に値下げ交渉を確約しない",
+      "Security の懸念事項は交渉論点に含める",
+      "会議時間は60分以内にする"
+    ],
+    "task_dependencies": [
+      {
+        "before": "review_current_contract",
+        "after": "draft_negotiation_brief",
+        "reason": "現行条件を見ずに交渉ブリーフは作れない"
+      }
+    ],
+    "reference_data": {
+      "renewal_type": "annual",
+      "vendor_tier": "strategic",
+      "tool_summary": "internal knowledge search tool used by support and sales",
+      "decision_goal": "decide target terms before vendor meeting",
+      "known_issues": ["SSO setup takes too long", "security questionnaire needs refresh"],
+      "security_review_mode": "live review in meeting"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "Finance から、今回の更新では追加費用を3万円以内に抑える方針が共有されました。",
+      "delta": {
+        "budget": 30000
+      },
+      "expected_artifact_updates": ["negotiation_brief"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 3,
+      "type": "stakeholder_change",
+      "message": "Security が都合により欠席となり、事前レビューコメントをブリーフに反映する必要があります。",
+      "delta": {
+        "reference_data": {
+          "security_review_mode": "async review"
+        }
+      },
+      "expected_artifact_updates": ["agenda", "negotiation_brief"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "negotiation_brief"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "negotiation_brief が3万円上限を反映している",
+      "agenda が非同期の Security レビュー前提に更新されている"
+    ],
+    "process": [
+      "現行契約レビューをブリーフ作成前の依存関係として扱っている",
+      "予算変更を受けて交渉優先順位を見直している"
+    ],
+    "recovery": [
+      "予算変更と欠席連絡の両方に1ターン以内で反応する",
+      "必要成果物のみを適切に更新する"
+    ]
+  },
+  "notes": "比較的軽量な調達会議ケース。予算変更と非同期レビュー対応を試せる。"
+}

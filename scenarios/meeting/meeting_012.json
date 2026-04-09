@@ -1,0 +1,141 @@
+{
+  "task_id": "meeting_012",
+  "domain": "meeting_prep",
+  "difficulty": "hard",
+  "initial_request": "新しい請求基盤への移行判定会議を準備してください。PM、FinanceSystemsLead、PlatformLead、SupportOps が参加し、6月移行を維持するか、対象範囲を絞るかを決めます。会議アジェンダと移行判定メモを作り、移行の是非を判断できる状態にしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-22T15:00:00+09:00",
+    "participants": ["PM", "FinanceSystemsLead", "PlatformLead", "SupportOps"],
+    "budget": 70000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["meeting_goal", "agenda_items", "owners", "decision_criteria"],
+        "semantic_checks": [
+          {
+            "artifact_field": "migration_scope",
+            "state_path": "reference_data.migration_scope"
+          },
+          {
+            "artifact_field": "scope_decision_status",
+            "state_path": "reference_data.scope_decision_status"
+          }
+        ]
+      },
+      {
+        "artifact_id": "migration_memo",
+        "artifact_type": "document",
+        "required_fields": ["scope_options", "readiness_gaps", "recommended_path", "open_questions"],
+        "semantic_checks": [
+          {
+            "artifact_field": "target_date",
+            "state_path": "reference_data.target_date"
+          },
+          {
+            "artifact_field": "migration_scope",
+            "state_path": "reference_data.migration_scope"
+          },
+          {
+            "artifact_field": "scope_decision_status",
+            "state_path": "reference_data.scope_decision_status"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "決済影響のある移行は SupportOps の対応方針が不明なまま確定しない",
+      "会議時間は75分以内にする",
+      "対象範囲が未確定な場合は ask_clarification を行ってから確定案に進む",
+      "reference_data.scope_decision_status が confirmed 以外のまま finalize しない"
+    ],
+    "task_dependencies": [
+      {
+        "before": "confirm_migration_scope",
+        "after": "draft_migration_memo",
+        "reason": "対象範囲の定義がないと判定メモを確定できない"
+      },
+      {
+        "before": "collect_support_impact",
+        "after": "finalize_migration_memo",
+        "reason": "サポート影響を踏まえて推奨案を整理する必要がある"
+      }
+    ],
+    "reference_data": {
+      "migration_scope": "all existing customers",
+      "scope_decision_status": "confirmed",
+      "target_date": "2026-06-10",
+      "topic": "billing platform migration review",
+      "decision_goal": "choose full migration or scoped migration",
+      "scope_options": [
+        "all existing customers",
+        "new customers only",
+        "one pilot segment only"
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "state_change",
+      "message": "PlatformLead から、既存顧客全体移行は6月に間に合わないと共有がありました。対象範囲を見直してください。",
+      "delta": {
+        "reference_data": {
+          "migration_scope": null,
+          "scope_decision_status": "reduction_required_unconfirmed"
+        }
+      },
+      "expected_artifact_updates": ["agenda", "migration_memo"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 3,
+      "type": "ambiguity",
+      "message": "FinanceSystemsLead は『新規顧客のみ』を想定し、SupportOps は『特定パイロット顧客のみ』を想定しています。どちらを主たる比較軸にするか現時点では確定していません。",
+      "delta": {
+        "reference_data": {
+          "migration_scope": null,
+          "scope_decision_status": "ambiguous_between_reduced_options",
+          "scope_options": [
+            "new customers only",
+            "one pilot segment only"
+          ]
+        }
+      },
+      "expected_artifact_updates": ["migration_memo"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "migration_memo"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": true
+  },
+  "rubric": {
+    "outcome": [
+      "migration_memo が全量移行前提を捨て、未確定状態を構造化して更新している",
+      "曖昧な段階で1案を断定せず、主要未確定点を open_questions に残している"
+    ],
+    "process": [
+      "scope_decision_status を使って未確定状態を表現し、意思決定枠組み自体を再構成している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+    ],
+    "recovery": [
+      "2つ目のイベントで曖昧さを認識し、誤った確定を避けている"
+    ]
+  },
+  "notes": "対象範囲の縮小と、その縮小先が曖昧なまま競合するケース。確認質問能力を測る。"
+}

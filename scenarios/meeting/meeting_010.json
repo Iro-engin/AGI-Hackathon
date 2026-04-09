@@ -1,0 +1,144 @@
+{
+  "task_id": "meeting_010",
+  "domain": "meeting_prep",
+  "difficulty": "medium",
+  "initial_request": "顧客諮問委員会の準備を進めたいです。対象は既存顧客向けの半期アップデート会で、CustomerSuccess、ProductLead、SalesDirector、ExecSponsor が参加します。会議アジェンダ、スピーカーノート、想定Q&Aをまとめて、社内レビューに出せる状態にしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-18T13:00:00+09:00",
+    "participants": ["CustomerSuccess", "ProductLead", "SalesDirector", "ExecSponsor"],
+    "budget": 50000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["session_goal", "agenda_items", "owners", "guest_sequence"],
+        "semantic_checks": [
+          {
+            "artifact_field": "participants",
+            "state_path": "participants"
+          }
+        ]
+      },
+      {
+        "artifact_id": "speaker_notes",
+        "artifact_type": "document",
+        "required_fields": ["key_messages", "customer_context", "transitions", "do_not_say"],
+        "semantic_checks": [
+          {
+            "artifact_field": "messaging_version",
+            "state_path": "reference_data.messaging_version"
+          }
+        ]
+      },
+      {
+        "artifact_id": "customer_faq_sheet",
+        "artifact_type": "document",
+        "required_fields": ["expected_questions", "approved_answers", "owners"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      },
+      {
+        "artifact_id": "internal_faq_addendum",
+        "artifact_type": "document",
+        "required_fields": ["expected_questions", "internal_only_answers", "owners", "do_not_share"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "未公開ロードマップは顧客向けQ&Aに含めない",
+      "ExecSponsor の冒頭挨拶は最初の15分以内に配置する",
+      "顧客事例は公開許諾済みのものだけを使う"
+    ],
+    "task_dependencies": [
+      {
+        "before": "collect_approved_messaging",
+        "after": "draft_speaker_notes",
+        "reason": "承認済みメッセージがないと登壇ノートを作れない"
+      },
+      {
+        "before": "confirm_share_policy",
+        "after": "finalize_faq_sheet",
+        "reason": "共有可能範囲を確定してから FAQ を完成させる"
+      }
+    ],
+    "reference_data": {
+      "messaging_version": "v1",
+      "share_policy": "customer-safe only",
+      "event_format": "hybrid",
+      "session_goal": "share product updates and collect feedback from top customers",
+      "approved_storyline": [
+        "customer wins",
+        "recent product improvements",
+        "next half priorities"
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "artifact_update",
+      "message": "広報レビュー後に承認メッセージが v2 に更新されました。表現の強さが調整されています。",
+      "delta": {
+        "reference_data": {
+          "messaging_version": "v2"
+        }
+      },
+      "expected_artifact_updates": ["speaker_notes"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
+      "type": "new_constraint",
+      "message": "法務から、顧客向け配布物は社内限定補足を除いた別版にするよう指示がありました。",
+      "delta": {
+        "reference_data": {
+          "share_policy": "split customer and internal versions"
+        }
+      },
+      "expected_artifact_updates": ["customer_faq_sheet", "internal_faq_addendum", "agenda"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "speaker_notes", "customer_faq_sheet", "internal_faq_addendum"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "speaker_notes が最新 messaging_version v2 を反映している",
+      "customer_faq_sheet が最新の share_policy に整合している",
+      "internal_faq_addendum が社内限定補足を別成果物として保持している",
+      "agenda が顧客向け配布版の前提に合わせて更新されている"
+    ],
+    "process": [
+      "承認済みメッセージ収集を speaker_notes 起草前の依存関係として扱っている",
+      "share policy 確認を FAQ 確定前に置いている"
+    ],
+    "recovery": [
+      "メッセージ更新と共有制約追加の両方を明示的に認識している",
+      "必要な成果物を1ターン以内に見直している"
+    ]
+  },
+  "notes": "顧客向け会議の準備ケース。メッセージ更新と外部共有制約の両方を評価できる。"
+}

@@ -1,0 +1,140 @@
+{
+  "task_id": "meeting_013",
+  "domain": "meeting_prep",
+  "difficulty": "hard",
+  "initial_request": "戦略パートナー向けの共同ロードマップ会議を準備してください。社内のBizDev、ProductLead、PartnershipsCounsel と先方のPartnerGM が参加し、今後2四半期の共同施策を整理します。会議アジェンダ、共同議論用メモ、社内判断用メモを作って、外部会議と社内レビューの両方に使えるようにしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-27T18:00:00+09:00",
+    "participants": ["BizDev", "ProductLead", "PartnershipsCounsel", "PartnerGM"],
+    "budget": 40000,
+    "required_artifacts": [
+      {
+        "artifact_id": "partner_agenda",
+        "artifact_type": "document",
+        "required_fields": ["session_goal", "agenda_items", "owners", "share_version_note"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      },
+      {
+        "artifact_id": "internal_review_agenda",
+        "artifact_type": "document",
+        "required_fields": ["session_goal", "agenda_items", "owners", "internal_prep_note"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      },
+      {
+        "artifact_id": "joint_memo",
+        "artifact_type": "document",
+        "required_fields": ["shared_context", "joint_topics", "dependencies", "next_steps"],
+        "semantic_checks": [
+          {
+            "artifact_field": "share_policy",
+            "state_path": "reference_data.share_policy"
+          }
+        ]
+      },
+      {
+        "artifact_id": "internal_strategy_memo",
+        "artifact_type": "document",
+        "required_fields": ["internal_options", "negotiation_bounds", "risks", "approval_path"],
+        "semantic_checks": [
+          {
+            "artifact_field": "internal_note_policy",
+            "state_path": "reference_data.internal_note_policy"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "共同議論用メモには未承認の価格条件を含めない",
+      "社内判断用メモには交渉上限と譲れない条件を残す",
+      "共有方針が分かれる場合は成果物の版を明示的に分ける"
+    ],
+    "task_dependencies": [
+      {
+        "before": "confirm_share_policy",
+        "after": "finalize_joint_memo",
+        "reason": "対外共有可能範囲を確認してから共同メモを確定する必要がある"
+      },
+      {
+        "before": "define_negotiation_bounds",
+        "after": "finalize_internal_strategy_memo",
+        "reason": "社内メモは交渉境界を決めてから固める"
+      }
+    ],
+    "reference_data": {
+      "share_policy": "single shared version allowed",
+      "internal_note_policy": "full internal detail allowed",
+      "topic": "joint roadmap planning",
+      "decision_goal": "align external roadmap narrative and internal negotiation boundaries",
+      "planning_horizon": "next two quarters"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "法務レビューで、共同会議では価格や未承認時期を含まない外部版を使うよう指示が出ました。社内版と対外版を分けてください。",
+      "delta": {
+        "reference_data": {
+          "share_policy": "split external and internal versions",
+          "internal_note_policy": "retain full negotiation detail internally"
+        }
+      },
+      "expected_artifact_updates": ["partner_agenda", "internal_review_agenda", "joint_memo", "internal_strategy_memo"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "state_change",
+      "message": "PartnerGM の参加時間が後半30分だけになりました。外部向け議題を前半に置く前提は使えません。",
+      "delta": {
+        "reference_data": {
+          "partner_availability_note": "PartnerGM available last 30 minutes only"
+        }
+      },
+      "expected_artifact_updates": ["partner_agenda"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["partner_agenda", "internal_review_agenda", "joint_memo", "internal_strategy_memo"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "joint_memo が対外共有可能な内容に限定されている",
+      "internal_strategy_memo が社内専用の交渉境界を保持している",
+      "partner_agenda と internal_review_agenda が版分岐を明示している",
+      "partner_agenda が PartnerGM の後半参加制約を反映している"
+    ],
+    "process": [
+      "共有方針分岐を単なる注意書きではなく成果物分離として扱っている",
+      "外部向け議題を前半固定のままにせず、参加可能時間に合わせて並べ替えている"
+    ],
+    "recovery": [
+      "版分岐イベント後1ターン以内に複数成果物の役割を再定義している"
+    ]
+  },
+  "notes": "共有範囲の分岐と参加時間制約を同時に扱う、バージョン分離型のケース。"
+}

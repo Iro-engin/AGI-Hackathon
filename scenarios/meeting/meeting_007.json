@@ -1,0 +1,125 @@
+{
+  "task_id": "meeting_007",
+  "domain": "meeting_prep",
+  "difficulty": "medium",
+  "initial_request": "重大障害の振り返り会議を準備したいです。参加者は IncidentManager、SRELead、BackendLead、SupportLead で、先週発生したログイン障害の原因と再発防止策を整理します。アジェンダとレトロ文書を作り、責任追及ではなく改善議論ができる状態にしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-05-02T11:00:00+09:00",
+    "participants": ["IncidentManager", "SRELead", "BackendLead", "SupportLead"],
+    "budget": 20000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["objective", "topics", "owners", "timebox", "support_input_mode"],
+        "semantic_checks": [
+          {
+            "artifact_field": "participants",
+            "state_path": "participants"
+          },
+          {
+            "artifact_field": "support_input_mode",
+            "state_path": "reference_data.support_input_mode"
+          }
+        ]
+      },
+      {
+        "artifact_id": "retro_doc",
+        "artifact_type": "document",
+        "required_fields": ["timeline", "root_causes", "action_items", "facilitation_note"],
+        "semantic_checks": [
+          {
+            "artifact_field": "incident_severity",
+            "state_path": "reference_data.incident_severity"
+          },
+          {
+            "artifact_field": "anonymize_customer_names",
+            "state_path": "reference_data.anonymize_customer_names"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "個人を非難する表現を含めない",
+      "アクションアイテムは必ず担当者と期限を持つ",
+      "SupportLead の参加が難しい場合は事前コメントを収集する"
+    ],
+    "task_dependencies": [
+      {
+        "before": "collect_incident_timeline",
+        "after": "draft_retro_doc",
+        "reason": "時系列整理がないと振り返り文書を正しく書けない"
+      },
+      {
+        "before": "identify_action_item_owners",
+        "after": "finalize_retro_doc",
+        "reason": "担当者を埋めてから最終化する必要がある"
+      }
+    ],
+    "reference_data": {
+      "incident_severity": "sev-1",
+      "meeting_mode": "remote",
+      "incident_summary": "users could not log in for 42 minutes",
+      "decision_goal": "agree on top 3 action items and owners",
+      "support_input_mode": "live discussion",
+      "anonymize_customer_names": false
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 3,
+      "type": "stakeholder_change",
+      "message": "SupportLead は会議に出られなくなりました。事前にコメントを回収して議題に反映してください。",
+      "delta": {
+        "reference_data": {
+          "support_input_mode": "async comments required"
+        }
+      },
+      "expected_artifact_updates": ["agenda", "retro_doc"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "new_constraint",
+      "message": "法務から、顧客名をそのまま記載しないよう匿名化の制約が追加されました。",
+      "delta": {
+        "reference_data": {
+          "anonymize_customer_names": true
+        }
+      },
+      "expected_artifact_updates": ["retro_doc"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "retro_doc"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "retro_doc が最新の severity と匿名化制約を反映している",
+      "agenda が非同期コメント前提の進行に更新されている"
+    ],
+    "process": [
+      "時系列整理を文書化前の依存関係として扱っている",
+      "担当者未設定のままアクションアイテムを確定しない"
+    ],
+    "recovery": [
+      "欠席連絡と匿名化制約の両方に対して即時に再計画する",
+      "イベントを明示的に認識し、必要成果物のみ更新する"
+    ]
+  },
+  "notes": "障害振り返り会議向け。制約違反しやすい匿名化と非同期参加を評価できる。"
+}

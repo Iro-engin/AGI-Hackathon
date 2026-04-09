@@ -1,0 +1,141 @@
+{
+  "task_id": "meeting_015",
+  "domain": "meeting_prep",
+  "difficulty": "hard",
+  "initial_request": "プロダクトカウンシルで、次の四半期に推す重点テーマを絞り込む会議を準備してください。CPO、ResearchLead、GrowthLead、CorePM が参加し、4つの候補テーマから2つに絞る予定です。アジェンダ、評価メモ、比較表を作り、当日に優先順位を決められる状態にしてください。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-03T14:00:00+09:00",
+    "participants": ["CPO", "ResearchLead", "GrowthLead", "CorePM"],
+    "budget": 30000,
+    "required_artifacts": [
+      {
+        "artifact_id": "agenda",
+        "artifact_type": "document",
+        "required_fields": ["meeting_goal", "agenda_items", "owners", "evaluation_flow"],
+        "semantic_checks": [
+          {
+            "artifact_field": "candidate_count",
+            "state_path": "reference_data.candidate_count"
+          }
+        ]
+      },
+      {
+        "artifact_id": "evaluation_memo",
+        "artifact_type": "document",
+        "required_fields": ["candidate_summary", "decision_criteria", "recommendation", "risks"],
+        "semantic_checks": [
+          {
+            "artifact_field": "candidate_count",
+            "state_path": "reference_data.candidate_count"
+          },
+          {
+            "artifact_field": "comparison_basis",
+            "state_path": "reference_data.comparison_basis"
+          }
+        ]
+      },
+      {
+        "artifact_id": "comparison_table",
+        "artifact_type": "document",
+        "required_fields": ["candidates", "criteria", "scores", "notes"],
+        "semantic_checks": [
+          {
+            "artifact_field": "candidates",
+            "state_path": "reference_data.candidates"
+          }
+        ]
+      }
+    ],
+    "constraints": [
+      "比較表には最新の候補一覧だけを残す",
+      "候補が取り下げられた場合は recommendation を更新する",
+      "会議時間は90分以内にする"
+    ],
+    "task_dependencies": [
+      {
+        "before": "confirm_candidate_list",
+        "after": "draft_comparison_table",
+        "reason": "候補一覧確定前に比較表を固められない"
+      },
+      {
+        "before": "define_comparison_basis",
+        "after": "finalize_evaluation_memo",
+        "reason": "比較軸を揃えてから推奨案を整理する必要がある"
+      }
+    ],
+    "reference_data": {
+      "candidate_count": 4,
+      "comparison_basis": "growth potential and implementation effort",
+      "topic": "quarterly product priorities",
+      "decision_goal": "choose top 2 themes",
+      "candidates": [
+        "team workspace templates",
+        "AI-generated summaries",
+        "advanced permission controls",
+        "usage anomaly alerts"
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "artifact_update",
+      "message": "ResearchLead から、比較の主軸を growth potential だけでなく learning value も含めるよう依頼がありました。",
+      "delta": {
+        "reference_data": {
+          "comparison_basis": "growth potential, implementation effort, and learning value"
+        }
+      },
+      "expected_artifact_updates": ["evaluation_memo", "comparison_table"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "state_change",
+      "message": "advanced permission controls は別委員会に移管され、この会議の候補から外れました。候補は3つに減ります。",
+      "delta": {
+        "reference_data": {
+          "candidate_count": 3,
+          "candidates": [
+            "team workspace templates",
+            "AI-generated summaries",
+            "usage anomaly alerts"
+          ]
+        }
+      },
+      "expected_artifact_updates": ["agenda", "evaluation_memo", "comparison_table"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["agenda", "evaluation_memo", "comparison_table"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true
+  },
+  "rubric": {
+    "outcome": [
+      "comparison_table から除外候補が完全に消えている",
+      "evaluation_memo が新しい比較軸と3候補前提で更新されている",
+      "agenda が4候補比較の時間配分のまま残っていない"
+    ],
+    "process": [
+      "候補削除を append ではなく replace として扱っている",
+      "比較軸変更と候補数変更の両方を recommendation に反映している"
+    ],
+    "recovery": [
+      "後半イベントで旧候補を残さず、成果物全体を整合させている"
+    ]
+  },
+  "notes": "比較軸の変更と候補削除を組み合わせた、置換忘れを狙うケース。"
+}

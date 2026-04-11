@@ -217,7 +217,8 @@
             "state_change",
             "new_constraint",
             "artifact_update",
-            "stakeholder_change"
+            "stakeholder_change",
+            "ambiguity"
           ]
         },
         "message": {
@@ -263,6 +264,14 @@
         "must_acknowledge_changes": {
           "type": "boolean",
           "default": true
+        },
+        "must_use_ask_clarification_on_ambiguity": {
+          "type": "boolean",
+          "default": false
+        },
+        "must_not_finalize_with_unresolved_scope": {
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false

@@ -72,6 +72,8 @@ class GoalCondition(BaseModel):
     required_artifacts: list[str]
     no_constraint_violation: bool
     must_acknowledge_changes: bool = True
+    must_use_ask_clarification_on_ambiguity: bool = False
+    must_not_finalize_with_unresolved_scope: bool = False
 
 
 class Rubric(BaseModel):

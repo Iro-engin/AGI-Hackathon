@@ -1,0 +1,258 @@
+{
+  "task_id": "finance_001",
+  "domain": "finance_analyst",
+  "difficulty": "medium",
+  "initial_request": "今週の運用会議向けに、AIサーバー関連、電力設備・送配電、冷却・熱マネジメント、半導体製造装置の4セクターを比較してください。現時点では AIサーバー関連が主導と見られている理由と、電力設備・送配電や冷却関連が次点候補としてどこまで追随できるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-03T08:30:00+09:00",
+    "participants": ["PM", "AnalystLead", "RiskManager"],
+    "budget": 100,
+    "required_artifacts": [
+      {
+        "artifact_id": "news_reaction_note",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_view",
+          "headline_summary",
+          "losing_sector",
+          "winning_sector_candidates",
+          "current_sector_weights",
+          "recommended_sector_weights",
+          "weight_change_rationale",
+          "rotation_reasoning",
+          "positioning_implication"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "losing_sector",
+            "state_path": "reference_data.losing_sector"
+          },
+          {
+            "artifact_field": "winning_sector_candidates",
+            "state_path": "reference_data.winning_sector_candidates"
+          },
+          {
+            "artifact_field": "current_sector_weights",
+            "state_path": "reference_data.sector_weights"
+          },
+          {
+            "artifact_field": "recommended_sector_weights",
+            "state_path": "reference_data.target_weight_template"
+          },
+          {
+            "artifact_field": "rotation_status",
+            "state_path": "reference_data.rotation_status"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "sector_watch_update",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_checks",
+          "news_checklist",
+          "correlation_map",
+          "rebalance_actions",
+          "risk_scenarios",
+          "sectors_to_watch",
+          "next_checkpoints"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "news_state",
+            "state_path": "reference_data.news_state"
+          },
+          {
+            "artifact_field": "sector_links",
+            "state_path": "reference_data.sector_links"
+          },
+          {
+            "artifact_field": "correlation_map",
+            "state_path": "reference_data.correlation_map"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [
+      "AIサーバー需要の減速が未確認のままAIサーバー関連の上昇継続を断定しない",
+      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
+      "sector_watch_update には上昇シナリオだけでなく反証条件も含める",
+      "電力設備セクターへの資金回転は、需給だけでなく業績感応度とのつながりを説明する",
+      "少なくとも AIサーバー関連、電力設備・送配電、冷却・熱マネジメント、半導体製造装置の4セクターを比較対象に含める",
+      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+    ],
+    "task_dependencies": [
+      {
+        "before": "verify_hyperscaler_capex_news",
+        "after": "update_sector_view",
+        "reason": "AIサーバー関連の前提が崩れたかを確認してから主導セクター見通しを更新する必要がある"
+      },
+      {
+        "before": "compare_rotation_candidates",
+        "after": "finalize_watchlist",
+        "reason": "電力設備・送配電と冷却・熱マネジメントのどちらが受益候補かを比較してから監視対象を確定する必要がある"
+      }
+    ],
+    "reference_data": {
+      "market_theme": "AI capex and data center power bottlenecks",
+      "headline_summary": "baseline checks still favor AI infrastructure momentum",
+      "news_state": "unconfirmed",
+      "current_leader_sector": "ai_server_supply_chain",
+      "losing_sector": null,
+      "baseline_stability_reason": "hyperscaler capex guidance remains firm, lead times are still tight, and near-term order visibility for AI racks and networking remains stronger than adjacent sectors",
+      "winning_sector_candidates": [
+        "power_grid_equipment",
+        "thermal_management",
+        "semiconductor_equipment"
+      ],
+      "rotation_status": "rotation_under_review",
+      "sector_links": [
+        "if hyperscaler capex pauses while grid bottlenecks stay tight, capital can move from compute suppliers to power equipment names",
+        "if server density remains high but full rack expansion slows, thermal management can outperform broad AI infrastructure",
+        "if investment shifts from deployment to process efficiency, semiconductor equipment can stabilize relative performance"
+      ],
+      "sector_universe": [
+        "ai_server_supply_chain",
+        "power_grid_equipment",
+        "thermal_management",
+        "semiconductor_equipment"
+      ],
+      "sector_weights": {
+        "ai_server_supply_chain": 0.4,
+        "power_grid_equipment": 0.25,
+        "thermal_management": 0.2,
+        "semiconductor_equipment": 0.15
+      },
+      "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
+      "target_weight_template": {
+        "ai_server_supply_chain": 0.25,
+        "power_grid_equipment": 0.35,
+        "thermal_management": 0.25,
+        "semiconductor_equipment": 0.15
+      },
+      "correlation_map": [
+        {
+          "pair": [
+            "ai_server_supply_chain",
+            "power_grid_equipment"
+          ],
+          "relation": "rotation",
+          "strength": "medium",
+          "note": "compute buildout pauses can redirect capital toward grid bottleneck beneficiaries"
+        },
+        {
+          "pair": [
+            "ai_server_supply_chain",
+            "thermal_management"
+          ],
+          "relation": "positive",
+          "strength": "medium",
+          "note": "higher rack density supports both server suppliers and cooling names in baseline"
+        },
+        {
+          "pair": [
+            "power_grid_equipment",
+            "thermal_management"
+          ],
+          "relation": "rotation",
+          "strength": "low",
+          "note": "both are second-derivative beneficiaries, but leadership can split after demand shocks"
+        },
+        {
+          "pair": [
+            "ai_server_supply_chain",
+            "semiconductor_equipment"
+          ],
+          "relation": "positive",
+          "strength": "medium",
+          "note": "baseline AI deployment strength usually supports upstream semiconductor equipment sentiment as well"
+        }
+      ],
+      "watchlist_names": [
+        "server_rack_vendor",
+        "cooling_component_supplier",
+        "transformer_manufacturer",
+        "grid_automation_vendor",
+        "wafer_tool_vendor"
+      ],
+      "forecast_horizon": "1m",
+      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 4,
+      "type": "state_change",
+      "message": "主要ハイパースケーラーの短期 CAPEX 計画見直しが確認され、AI サーバー関連の短期受注期待が低下しました。一方で、データセンター電力制約に関する報告が増えています。",
+      "delta": {
+        "reference_data": {
+          "headline_summary": "major hyperscaler trims near-term AI server deployment pace while data center power bottleneck commentary rises",
+          "news_state": "confirmed_material_change",
+          "rotation_status": "rotation_under_review",
+          "losing_sector": "ai_server_supply_chain"
+        }
+      },
+      "expected_artifact_updates": ["news_reaction_note", "sector_watch_update"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
+      "type": "ambiguity",
+      "message": "資金回転先について、チーム内では『電力設備・送配電』と『冷却・熱マネジメント』を推す声が割れており、一部は半導体製造装置の押し目継続も主張しています。主軸セクターはまだ確定していません。",
+      "delta": {
+        "reference_data": {
+          "rotation_status": "ambiguous",
+          "news_state": "partially_confirmed",
+          "winning_sector_candidates": [
+            "power_grid_equipment",
+            "thermal_management",
+            "semiconductor_equipment"
+          ]
+        }
+      },
+      "expected_artifact_updates": ["news_reaction_note", "sector_watch_update"],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": ["news_reaction_note", "sector_watch_update"],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": {
+    "outcome": [
+      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
+      "sector_watch_update が news_state と sector_links を反映している",
+      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
+      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
+      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+    ],
+    "process": [
+      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
+      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
+      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
+      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+    ],
+    "recovery": [
+      "各イベント後1ターン以内に状態更新または再計画を行う",
+      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
+    ]
+  },
+  "notes": "AIサーバー関連が安定して見える具体理由を先に与え、その前提が後から崩れるケース。予測精度そのものより、平常時 view の根拠と初期配分を持ちながら、異常ニュース後にどのセクターへ資金が回るかを具体的に絞り直せるかを見る。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+}

@@ -24,6 +24,7 @@
       "type": "string",
       "enum": [
         "meeting_prep",
+        "finance_analyst",
         "travel_planning",
         "research_report",
         "interview_scheduling",

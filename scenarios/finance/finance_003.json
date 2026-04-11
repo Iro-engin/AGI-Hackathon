@@ -1,0 +1,253 @@
+{
+  "task_id": "finance_003",
+  "domain": "finance_analyst",
+  "difficulty": "medium",
+  "initial_request": "航空、海運、石油元売、防衛の4セクターを比較してください。現時点では原油と地政学リスクが安定圏にあり、航空が相対的に崩れにくいと見られている理由と、海運・石油元売・防衛がどの条件なら受益候補に変わるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-06T08:20:00+09:00",
+    "participants": ["MacroPM", "SectorAnalyst", "RiskManager"],
+    "budget": 100,
+    "required_artifacts": [
+      {
+        "artifact_id": "news_reaction_note",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_view",
+          "headline_summary",
+          "losing_sector",
+          "winning_sector_candidates",
+          "current_sector_weights",
+          "recommended_sector_weights",
+          "weight_change_rationale",
+          "rotation_reasoning",
+          "positioning_implication"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "losing_sector",
+            "state_path": "reference_data.losing_sector"
+          },
+          {
+            "artifact_field": "winning_sector_candidates",
+            "state_path": "reference_data.winning_sector_candidates"
+          },
+          {
+            "artifact_field": "current_sector_weights",
+            "state_path": "reference_data.sector_weights"
+          },
+          {
+            "artifact_field": "recommended_sector_weights",
+            "state_path": "reference_data.target_weight_template"
+          },
+          {
+            "artifact_field": "rotation_status",
+            "state_path": "reference_data.rotation_status"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "sector_watch_update",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_checks",
+          "news_checklist",
+          "correlation_map",
+          "rebalance_actions",
+          "risk_scenarios",
+          "sectors_to_watch",
+          "next_checkpoints"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "news_state",
+            "state_path": "reference_data.news_state"
+          },
+          {
+            "artifact_field": "sector_links",
+            "state_path": "reference_data.sector_links"
+          },
+          {
+            "artifact_field": "correlation_map",
+            "state_path": "reference_data.correlation_map"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [
+      "供給混乱が未確認のまま航空セクターの悪化を断定しない",
+      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
+      "少なくとも 航空、海運、石油元売、防衛 の4セクターを比較対象に含める",
+      "sector_watch_update には原油急落シナリオも反証条件として残す",
+      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+    ],
+    "task_dependencies": [
+      {
+        "before": "verify_supply_disruption_news",
+        "after": "update_sector_view",
+        "reason": "供給混乱ニュースを確認してからセクター優位性を更新する必要がある"
+      },
+      {
+        "before": "compare_energy_winners",
+        "after": "finalize_watchlist",
+        "reason": "石油元売と海運、防衛のどこが受益かを比較してから監視対象を確定する必要がある"
+      }
+    ],
+    "reference_data": {
+      "market_theme": "oil shock and geopolitical risk",
+      "headline_summary": "旅行需要回復で航空が堅調、原油は安定圏",
+      "news_state": "unconfirmed",
+      "current_leader_sector": "airlines",
+      "losing_sector": null,
+      "baseline_stability_reason": "jet fuel costs are stable, passenger demand remains resilient, and no immediate supply disruption is priced into transport-sensitive sectors",
+      "winning_sector_candidates": [
+        "oil_refiners",
+        "shipping",
+        "defense"
+      ],
+      "rotation_status": "rotation_under_review",
+      "sector_links": [
+        "if crude spikes on supply disruption, airlines can underperform on fuel cost pressure while oil refiners benefit",
+        "if route risk rises, shipping rates can tighten and defense sentiment can improve"
+      ],
+      "sector_universe": [
+        "airlines",
+        "shipping",
+        "oil_refiners",
+        "defense"
+      ],
+      "sector_weights": {
+        "airlines": 0.35,
+        "shipping": 0.2,
+        "oil_refiners": 0.25,
+        "defense": 0.2
+      },
+      "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
+      "target_weight_template": {
+        "airlines": 0.15,
+        "shipping": 0.25,
+        "oil_refiners": 0.35,
+        "defense": 0.25
+      },
+      "correlation_map": [
+        {
+          "pair": [
+            "airlines",
+            "oil_refiners"
+          ],
+          "relation": "negative",
+          "strength": "high",
+          "note": "higher crude hurts airline fuel costs while helping refiners"
+        },
+        {
+          "pair": [
+            "shipping",
+            "defense"
+          ],
+          "relation": "positive",
+          "strength": "low",
+          "note": "geopolitical stress can lift both, but through different earnings channels"
+        },
+        {
+          "pair": [
+            "airlines",
+            "shipping"
+          ],
+          "relation": "rotation",
+          "strength": "medium",
+          "note": "route disruption can hurt airlines while tightening shipping rates"
+        }
+      ],
+      "watchlist_names": [
+        "global_airline",
+        "tanker_operator",
+        "oil_refiner",
+        "defense_prime"
+      ],
+      "forecast_horizon": "1w",
+      "decision_goal": "decide whether to rotate away from airlines into energy or geopolitical beneficiaries"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 4,
+      "type": "state_change",
+      "message": "中東での供給混乱懸念を受けて原油先物が急騰し、主要海上ルートの保険コスト上昇が報じられました。",
+      "delta": {
+        "reference_data": {
+          "headline_summary": "oil spikes on supply disruption concerns and shipping insurance costs rise",
+          "news_state": "confirmed_material_change",
+          "losing_sector": "airlines"
+        }
+      },
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
+      "type": "ambiguity",
+      "message": "受益先について、石油元売優位か海運優位かで見方が割れており、防衛セクターを含めるべきとの意見も出ています。",
+      "delta": {
+        "reference_data": {
+          "rotation_status": "ambiguous",
+          "news_state": "partially_confirmed",
+          "winning_sector_candidates": [
+            "oil_refiners",
+            "shipping",
+            "defense"
+          ]
+        }
+      },
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "news_reaction_note",
+      "sector_watch_update"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": {
+    "outcome": [
+      "news_reaction_note が平常時の航空堅調前提を更新し、最新の rotation_status を反映している",
+      "sector_watch_update が news_state と sector_links を反映している",
+      "石油元売、海運、防衛を比較したうえで断定を避けるべき段階では監視ポイントを残している",
+      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
+      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+    ],
+    "process": [
+      "ニュース発生前は平常時の原油安定 view を維持し、供給混乱ニュース発生後に stance 更新している",
+      "航空、海運、石油元売、防衛を比較している",
+      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+    ],
+    "recovery": [
+      "各イベント後1ターン以内に状態更新または再計画を行う",
+      "航空の弱化と受益先セクターの未確定性を両方認識している"
+    ]
+  },
+  "notes": "航空が安定して見える理由を先に与え、その前提が後から出た供給混乱ニュースで崩れるケース。初期配分をどれだけ石油元売・海運・防衛へ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+}

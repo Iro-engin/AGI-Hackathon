@@ -1,0 +1,260 @@
+{
+  "task_id": "finance_014",
+  "domain": "finance_analyst",
+  "difficulty": "medium",
+  "initial_request": "データセンターREIT、通信キャリア、光ファイバー設備、電力市場の4セクターを比較してください。現時点ではデータセンターREITが相対的に主導と見られている理由と、通信キャリア・光ファイバー設備・電力市場がどの条件なら逆転候補になるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-18T08:20:00+09:00",
+    "participants": [
+      "InfraPM",
+      "TelecomAnalyst",
+      "RiskManager"
+    ],
+    "budget": 100,
+    "required_artifacts": [
+      {
+        "artifact_id": "news_reaction_note",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_view",
+          "headline_summary",
+          "losing_sector",
+          "winning_sector_candidates",
+          "current_sector_weights",
+          "recommended_sector_weights",
+          "weight_change_rationale",
+          "rotation_reasoning",
+          "positioning_implication"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "losing_sector",
+            "state_path": "reference_data.losing_sector"
+          },
+          {
+            "artifact_field": "winning_sector_candidates",
+            "state_path": "reference_data.winning_sector_candidates"
+          },
+          {
+            "artifact_field": "current_sector_weights",
+            "state_path": "reference_data.sector_weights"
+          },
+          {
+            "artifact_field": "recommended_sector_weights",
+            "state_path": "reference_data.target_weight_template"
+          },
+          {
+            "artifact_field": "rotation_status",
+            "state_path": "reference_data.rotation_status"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "sector_watch_update",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_checks",
+          "news_checklist",
+          "correlation_map",
+          "rebalance_actions",
+          "risk_scenarios",
+          "sectors_to_watch",
+          "next_checkpoints"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "news_state",
+            "state_path": "reference_data.news_state"
+          },
+          {
+            "artifact_field": "sector_links",
+            "state_path": "reference_data.sector_links"
+          },
+          {
+            "artifact_field": "correlation_map",
+            "state_path": "reference_data.correlation_map"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [
+      "新規データセンター供給過多が未確認のままデータセンターREIT主導の継続を断定しない",
+      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
+      "sector_watch_update には需要見通しだけでなく電力制約と建設遅延も含める",
+      "通信キャリア・光ファイバー設備・電力市場への回転は、安定契約と設備制約の差まで説明する",
+      "少なくともデータセンターREIT、通信キャリア、光ファイバー設備、電力市場の4セクターを比較対象に含める",
+      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+    ],
+    "task_dependencies": [
+      {
+        "before": "verify_datacenter_supply_news",
+        "after": "update_sector_view",
+        "reason": "データセンター供給とテナント需要の変化を確認してから主導セクター見通しを更新する必要がある"
+      },
+      {
+        "before": "compare_rotation_candidates",
+        "after": "finalize_watchlist",
+        "reason": "通信キャリアと光ファイバー設備、電力市場のどこが受益しやすいかを比較してから監視対象を確定する必要がある"
+      }
+    ],
+    "reference_data": {
+      "market_theme": "digital infrastructure and power bottlenecks",
+      "headline_summary": "baseline checks still favor data center REITs on AI demand and tight capacity",
+      "news_state": "unconfirmed",
+      "current_leader_sector": "data_center_reits",
+      "losing_sector": null,
+      "baseline_stability_reason": "AI tenant demand and still-tight capacity continue to support data center REIT leadership.",
+      "winning_sector_candidates": [
+        "telecom_carriers",
+        "fiber_equipment",
+        "power_markets"
+      ],
+      "rotation_status": "rotation_under_review",
+      "sector_links": [
+        "If data center supply risk rises, fiber equipment can still hold up if network expansion remains necessary.",
+        "If power scarcity becomes the bottleneck, power market exposure can outperform landlord exposure."
+      ],
+      "sector_universe": [
+        "data_center_reits",
+        "telecom_carriers",
+        "fiber_equipment",
+        "power_markets"
+      ],
+      "sector_weights": {
+        "data_center_reits": 0.39,
+        "telecom_carriers": 0.2,
+        "fiber_equipment": 0.19,
+        "power_markets": 0.22
+      },
+      "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
+      "target_weight_template": {
+        "data_center_reits": 0.22,
+        "telecom_carriers": 0.2,
+        "fiber_equipment": 0.24,
+        "power_markets": 0.34
+      },
+      "correlation_map": [
+        {
+          "pair": [
+            "data_center_reits",
+            "fiber_equipment"
+          ],
+          "relation": "positive",
+          "strength": "medium",
+          "note": "Fiber equipment can still benefit from buildout even if landlord multiples cool."
+        },
+        {
+          "pair": [
+            "data_center_reits",
+            "power_markets"
+          ],
+          "relation": "rotation",
+          "strength": "high",
+          "note": "Power market exposure can lead if electricity scarcity becomes the dominant constraint."
+        },
+        {
+          "pair": [
+            "telecom_carriers",
+            "fiber_equipment"
+          ],
+          "relation": "positive",
+          "strength": "medium",
+          "note": "Carrier network upgrades can support fiber demand, though carrier defensiveness changes the trade profile."
+        }
+      ],
+      "watchlist_names": [
+        "data center leasing",
+        "carrier capex",
+        "fiber backlog",
+        "regional power pricing"
+      ],
+      "forecast_horizon": "1m",
+      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 4,
+      "type": "state_change",
+      "message": "一部地域で新規データセンター供給計画の増加と電力接続遅延が同時に報じられ、REIT の需給逼迫シナリオに揺らぎが出ました。",
+      "delta": {
+        "reference_data": {
+          "headline_summary": "rising data center supply plans and power interconnection delays complicate the landlord thesis",
+          "news_state": "confirmed_material_change",
+          "rotation_status": "rotation_under_review",
+          "losing_sector": "data_center_reits"
+        }
+      },
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
+      "type": "ambiguity",
+      "message": "回転先について、電力市場優位か光ファイバー設備優位かで見方が割れており、通信キャリアのディフェンシブ性を重視する声も残っています。",
+      "delta": {
+        "reference_data": {
+          "rotation_status": "ambiguous",
+          "news_state": "partially_confirmed",
+          "winning_sector_candidates": [
+            "power_markets",
+            "fiber_equipment",
+            "telecom_carriers"
+          ]
+        }
+      },
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "news_reaction_note",
+      "sector_watch_update"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": {
+    "outcome": [
+      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
+      "sector_watch_update が news_state と sector_links を反映している",
+      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
+      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
+      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+    ],
+    "process": [
+      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
+      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
+      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
+      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+    ],
+    "recovery": [
+      "各イベント後1ターン以内に状態更新または再計画を行う",
+      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
+    ]
+  },
+  "notes": "データセンターREITが安定して見える理由を先に与え、その前提が供給増加と電力制約ニュースで崩れるケース。初期配分をどれだけ電力市場や光ファイバー設備へ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+}

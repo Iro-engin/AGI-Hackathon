@@ -1,6 +1,8 @@
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
+.python-version
 
 # Virtual environments
 .venv/
@@ -20,4 +22,5 @@ env/
 Thumbs.db
 
 *.codex
+.env
 *.env

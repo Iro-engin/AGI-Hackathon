@@ -6,52 +6,81 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-27T18:00:00+09:00",
-    "participants": ["BizDev", "ProductLead", "PartnershipsCounsel", "PartnerGM"],
+    "participants": [
+      "BizDev",
+      "ProductLead",
+      "PartnershipsCounsel",
+      "PartnerGM"
+    ],
     "budget": 40000,
     "required_artifacts": [
       {
         "artifact_id": "partner_agenda",
         "artifact_type": "document",
-        "required_fields": ["session_goal", "agenda_items", "owners", "share_version_note"],
+        "required_fields": [
+          "session_goal",
+          "agenda_items",
+          "owners",
+          "share_version_note"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "internal_review_agenda",
         "artifact_type": "document",
-        "required_fields": ["session_goal", "agenda_items", "owners", "internal_prep_note"],
+        "required_fields": [
+          "session_goal",
+          "agenda_items",
+          "owners",
+          "internal_prep_note"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "joint_memo",
         "artifact_type": "document",
-        "required_fields": ["shared_context", "joint_topics", "dependencies", "next_steps"],
+        "required_fields": [
+          "shared_context",
+          "joint_topics",
+          "dependencies",
+          "next_steps"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "internal_strategy_memo",
         "artifact_type": "document",
-        "required_fields": ["internal_options", "negotiation_bounds", "risks", "approval_path"],
+        "required_fields": [
+          "internal_options",
+          "negotiation_bounds",
+          "risks",
+          "approval_path"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "internal_note_policy",
             "state_path": "reference_data.internal_note_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -99,7 +128,12 @@
           "internal_note_policy": "retain full negotiation detail internally"
         }
       },
-      "expected_artifact_updates": ["partner_agenda", "internal_review_agenda", "joint_memo", "internal_strategy_memo"],
+      "expected_artifact_updates": [
+        "partner_agenda",
+        "internal_review_agenda",
+        "joint_memo",
+        "internal_strategy_memo"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -111,13 +145,20 @@
           "partner_availability_note": "PartnerGM available last 30 minutes only"
         }
       },
-      "expected_artifact_updates": ["partner_agenda"],
+      "expected_artifact_updates": [
+        "partner_agenda"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["partner_agenda", "internal_review_agenda", "joint_memo", "internal_strategy_memo"],
+    "required_artifacts": [
+      "partner_agenda",
+      "internal_review_agenda",
+      "joint_memo",
+      "internal_strategy_memo"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

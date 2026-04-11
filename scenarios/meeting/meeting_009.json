@@ -6,24 +6,40 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-12T16:30:00+09:00",
-    "participants": ["Procurement", "Finance", "Security", "ITManager"],
+    "participants": [
+      "Procurement",
+      "Finance",
+      "Security",
+      "ITManager"
+    ],
     "budget": 40000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["objective", "agenda_items", "owners"],
+        "required_fields": [
+          "objective",
+          "agenda_items",
+          "owners"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "participants",
             "state_path": "participants"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "negotiation_brief",
         "artifact_type": "document",
-        "required_fields": ["current_terms", "target_terms", "walkaway_conditions", "risks", "security_review_mode"],
+        "required_fields": [
+          "current_terms",
+          "target_terms",
+          "walkaway_conditions",
+          "risks",
+          "security_review_mode"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "budget",
@@ -33,7 +49,8 @@
             "artifact_field": "security_review_mode",
             "state_path": "reference_data.security_review_mode"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -53,7 +70,10 @@
       "vendor_tier": "strategic",
       "tool_summary": "internal knowledge search tool used by support and sales",
       "decision_goal": "decide target terms before vendor meeting",
-      "known_issues": ["SSO setup takes too long", "security questionnaire needs refresh"],
+      "known_issues": [
+        "SSO setup takes too long",
+        "security questionnaire needs refresh"
+      ],
       "security_review_mode": "live review in meeting"
     }
   },
@@ -74,7 +94,9 @@
       "delta": {
         "budget": 30000
       },
-      "expected_artifact_updates": ["negotiation_brief"],
+      "expected_artifact_updates": [
+        "negotiation_brief"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -86,13 +108,19 @@
           "security_review_mode": "async review"
         }
       },
-      "expected_artifact_updates": ["agenda", "negotiation_brief"],
+      "expected_artifact_updates": [
+        "agenda",
+        "negotiation_brief"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "negotiation_brief"],
+    "required_artifacts": [
+      "agenda",
+      "negotiation_brief"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

@@ -6,30 +6,47 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-20T10:00:00+09:00",
-    "participants": ["CEO", "COO", "CFO", "SalesLead"],
+    "participants": [
+      "CEO",
+      "COO",
+      "CFO",
+      "SalesLead"
+    ],
     "budget": 80000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["agenda_items", "decision_points", "timebox", "participant_availability_note"],
+        "required_fields": [
+          "agenda_items",
+          "decision_points",
+          "timebox",
+          "participant_availability_note"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "participant_availability_note",
             "state_path": "reference_data.participant_availability_note"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "review_deck",
         "artifact_type": "slides",
-        "required_fields": ["revenue_summary", "forecast", "issues", "asks"],
+        "required_fields": [
+          "revenue_summary",
+          "forecast",
+          "issues",
+          "asks"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "sales_snapshot_date",
             "state_path": "reference_data.sales_snapshot_date"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -55,7 +72,11 @@
       "participant_availability_note": "all participants available for full session",
       "topic": "monthly sales performance",
       "decision_goal": "confirm April recovery actions and May forecast assumptions",
-      "key_metrics": ["MRR", "new deals", "churn risk"]
+      "key_metrics": [
+        "MRR",
+        "new deals",
+        "churn risk"
+      ]
     }
   },
   "allowed_actions": [
@@ -78,7 +99,9 @@
           "sales_snapshot_date": "2026-04-19"
         }
       },
-      "expected_artifact_updates": ["review_deck"],
+      "expected_artifact_updates": [
+        "review_deck"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -90,13 +113,18 @@
           "participant_availability_note": "CFO available first 30 minutes only"
         }
       },
-      "expected_artifact_updates": ["agenda"],
+      "expected_artifact_updates": [
+        "agenda"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "review_deck"],
+    "required_artifacts": [
+      "agenda",
+      "review_deck"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

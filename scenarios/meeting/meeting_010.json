@@ -6,52 +6,80 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-18T13:00:00+09:00",
-    "participants": ["CustomerSuccess", "ProductLead", "SalesDirector", "ExecSponsor"],
+    "participants": [
+      "CustomerSuccess",
+      "ProductLead",
+      "SalesDirector",
+      "ExecSponsor"
+    ],
     "budget": 50000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["session_goal", "agenda_items", "owners", "guest_sequence"],
+        "required_fields": [
+          "session_goal",
+          "agenda_items",
+          "owners",
+          "guest_sequence"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "participants",
             "state_path": "participants"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "speaker_notes",
         "artifact_type": "document",
-        "required_fields": ["key_messages", "customer_context", "transitions", "do_not_say"],
+        "required_fields": [
+          "key_messages",
+          "customer_context",
+          "transitions",
+          "do_not_say"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "messaging_version",
             "state_path": "reference_data.messaging_version"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "customer_faq_sheet",
         "artifact_type": "document",
-        "required_fields": ["expected_questions", "approved_answers", "owners"],
+        "required_fields": [
+          "expected_questions",
+          "approved_answers",
+          "owners"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "internal_faq_addendum",
         "artifact_type": "document",
-        "required_fields": ["expected_questions", "internal_only_answers", "owners", "do_not_share"],
+        "required_fields": [
+          "expected_questions",
+          "internal_only_answers",
+          "owners",
+          "do_not_share"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -102,7 +130,9 @@
           "messaging_version": "v2"
         }
       },
-      "expected_artifact_updates": ["speaker_notes"],
+      "expected_artifact_updates": [
+        "speaker_notes"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -114,13 +144,22 @@
           "share_policy": "split customer and internal versions"
         }
       },
-      "expected_artifact_updates": ["customer_faq_sheet", "internal_faq_addendum", "agenda"],
+      "expected_artifact_updates": [
+        "customer_faq_sheet",
+        "internal_faq_addendum",
+        "agenda"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "speaker_notes", "customer_faq_sheet", "internal_faq_addendum"],
+    "required_artifacts": [
+      "agenda",
+      "speaker_notes",
+      "customer_faq_sheet",
+      "internal_faq_addendum"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

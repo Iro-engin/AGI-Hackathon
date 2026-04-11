@@ -6,41 +6,65 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-08T14:00:00+09:00",
-    "participants": ["PM", "EngineeringManager", "MarketingLead", "SupportManager", "QA"],
+    "participants": [
+      "PM",
+      "EngineeringManager",
+      "MarketingLead",
+      "SupportManager",
+      "QA"
+    ],
     "budget": 60000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["decision_goal", "agenda_items", "owners", "decision_criteria"],
+        "required_fields": [
+          "decision_goal",
+          "agenda_items",
+          "owners",
+          "decision_criteria"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "deadline",
             "state_path": "deadline"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "launch_readout",
         "artifact_type": "document",
-        "required_fields": ["launch_scope", "readiness_summary", "metrics_snapshot", "open_issues"],
+        "required_fields": [
+          "launch_scope",
+          "readiness_summary",
+          "metrics_snapshot",
+          "open_issues"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "release_candidate",
             "state_path": "reference_data.release_candidate"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "risk_register",
         "artifact_type": "document",
-        "required_fields": ["top_risks", "mitigations", "owners", "escalation_rule"],
+        "required_fields": [
+          "top_risks",
+          "mitigations",
+          "owners",
+          "escalation_rule"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "launch_date",
             "state_path": "reference_data.launch_date"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -77,7 +101,11 @@
         "help center article not finalized",
         "support escalation script pending review"
       ],
-      "success_metrics": ["adoption rate", "permission update success rate", "support ticket volume"]
+      "success_metrics": [
+        "adoption rate",
+        "permission update success rate",
+        "support ticket volume"
+      ]
     }
   },
   "allowed_actions": [
@@ -99,7 +127,9 @@
           "release_candidate": "rc2"
         }
       },
-      "expected_artifact_updates": ["launch_readout"],
+      "expected_artifact_updates": [
+        "launch_readout"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -107,18 +137,28 @@
       "type": "state_change",
       "message": "ローンチ日が 2026-05-12 に前倒しされ、法務担当も判定会議に参加します。",
       "delta": {
-        "participants_added": ["Legal"],
+        "participants_added": [
+          "Legal"
+        ],
         "reference_data": {
           "launch_date": "2026-05-12"
         }
       },
-      "expected_artifact_updates": ["agenda", "risk_register", "launch_readout"],
+      "expected_artifact_updates": [
+        "agenda",
+        "risk_register",
+        "launch_readout"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "launch_readout", "risk_register"],
+    "required_artifacts": [
+      "agenda",
+      "launch_readout",
+      "risk_register"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

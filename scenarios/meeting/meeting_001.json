@@ -6,13 +6,22 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-10T17:00:00+09:00",
-    "participants": ["CEO", "SalesLead", "ProductLead"],
+    "participants": [
+      "CEO",
+      "SalesLead",
+      "ProductLead"
+    ],
     "budget": 50000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_objective", "agenda_items", "owner", "time_allocation"],
+        "required_fields": [
+          "meeting_objective",
+          "agenda_items",
+          "owner",
+          "time_allocation"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "deadline",
@@ -22,12 +31,18 @@
             "artifact_field": "participants",
             "state_path": "participants"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "briefing_doc",
         "artifact_type": "document",
-        "required_fields": ["summary", "decision_points", "risks", "next_actions"],
+        "required_fields": [
+          "summary",
+          "decision_points",
+          "risks",
+          "next_actions"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "deadline",
@@ -37,7 +52,8 @@
             "artifact_field": "participants",
             "state_path": "participants"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -84,16 +100,24 @@
       "type": "state_change",
       "message": "FinanceLead も意思決定に参加することになり、経営陣の空き時間都合で締切が前倒しになりました。",
       "delta": {
-        "participants_added": ["FinanceLead"],
+        "participants_added": [
+          "FinanceLead"
+        ],
         "deadline": "2026-04-09T12:00:00+09:00"
       },
-      "expected_artifact_updates": ["agenda", "briefing_doc"],
+      "expected_artifact_updates": [
+        "agenda",
+        "briefing_doc"
+      ],
       "expected_replan_within_turns": 2
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "briefing_doc"],
+    "required_artifacts": [
+      "agenda",
+      "briefing_doc"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

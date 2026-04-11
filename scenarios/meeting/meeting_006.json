@@ -6,13 +6,24 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-28T18:00:00+09:00",
-    "participants": ["CEO", "COO", "CFO", "ChiefOfStaff", "StrategyLead"],
+    "participants": [
+      "CEO",
+      "COO",
+      "CFO",
+      "ChiefOfStaff",
+      "StrategyLead"
+    ],
     "budget": 150000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_goal", "agenda_items", "owners", "timeboxes"],
+        "required_fields": [
+          "meeting_goal",
+          "agenda_items",
+          "owners",
+          "timeboxes"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "participants",
@@ -22,29 +33,42 @@
             "artifact_field": "deadline",
             "state_path": "deadline"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "decision_memo",
         "artifact_type": "document",
-        "required_fields": ["decision_topics", "options", "risks", "recommended_path"],
+        "required_fields": [
+          "decision_topics",
+          "options",
+          "risks",
+          "recommended_path"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "budget",
             "state_path": "budget"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "attendee_brief",
         "artifact_type": "document",
-        "required_fields": ["context", "pre_reads", "logistics", "confidentiality_note"],
+        "required_fields": [
+          "context",
+          "pre_reads",
+          "logistics",
+          "confidentiality_note"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -97,12 +121,17 @@
       "type": "stakeholder_change",
       "message": "外部アドバイザーが1名参加することになりました。配布資料は共有方針を見直してください。",
       "delta": {
-        "participants_added": ["ExternalAdvisor"],
+        "participants_added": [
+          "ExternalAdvisor"
+        ],
         "reference_data": {
           "share_policy": "split internal and advisor versions"
         }
       },
-      "expected_artifact_updates": ["agenda", "attendee_brief"],
+      "expected_artifact_updates": [
+        "agenda",
+        "attendee_brief"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -112,13 +141,20 @@
       "delta": {
         "budget": 120000
       },
-      "expected_artifact_updates": ["decision_memo", "attendee_brief"],
+      "expected_artifact_updates": [
+        "decision_memo",
+        "attendee_brief"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "decision_memo", "attendee_brief"],
+    "required_artifacts": [
+      "agenda",
+      "decision_memo",
+      "attendee_brief"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

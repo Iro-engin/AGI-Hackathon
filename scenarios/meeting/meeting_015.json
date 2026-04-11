@@ -6,24 +6,40 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-06-03T14:00:00+09:00",
-    "participants": ["CPO", "ResearchLead", "GrowthLead", "CorePM"],
+    "participants": [
+      "CPO",
+      "ResearchLead",
+      "GrowthLead",
+      "CorePM"
+    ],
     "budget": 30000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_goal", "agenda_items", "owners", "evaluation_flow"],
+        "required_fields": [
+          "meeting_goal",
+          "agenda_items",
+          "owners",
+          "evaluation_flow"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "candidate_count",
             "state_path": "reference_data.candidate_count"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "evaluation_memo",
         "artifact_type": "document",
-        "required_fields": ["candidate_summary", "decision_criteria", "recommendation", "risks"],
+        "required_fields": [
+          "candidate_summary",
+          "decision_criteria",
+          "recommendation",
+          "risks"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "candidate_count",
@@ -33,18 +49,25 @@
             "artifact_field": "comparison_basis",
             "state_path": "reference_data.comparison_basis"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "comparison_table",
         "artifact_type": "document",
-        "required_fields": ["candidates", "criteria", "scores", "notes"],
+        "required_fields": [
+          "candidates",
+          "criteria",
+          "scores",
+          "notes"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "candidates",
             "state_path": "reference_data.candidates"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -96,7 +119,10 @@
           "comparison_basis": "growth potential, implementation effort, and learning value"
         }
       },
-      "expected_artifact_updates": ["evaluation_memo", "comparison_table"],
+      "expected_artifact_updates": [
+        "evaluation_memo",
+        "comparison_table"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -113,13 +139,21 @@
           ]
         }
       },
-      "expected_artifact_updates": ["agenda", "evaluation_memo", "comparison_table"],
+      "expected_artifact_updates": [
+        "agenda",
+        "evaluation_memo",
+        "comparison_table"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "evaluation_memo", "comparison_table"],
+    "required_artifacts": [
+      "agenda",
+      "evaluation_memo",
+      "comparison_table"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

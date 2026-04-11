@@ -6,41 +6,61 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-25T16:00:00+09:00",
-    "participants": ["InternalPM", "PartnerLead", "Engineering"],
+    "participants": [
+      "InternalPM",
+      "PartnerLead",
+      "Engineering"
+    ],
     "budget": 10000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["topics", "owners", "external_share_ok"],
+        "required_fields": [
+          "topics",
+          "owners",
+          "external_share_ok"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "meeting_duration_limit_minutes",
             "state_path": "meeting_duration_limit_minutes"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "partner_memo",
         "artifact_type": "document",
-        "required_fields": ["context", "discussion_points", "followups"],
+        "required_fields": [
+          "context",
+          "discussion_points",
+          "followups"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "internal_memo",
         "artifact_type": "document",
-        "required_fields": ["context", "discussion_points", "followups", "internal_notes"],
+        "required_fields": [
+          "context",
+          "discussion_points",
+          "followups",
+          "internal_notes"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "share_policy",
             "state_path": "reference_data.share_policy"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -80,7 +100,11 @@
           "share_policy": "split internal and external versions"
         }
       },
-      "expected_artifact_updates": ["agenda", "partner_memo", "internal_memo"],
+      "expected_artifact_updates": [
+        "agenda",
+        "partner_memo",
+        "internal_memo"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -90,13 +114,19 @@
       "delta": {
         "meeting_duration_limit_minutes": 45
       },
-      "expected_artifact_updates": ["agenda"],
+      "expected_artifact_updates": [
+        "agenda"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "partner_memo", "internal_memo"],
+    "required_artifacts": [
+      "agenda",
+      "partner_memo",
+      "internal_memo"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

@@ -6,13 +6,23 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-22T15:00:00+09:00",
-    "participants": ["PM", "FinanceSystemsLead", "PlatformLead", "SupportOps"],
+    "participants": [
+      "PM",
+      "FinanceSystemsLead",
+      "PlatformLead",
+      "SupportOps"
+    ],
     "budget": 70000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_goal", "agenda_items", "owners", "decision_criteria"],
+        "required_fields": [
+          "meeting_goal",
+          "agenda_items",
+          "owners",
+          "decision_criteria"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "migration_scope",
@@ -22,12 +32,18 @@
             "artifact_field": "scope_decision_status",
             "state_path": "reference_data.scope_decision_status"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "migration_memo",
         "artifact_type": "document",
-        "required_fields": ["scope_options", "readiness_gaps", "recommended_path", "open_questions"],
+        "required_fields": [
+          "scope_options",
+          "readiness_gaps",
+          "recommended_path",
+          "open_questions"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "target_date",
@@ -41,7 +57,8 @@
             "artifact_field": "scope_decision_status",
             "state_path": "reference_data.scope_decision_status"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -95,7 +112,10 @@
           "scope_decision_status": "reduction_required_unconfirmed"
         }
       },
-      "expected_artifact_updates": ["agenda", "migration_memo"],
+      "expected_artifact_updates": [
+        "agenda",
+        "migration_memo"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -112,13 +132,18 @@
           ]
         }
       },
-      "expected_artifact_updates": ["migration_memo"],
+      "expected_artifact_updates": [
+        "migration_memo"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "migration_memo"],
+    "required_artifacts": [
+      "agenda",
+      "migration_memo"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true,
     "must_use_ask_clarification_on_ambiguity": true,

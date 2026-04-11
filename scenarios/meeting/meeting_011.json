@@ -6,13 +6,23 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-20T17:00:00+09:00",
-    "participants": ["CEO", "CRO", "CFO", "CustomerSuccessLead"],
+    "participants": [
+      "CEO",
+      "CRO",
+      "CFO",
+      "CustomerSuccessLead"
+    ],
     "budget": 50000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_goal", "agenda_items", "owners", "decision_blocks"],
+        "required_fields": [
+          "meeting_goal",
+          "agenda_items",
+          "owners",
+          "decision_blocks"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "decision_mode",
@@ -22,12 +32,18 @@
             "artifact_field": "participants",
             "state_path": "participants"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "decision_memo",
         "artifact_type": "document",
-        "required_fields": ["decision_topics", "options", "customer_risks", "recommended_path"],
+        "required_fields": [
+          "decision_topics",
+          "options",
+          "customer_risks",
+          "recommended_path"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "decision_mode",
@@ -37,7 +53,8 @@
             "artifact_field": "decision_goal",
             "state_path": "reference_data.decision_goal"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -61,7 +78,11 @@
       "decision_mode": "final decision in meeting",
       "topic": "enterprise price increase planning",
       "decision_goal": "finalize price increase scope and timing",
-      "customer_segments": ["SMB", "mid-market", "enterprise"],
+      "customer_segments": [
+        "SMB",
+        "mid-market",
+        "enterprise"
+      ],
       "known_options": [
         "raise enterprise only",
         "raise mid-market and enterprise",
@@ -84,19 +105,27 @@
       "type": "state_change",
       "message": "CEO が急きょ参加できなくなりました。この会議では最終決定ではなく、CFO と CRO 向けの方針レビューまでに切り替えてください。",
       "delta": {
-        "participants_removed": ["CEO"],
+        "participants_removed": [
+          "CEO"
+        ],
         "reference_data": {
           "decision_mode": "review only, no final decision",
           "decision_goal": "narrow to one recommended option for CEO follow-up"
         }
       },
-      "expected_artifact_updates": ["agenda", "decision_memo"],
+      "expected_artifact_updates": [
+        "agenda",
+        "decision_memo"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "decision_memo"],
+    "required_artifacts": [
+      "agenda",
+      "decision_memo"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

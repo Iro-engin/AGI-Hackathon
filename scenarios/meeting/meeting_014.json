@@ -6,24 +6,40 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-30T12:00:00+09:00",
-    "participants": ["ProductOps", "DesignLead", "EngineeringManager", "DataLead"],
+    "participants": [
+      "ProductOps",
+      "DesignLead",
+      "EngineeringManager",
+      "DataLead"
+    ],
     "budget": 90000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["workshop_goal", "agenda_items", "owners", "format_note"],
+        "required_fields": [
+          "workshop_goal",
+          "agenda_items",
+          "owners",
+          "format_note"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "session_format",
             "state_path": "reference_data.session_format"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "attendee_brief",
         "artifact_type": "document",
-        "required_fields": ["context", "pre_reads", "logistics", "decision_rules"],
+        "required_fields": [
+          "context",
+          "pre_reads",
+          "logistics",
+          "decision_rules"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "session_format",
@@ -33,7 +49,8 @@
             "artifact_field": "logistics_mode",
             "state_path": "reference_data.logistics_mode"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -81,7 +98,10 @@
           "logistics_mode": "video link and online facilitation guide required"
         }
       },
-      "expected_artifact_updates": ["agenda", "attendee_brief"],
+      "expected_artifact_updates": [
+        "agenda",
+        "attendee_brief"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -93,13 +113,18 @@
           "availability_note": "DataLead available first 45 minutes only"
         }
       },
-      "expected_artifact_updates": ["agenda"],
+      "expected_artifact_updates": [
+        "agenda"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "attendee_brief"],
+    "required_artifacts": [
+      "agenda",
+      "attendee_brief"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

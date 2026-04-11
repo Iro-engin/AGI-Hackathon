@@ -6,13 +6,24 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-02T11:00:00+09:00",
-    "participants": ["IncidentManager", "SRELead", "BackendLead", "SupportLead"],
+    "participants": [
+      "IncidentManager",
+      "SRELead",
+      "BackendLead",
+      "SupportLead"
+    ],
     "budget": 20000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["objective", "topics", "owners", "timebox", "support_input_mode"],
+        "required_fields": [
+          "objective",
+          "topics",
+          "owners",
+          "timebox",
+          "support_input_mode"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "participants",
@@ -22,12 +33,18 @@
             "artifact_field": "support_input_mode",
             "state_path": "reference_data.support_input_mode"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "retro_doc",
         "artifact_type": "document",
-        "required_fields": ["timeline", "root_causes", "action_items", "facilitation_note"],
+        "required_fields": [
+          "timeline",
+          "root_causes",
+          "action_items",
+          "facilitation_note"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "incident_severity",
@@ -37,7 +54,8 @@
             "artifact_field": "anonymize_customer_names",
             "state_path": "reference_data.anonymize_customer_names"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -85,7 +103,10 @@
           "support_input_mode": "async comments required"
         }
       },
-      "expected_artifact_updates": ["agenda", "retro_doc"],
+      "expected_artifact_updates": [
+        "agenda",
+        "retro_doc"
+      ],
       "expected_replan_within_turns": 1
     },
     {
@@ -97,13 +118,18 @@
           "anonymize_customer_names": true
         }
       },
-      "expected_artifact_updates": ["retro_doc"],
+      "expected_artifact_updates": [
+        "retro_doc"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "retro_doc"],
+    "required_artifacts": [
+      "agenda",
+      "retro_doc"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

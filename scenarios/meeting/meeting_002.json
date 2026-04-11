@@ -6,30 +6,44 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-15T18:00:00+09:00",
-    "participants": ["PM", "Finance", "Legal"],
+    "participants": [
+      "PM",
+      "Finance",
+      "Legal"
+    ],
     "budget": 30000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["purpose", "agenda_items", "decision_needed"],
+        "required_fields": [
+          "purpose",
+          "agenda_items",
+          "decision_needed"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "budget",
             "state_path": "budget"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "one_pager",
         "artifact_type": "document",
-        "required_fields": ["background", "proposal", "open_questions"],
+        "required_fields": [
+          "background",
+          "proposal",
+          "open_questions"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "budget",
             "state_path": "budget"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -47,7 +61,10 @@
       "room_type": "hybrid",
       "topic": "payment gateway vendor selection",
       "decision_goal": "pick one vendor for formal approval",
-      "vendors": ["VendorA", "VendorB"],
+      "vendors": [
+        "VendorA",
+        "VendorB"
+      ],
       "known_tradeoff": "VendorA is cheaper, VendorB has stronger legal terms"
     }
   },
@@ -68,13 +85,19 @@
       "delta": {
         "budget": 20000
       },
-      "expected_artifact_updates": ["agenda", "one_pager"],
+      "expected_artifact_updates": [
+        "agenda",
+        "one_pager"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "one_pager"],
+    "required_artifacts": [
+      "agenda",
+      "one_pager"
+    ],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },

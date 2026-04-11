@@ -46,26 +46,39 @@
 
 ## ディレクトリ構成
 
-- [`src/models.py`](/Users/iro/Git/AGI-Hackathon/src/models.py)
+- [`src/models.py`](src/models.py)
   case / execution log の型定義
-- [`src/rule_evaluator.py`](/Users/iro/Git/AGI-Hackathon/src/rule_evaluator.py)
+- [`src/rule_evaluator.py`](src/rule_evaluator.py)
   ルールベース採点ロジック
-- [`src/build_notebook.py`](/Users/iro/Git/AGI-Hackathon/src/build_notebook.py)
+- [`src/build_notebook.py`](src/build_notebook.py)
   Kaggle 提出用 notebook 生成
-- [`src/logging_config.py`](/Users/iro/Git/AGI-Hackathon/src/logging_config.py)
+- [`src/logging_config.py`](src/logging_config.py)
   共通ログ設定
-- [`scenarios/meeting/`](/Users/iro/Git/AGI-Hackathon/scenarios/meeting)
+- [`scenarios/meeting/`](scenarios/meeting/)
   benchmark case の JSON
-- [`results/sample_execution_meeting_001.json`](/Users/iro/Git/AGI-Hackathon/results/sample_execution_meeting_001.json)
+- [`results/sample_execution_meeting_001.json`](results/sample_execution_meeting_001.json)
   sample execution log
-- [`schemas/benchmark_case.schema.json`](/Users/iro/Git/AGI-Hackathon/schemas/benchmark_case.schema.json)
+- [`schemas/benchmark_case.schema.json`](schemas/benchmark_case.schema.json)
   case 用 JSON Schema
-- [`schemas/execution_log.schema.json`](/Users/iro/Git/AGI-Hackathon/schemas/execution_log.schema.json)
+- [`schemas/execution_log.schema.json`](schemas/execution_log.schema.json)
   execution log 用 JSON Schema
-- [`Makefile`](/Users/iro/Git/AGI-Hackathon/Makefile)
+- [`Makefile`](Makefile)
   実行ショートカット
 
 ## 評価の考え方
+
+このリポジトリの evaluator は、逐次対話の生ログを直接採点するのではなく、
+`Case + ExecutionLog` を入力として採点します。
+
+- `Case`
+  問題設定、初期状態、イベント、成功条件を持つ
+- `ExecutionLog`
+  エージェントの行動を評価用に構造化した記録を持つ
+
+そのため、現状の評価は
+「会話生成そのもの」よりも、
+「構造化ログ上で状態追跡・計画・再計画が整合しているか」
+を見る設計になっています。
 
 ### 1. 質問
 
@@ -108,6 +121,9 @@ case 側では `events` に次のような情報を入れます。
 - state にどう効くか
 - 何ターン以内に再計画すべきか
 - どの成果物に影響するか
+
+現状の turn は、厳密な会話ターンというより
+`actions` の時系列ステップ番号として扱っています。
 
 ### 5. 最終成果物の整合性
 
@@ -158,7 +174,7 @@ execution log は「エージェントがどう動いたか」の記録です。
 
 ## 採点ロジックの考え方
 
-[`src/rule_evaluator.py`](/Users/iro/Git/AGI-Hackathon/src/rule_evaluator.py) では、主に次の3軸で採点します。
+[`src/rule_evaluator.py`](src/rule_evaluator.py) では、主に次の3軸で採点します。
 
 - `outcome_score`
   最終成果物と最終 state の整合性
@@ -169,9 +185,32 @@ execution log は「エージェントがどう動いたか」の記録です。
 
 補助的に `failure_labels` と `deductions` も返します。
 
+## 現状の保証範囲と未成熟な部分
+
+現状の rule-based evaluator が比較的安定して見られるのは次です。
+
+- 許可 action 違反
+- タスク依存順序違反
+- 必須成果物の欠落
+- 成果物の必須項目欠落
+- 成果物と最終 state の単純な整合性
+- イベント後の状態確認と再計画の有無
+
+一方で、次はまだ粗い、もしくは今後拡張したい領域です。
+
+- 何を質問すべきだったかの厳密評価
+- 冗長質問や曖昧質問の評価
+- 再計画の質そのものの評価
+- 成果物本文の意味内容評価
+- 生の会話から execution log への標準変換
+
+このため、現状は
+「構造化ログに対する最小の整合性評価器」
+として理解するのが適切です。
+
 ## notebook の位置づけ
 
-[`src/kaggle_submission_benchmark.ipynb`](/Users/iro/Git/AGI-Hackathon/src/kaggle_submission_benchmark.ipynb) は、
+[`src/kaggle_submission_benchmark.ipynb`](src/kaggle_submission_benchmark.ipynb) は、
 Kaggle 提出や説明用の notebook です。
 
 この notebook は次を含みます。
@@ -280,9 +319,9 @@ OPENAI_API_KEY=... uv run python -m src.openai_case_inspector \
 
 最初に把握するなら、次の順番が見やすいです。
 
-1. [`README.md`](/Users/iro/Git/AGI-Hackathon/README.md)
-2. [`scenarios/meeting/meeting_001.json`](/Users/iro/Git/AGI-Hackathon/scenarios/meeting/meeting_001.json)
-3. [`results/sample_execution_meeting_001.json`](/Users/iro/Git/AGI-Hackathon/results/sample_execution_meeting_001.json)
-4. [`src/models.py`](/Users/iro/Git/AGI-Hackathon/src/models.py)
-5. [`src/rule_evaluator.py`](/Users/iro/Git/AGI-Hackathon/src/rule_evaluator.py)
-6. [`src/build_notebook.py`](/Users/iro/Git/AGI-Hackathon/src/build_notebook.py)
+1. [`README.md`](README.md)
+2. [`scenarios/meeting/meeting_001.json`](scenarios/meeting/meeting_001.json)
+3. [`results/sample_execution_meeting_001.json`](results/sample_execution_meeting_001.json)
+4. [`src/models.py`](src/models.py)
+5. [`src/rule_evaluator.py`](src/rule_evaluator.py)
+6. [`src/build_notebook.py`](src/build_notebook.py)

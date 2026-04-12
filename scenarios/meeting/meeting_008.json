@@ -6,41 +6,65 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-08T14:00:00+09:00",
-    "participants": ["PM", "EngineeringManager", "MarketingLead", "SupportManager", "QA"],
+    "participants": [
+      "PM",
+      "EngineeringManager",
+      "MarketingLead",
+      "SupportManager",
+      "QA"
+    ],
     "budget": 60000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["decision_goal", "agenda_items", "owners", "decision_criteria"],
+        "required_fields": [
+          "decision_goal",
+          "agenda_items",
+          "owners",
+          "decision_criteria"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "deadline",
             "state_path": "deadline"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "launch_readout",
         "artifact_type": "document",
-        "required_fields": ["launch_scope", "readiness_summary", "metrics_snapshot", "open_issues"],
+        "required_fields": [
+          "launch_scope",
+          "readiness_summary",
+          "metrics_snapshot",
+          "open_issues"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "release_candidate",
             "state_path": "reference_data.release_candidate"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "risk_register",
         "artifact_type": "document",
-        "required_fields": ["top_risks", "mitigations", "owners", "escalation_rule"],
+        "required_fields": [
+          "top_risks",
+          "mitigations",
+          "owners",
+          "escalation_rule"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "launch_date",
             "state_path": "reference_data.launch_date"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -63,6 +87,16 @@
         "before": "confirm_qa_signoff_status",
         "after": "finalize_launch_readout",
         "reason": "判定材料として QA 状況を含める必要がある"
+      },
+      {
+        "before": "refresh_validation_results",
+        "after": "finalize",
+        "reason": "The updated validation materials should be reflected before finalization."
+      },
+      {
+        "before": "clarify_decision_axis",
+        "after": "finalize",
+        "reason": "The Go/No-Go decision axis should be clarified before finalization."
       }
     ],
     "reference_data": {
@@ -77,7 +111,11 @@
         "help center article not finalized",
         "support escalation script pending review"
       ],
-      "success_metrics": ["adoption rate", "permission update success rate", "support ticket volume"]
+      "success_metrics": [
+        "adoption rate",
+        "permission update success rate",
+        "support ticket volume"
+      ]
     }
   },
   "allowed_actions": [
@@ -93,49 +131,93 @@
     {
       "turn": 2,
       "type": "artifact_update",
-      "message": "開発から新しいリリース候補 rc2 が共有されました。readout の前提を更新してください。",
+      "message": "An updated validation package arrived, so the launch materials must be refreshed to v2.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "release_candidate": "rc2"
+          "artifact_version": "v2"
         }
       },
-      "expected_artifact_updates": ["launch_readout"],
+      "expected_tasks": [
+        "refresh_validation_results"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
+        "launch_readout",
+        "risk_register"
+      ],
       "expected_replan_within_turns": 1
     },
     {
       "turn": 4,
       "type": "state_change",
-      "message": "ローンチ日が 2026-05-12 に前倒しされ、法務担当も判定会議に参加します。",
+      "message": "The launch-readiness conditions changed, so the earlier decision memo must be revised.",
       "delta": {
-        "participants_added": ["Legal"],
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "launch_date": "2026-05-12"
+          "launch_readiness_status": "changed"
         }
       },
-      "expected_artifact_updates": ["agenda", "risk_register", "launch_readout"],
+      "expected_tasks": [
+        "recheck_launch_readiness"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
+        "launch_readout",
+        "risk_register"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 7,
+      "type": "ambiguity",
+      "message": "However, views are split on whether feature completeness or operational safety should be the primary Go/No-Go axis.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "decision_axis_status": "ambiguous"
+        }
+      },
+      "expected_tasks": [
+        "clarify_decision_axis"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
+        "launch_readout",
+        "risk_register"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "launch_readout", "risk_register"],
+    "required_artifacts": [
+      "agenda",
+      "launch_readout",
+      "risk_register"
+    ],
     "no_constraint_violation": true,
-    "must_acknowledge_changes": true
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true
   },
   "rubric": {
     "outcome": [
-      "launch_readout が最新の release candidate を反映している",
-      "risk_register が前倒し後の launch_date を保持している",
-      "agenda が参加者追加と最新判断条件を反映している"
+      "The required artifacts reflect the updated validation package.",
+      "The changed launch-readiness state is reflected in the final artifacts.",
+      "The artifacts do not collapse onto a single Go/No-Go axis after ambiguity.",
+      "The required artifacts reflect the latest tracked state."
     ],
     "process": [
       "QA サインオフ確認を最終化前の依存関係に置いている",
-      "リスク更新を readout 更新と分離して整理している"
+      "リスク更新を readout 更新と分離して整理している",
+      "turn 2 artifact_update leads to a refresh instead of reusing stale materials.",
+      "turn 4 state_change leads to a refresh of the planning baseline before finalization.",
+      "turn 7 ambiguity is followed by ask_clarification."
     ],
     "recovery": [
       "rc2 共有とローンチ前倒しの両イベントで即座に再計画する",
       "更新が必要な3成果物を漏れなく見直す"
     ]
   },
-  "notes": "対象機能、判定基準、既知リスクを明示したローンチ判定会議ケース。"
+  "notes": "Hard case. This scenario combines an artifact refresh, a state change, and a late ambiguity about the Go/No-Go axis."
 }

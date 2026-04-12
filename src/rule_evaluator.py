@@ -49,7 +49,13 @@ class RuleBasedEvaluator:
     """1 件の benchmark case と execution log を評価する。"""
 
     def __init__(self) -> None:
-        self._tracked_state_keys = {"deadline", "participants", "budget", "reference_data"}
+        self._tracked_state_keys = {
+            "deadline",
+            "participants",
+            "budget",
+            "constraints",
+            "reference_data",
+        }
 
     def evaluate(
         self,
@@ -143,8 +149,17 @@ class RuleBasedEvaluator:
         process_score, recovery_score = self._score_events(
             events=events,
             actions=actions,
+            completed_tasks=completed_tasks,
+            questions_asked=execution_log.questions_asked,
+            final_state=final_state,
             required_artifact_ids=required_artifact_ids,
             must_acknowledge_changes=goal_condition.must_acknowledge_changes,
+            must_use_ask_clarification_on_ambiguity=(
+                goal_condition.must_use_ask_clarification_on_ambiguity
+            ),
+            must_not_finalize_with_unresolved_scope=(
+                goal_condition.must_not_finalize_with_unresolved_scope
+            ),
             process_score=process_score,
             recovery_score=recovery_score,
             deductions=deductions,
@@ -363,8 +378,13 @@ class RuleBasedEvaluator:
         self,
         events: list[BenchmarkEvent],
         actions: list[ActionLog],
+        completed_tasks: list[str],
+        questions_asked: list[Any],
+        final_state: dict[str, Any],
         required_artifact_ids: set[str],
         must_acknowledge_changes: bool,
+        must_use_ask_clarification_on_ambiguity: bool,
+        must_not_finalize_with_unresolved_scope: bool,
         process_score: int,
         recovery_score: int,
         deductions: list[str],
@@ -376,7 +396,9 @@ class RuleBasedEvaluator:
             responded = False
             updated_artifacts = False
             acknowledged = False
+            asked_clarification = False
             expected_artifact_updates = set(event.expected_artifact_updates)
+            expected_tasks = set(event.expected_tasks)
             observed_artifact_updates: set[str] = set()
 
             for action in actions:
@@ -390,6 +412,13 @@ class RuleBasedEvaluator:
                 if event.turn in action.acknowledged_event_turns:
                     acknowledged = True
                 observed_artifact_updates.update(action.artifact_updates)
+
+            for question in questions_asked:
+                if question.turn < event.turn:
+                    continue
+                if question.turn > event.turn + event.expected_replan_within_turns:
+                    continue
+                asked_clarification = True
 
             if expected_artifact_updates:
                 updated_artifacts = expected_artifact_updates.issubset(observed_artifact_updates)
@@ -416,6 +445,31 @@ class RuleBasedEvaluator:
                     f"no artifact update observed after event turn {event.turn} (-10)"
                 )
                 failure_labels.add("partial_replan")
+            if expected_tasks and not expected_tasks.issubset(set(completed_tasks)):
+                process_score -= 10
+                deductions.append(
+                    f"expected event follow-up tasks missing after event turn {event.turn} (-10)"
+                )
+                failure_labels.add("partial_replan")
+
+            if must_use_ask_clarification_on_ambiguity and event.type == "ambiguity":
+                if not asked_clarification:
+                    process_score -= 15
+                    recovery_score -= 10
+                    deductions.append(
+                        "ambiguity event was not followed by timely ask_clarification (-15 process, -10 recovery)"
+                    )
+                    failure_labels.add("question_handling")
+
+        if must_not_finalize_with_unresolved_scope:
+            finalize_turns = [action.turn for action in actions if action.action_type == "finalize"]
+            scope_status = self._get_nested_value(final_state, "reference_data.scope_decision_status")
+            if finalize_turns and scope_status != "confirmed":
+                process_score -= 20
+                deductions.append(
+                    "finalize used while reference_data.scope_decision_status was unresolved (-20)"
+                )
+                failure_labels.add("unsafe_commit")
 
         return process_score, recovery_score
 
@@ -455,12 +509,30 @@ class RuleBasedEvaluator:
         """1 件のイベント差分を追跡対象 state にマージする。"""
 
         for key, value in delta.items():
+            if key == "delta_applies_to":
+                continue
             if key == "participants_added":
                 participants = self._safe_list(expected_state.get("participants"))
                 expected_state["participants"] = participants + [
                     participant
                     for participant in self._safe_list(value)
                     if participant not in participants
+                ]
+                continue
+            if key == "added_constraints":
+                constraints = self._safe_list(expected_state.get("constraints"))
+                expected_state["constraints"] = constraints + [
+                    constraint
+                    for constraint in self._safe_list(value)
+                    if constraint not in constraints
+                ]
+                continue
+            if key == "overridden_constraints":
+                constraints = self._safe_list(expected_state.get("constraints"))
+                expected_state["constraints"] = [
+                    constraint
+                    for constraint in constraints
+                    if constraint not in self._safe_list(value)
                 ]
                 continue
 
@@ -511,6 +583,12 @@ class RuleBasedEvaluator:
 
             if isinstance(expected_value, list):
                 if f"{path_prefix}{key}" == "participants":
+                    if set(self._safe_list(actual_value)) != set(expected_value):
+                        penalty += 10
+                        deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")
+                        failure_labels.add("state_staleness")
+                    continue
+                if f"{path_prefix}{key}" == "constraints":
                     if set(self._safe_list(actual_value)) != set(expected_value):
                         penalty += 10
                         deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")

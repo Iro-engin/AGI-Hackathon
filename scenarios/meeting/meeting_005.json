@@ -1,86 +1,74 @@
 {
   "task_id": "meeting_005",
   "domain": "meeting_prep",
-  "difficulty": "medium",
-  "initial_request": "共同パートナーとの月次連携会議を準備してください。社内PM、パートナー窓口、社内エンジニアが参加し、今月の進捗共有と来月の共同施策を話します。アジェンダと共有メモを作り、外部共有可能な情報だけで会議できる状態にしたいです。",
+  "difficulty": "hard",
+  "initial_request": "共同パートナーとの月次同期会議を準備してください。InternalPM、PartnerLead、Engineering が参加し、来月の外部マイルストーンを確認します。agenda、partner_memo、internal_memo を用意してください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-25T16:00:00+09:00",
     "participants": ["InternalPM", "PartnerLead", "Engineering"],
     "budget": 10000,
+    "meeting_duration_limit_minutes": 60,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
         "required_fields": ["topics", "owners", "external_share_ok"],
         "semantic_checks": [
-          {
-            "artifact_field": "meeting_duration_limit_minutes",
-            "state_path": "meeting_duration_limit_minutes"
-          }
-        ]
+          {"artifact_field": "meeting_duration_limit_minutes", "state_path": "meeting_duration_limit_minutes"}
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "partner_memo",
         "artifact_type": "document",
         "required_fields": ["context", "discussion_points", "followups"],
         "semantic_checks": [
-          {
-            "artifact_field": "share_policy",
-            "state_path": "reference_data.share_policy"
-          }
-        ]
+          {"artifact_field": "share_policy", "state_path": "reference_data.share_policy"}
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "internal_memo",
         "artifact_type": "document",
         "required_fields": ["context", "discussion_points", "followups", "internal_notes"],
         "semantic_checks": [
-          {
-            "artifact_field": "share_policy",
-            "state_path": "reference_data.share_policy"
-          }
-        ]
+          {"artifact_field": "share_policy", "state_path": "reference_data.share_policy"}
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
-      "社外共有メモには未公開ロードマップを含めない",
-      "パートナー向け資料は共有可能範囲を確認してから送付する"
+      "外部共有メモには未公開ロードマップを含めない",
+      "partner_memo と internal_memo は共有可能範囲を分けて作る"
     ],
     "task_dependencies": [
-      {
-        "before": "check_external_share_policy",
-        "after": "send_agenda",
-        "reason": "共有可能範囲が決まる前に送ってはいけない"
-      }
+      {"before": "check_external_share_policy", "after": "send_agenda", "reason": "共有方針確認後に外部送付物を確定する必要がある"},
+      {"before": "check_duration_limit", "after": "finalize", "reason": "途中追加された時間制約を反映してから最終化する必要がある"},
+      {"before": "clarify_external_scope", "after": "finalize", "reason": "公開可能範囲が曖昧なまま最終化しないため"}
     ],
     "reference_data": {
       "share_policy": "internal draft not approved",
       "topic": "monthly partner sync",
       "joint_project": "integration marketing campaign",
-      "decision_goal": "confirm next month's external milestones"
+      "decision_goal": "confirm next month's external milestones",
+      "external_scope_status": "tentative"
     }
   },
-  "allowed_actions": [
-    "ask_clarification",
-    "propose_plan",
-    "update_plan",
-    "create_artifact",
-    "revise_artifact",
-    "confirm_state",
-    "finalize"
-  ],
+  "allowed_actions": ["ask_clarification", "propose_plan", "update_plan", "create_artifact", "revise_artifact", "confirm_state", "finalize"],
   "events": [
     {
       "turn": 2,
       "type": "artifact_update",
-      "message": "広報レビューが入り、社外共有資料は社内版と社外版を分けるよう方針が変わりました。",
+      "message": "法務レビューの結果、外部共有版と内部版を分ける方針が明確化されました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "share_policy": "split internal and external versions"
         }
       },
       "expected_artifact_updates": ["agenda", "partner_memo", "internal_memo"],
+      "expected_tasks": ["check_external_share_policy"],
       "expected_replan_within_turns": 1
     },
     {
@@ -88,9 +76,25 @@
       "type": "new_constraint",
       "message": "先方都合で会議時間を 45 分以内に短縮する必要が出ました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "meeting_duration_limit_minutes": 45
       },
       "expected_artifact_updates": ["agenda"],
+      "expected_tasks": ["check_duration_limit"],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 6,
+      "type": "ambiguity",
+      "message": "ただし来月の外部共有範囲について、PartnerLead は一部ロードマップ共有を希望する一方、Engineering は非公開維持を主張しています。",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "external_scope_status": "ambiguous"
+        }
+      },
+      "expected_artifact_updates": ["partner_memo", "internal_memo"],
+      "expected_tasks": ["clarify_external_scope"],
       "expected_replan_within_turns": 1
     }
   ],
@@ -98,21 +102,22 @@
     "must_satisfy_latest_state": true,
     "required_artifacts": ["agenda", "partner_memo", "internal_memo"],
     "no_constraint_violation": true,
-    "must_acknowledge_changes": true
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
   },
   "rubric": {
     "outcome": [
-      "partner_memo が最新の共有方針を反映している",
-      "internal_memo が社内版として必要な補足を保持している",
-      "agenda が 45 分制約に合わせて整理されている"
+      "partner_memo と internal_memo が share_policy の違いを反映している",
+      "agenda が 45 分制約に更新されている",
+      "external_scope_status が ambiguous の段階では外部共有範囲を断定していない"
     ],
     "process": [
-      "社内版と社外版の切り分けを明示的に別成果物として扱っている",
-      "共有方針確認を送付前の依存関係として扱っている"
+      "turn 2 の artifact_update 後に共有方針に合わせてメモ構成を分けている",
+      "turn 4 の new_constraint 後に agenda の時間配分を自発的に短縮している",
+      "turn 6 の ambiguity 後に ask_clarification を使って公開範囲を確認している"
     ],
-    "recovery": [
-      "共有方針変更と時間短縮の両イベントを1ターン以内に反映している"
-    ]
+    "recovery": ["各イベント後 1 ターン以内に更新または再計画を行っている"]
   },
-  "notes": "外部共有制約を中心にしたケース。専門知識なしでも扱える。"
+  "notes": "hard ケース。共有方針の変更、時間制約追加、公開範囲の曖昧化に順番に対処する。"
 }

@@ -1,0 +1,265 @@
+{
+  "task_id": "finance_009",
+  "domain": "finance_analyst",
+  "difficulty": "medium",
+  "initial_request": "Compare online travel, hotels, airlines, and consumer staples. Explain why online travel is currently leading, when the other sectors could overtake it, and prepare a news reaction note plus a sector watch update.",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-13T08:20:00+09:00",
+    "participants": [
+      "ConsumerPM",
+      "TravelAnalyst",
+      "RiskManager"
+    ],
+    "budget": 100,
+    "required_artifacts": [
+      {
+        "artifact_id": "news_reaction_note",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_view",
+          "headline_summary",
+          "losing_sector",
+          "winning_sector_candidates",
+          "current_sector_weights",
+          "recommended_sector_weights",
+          "weight_change_rationale",
+          "rotation_reasoning",
+          "positioning_implication"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "losing_sector",
+            "state_path": "reference_data.losing_sector"
+          },
+          {
+            "artifact_field": "winning_sector_candidates",
+            "state_path": "reference_data.winning_sector_candidates"
+          },
+          {
+            "artifact_field": "current_sector_weights",
+            "state_path": "reference_data.sector_weights"
+          },
+          {
+            "artifact_field": "recommended_sector_weights",
+            "state_path": "reference_data.target_weight_template"
+          },
+          {
+            "artifact_field": "rotation_status",
+            "state_path": "reference_data.rotation_status"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "sector_watch_update",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_checks",
+          "news_checklist",
+          "correlation_map",
+          "rebalance_actions",
+          "risk_scenarios",
+          "sectors_to_watch",
+          "next_checkpoints"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "news_state",
+            "state_path": "reference_data.news_state"
+          },
+          {
+            "artifact_field": "sector_links",
+            "state_path": "reference_data.sector_links"
+          },
+          {
+            "artifact_field": "correlation_map",
+            "state_path": "reference_data.correlation_map"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [
+      "Do not confirm a bearish view on online travel before the relevant booking and demand news is verified.",
+      "If rotation_status is ambiguous, do not lock into a single winner sector.",
+      "Include online_travel, hotels, airlines, and consumer_staples in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0."
+    ],
+    "task_dependencies": [
+      {
+        "before": "verify_travel_demand_news",
+        "after": "update_sector_view",
+        "reason": "Travel demand news should be verified before the sector stance is updated."
+      },
+      {
+        "before": "compare_rotation_candidates",
+        "after": "finalize_watchlist",
+        "reason": "The competing sectors should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "collect_defensive_view",
+        "after": "finalize_watchlist",
+        "reason": "The added defensive-sector viewpoint should be incorporated before the final watchlist is locked."
+      }
+    ],
+    "reference_data": {
+      "market_theme": "consumer discretionary to defensive rotation",
+      "headline_summary": "baseline checks still favor online travel on resilient booking trends",
+      "news_state": "unconfirmed",
+      "current_leader_sector": "online_travel",
+      "losing_sector": null,
+      "baseline_stability_reason": "Booking trends and pricing discipline still support online travel leadership while broader discretionary demand remains intact.",
+      "winning_sector_candidates": [
+        "hotels",
+        "airlines",
+        "consumer_staples"
+      ],
+      "rotation_status": "rotation_under_review",
+      "sector_links": [
+        "If consumer confidence softens, hotels can hold up better than online travel if group bookings stay firm.",
+        "If the growth scare deepens, capital can rotate from travel exposure into consumer staples."
+      ],
+      "sector_universe": [
+        "online_travel",
+        "hotels",
+        "airlines",
+        "consumer_staples"
+      ],
+      "sector_weights": {
+        "online_travel": 0.36,
+        "hotels": 0.24,
+        "airlines": 0.2,
+        "consumer_staples": 0.2
+      },
+      "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
+      "target_weight_template": {
+        "online_travel": 0.2,
+        "hotels": 0.23,
+        "airlines": 0.17,
+        "consumer_staples": 0.4
+      },
+      "correlation_map": [
+        {
+          "pair": [
+            "online_travel",
+            "hotels"
+          ],
+          "relation": "positive",
+          "strength": "medium",
+          "note": "Hotels can lag less if direct and group demand remain healthy despite softer online booking momentum."
+        },
+        {
+          "pair": [
+            "online_travel",
+            "consumer_staples"
+          ],
+          "relation": "rotation",
+          "strength": "high",
+          "note": "Staples can outperform if the market de-risks from discretionary travel exposure."
+        },
+        {
+          "pair": [
+            "airlines",
+            "consumer_staples"
+          ],
+          "relation": "negative",
+          "strength": "medium",
+          "note": "Fuel and macro shocks tend to separate cyclical travel from defensive staples."
+        }
+      ],
+      "watchlist_names": [
+        "booking trends",
+        "hotel RevPAR",
+        "airline load factor",
+        "staples pricing power"
+      ],
+      "forecast_horizon": "1m",
+      "decision_goal": "decide whether to reduce online travel exposure and raise consumer staples or hotel exposure"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "stakeholder_change",
+      "message": "A travel-demand analyst joined the review, so the consumer staples angle needs to be covered more explicitly.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "participants_added": [
+          "TravelDemandAnalyst"
+        ]
+      },
+      "expected_tasks": [
+        "collect_defensive_view"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 6,
+      "type": "ambiguity",
+      "message": "However, views are split on whether hotels, airlines, or consumer staples would outperform next.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "rotation_status": "ambiguous",
+          "news_state": "partially_confirmed"
+        }
+      },
+      "expected_tasks": [
+        "compare_rotation_candidates"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "news_reaction_note",
+      "sector_watch_update"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": {
+    "outcome": [
+      "The final artifacts reflect the latest tracked state for finance_009.",
+      "The delivered artifacts cover the four-sector comparison required in finance_009.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
+    ],
+    "process": [
+      "ニュース発生前は平常時の online_travel の堅調な予約動向前提を維持し、需要鈍化ニュース発生後に stance 更新している",
+      "consumer_staples・hotels・airlines を比較している",
+      "online_travel からの資金回転を、防御需要・団体宿泊・旅客需要感応度との因果リンクと初期相関ヒント付きで整理している",
+      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 2 stakeholder_change is reflected in the consumer staples comparison view.",
+      "turn 6 ambiguity is followed by ask_clarification."
+    ],
+    "recovery": [
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
+    ]
+  },
+  "notes": "Medium case. This scenario tests whether the agent incorporates a new participant viewpoint and later handles ambiguity about the likely rotation target."
+}

@@ -1,0 +1,273 @@
+{
+  "task_id": "finance_008",
+  "domain": "finance_analyst",
+  "difficulty": "medium",
+  "initial_request": "Compare large pharma, biotech, hospitals, and health insurers. Explain why large pharma is currently leading, when the other sectors could overtake it, and prepare a news reaction note plus a sector watch update.",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-12T08:15:00+09:00",
+    "participants": [
+      "HealthPM",
+      "HealthAnalyst",
+      "RiskManager"
+    ],
+    "budget": 100,
+    "required_artifacts": [
+      {
+        "artifact_id": "news_reaction_note",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_view",
+          "headline_summary",
+          "losing_sector",
+          "winning_sector_candidates",
+          "current_sector_weights",
+          "recommended_sector_weights",
+          "weight_change_rationale",
+          "rotation_reasoning",
+          "positioning_implication"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "losing_sector",
+            "state_path": "reference_data.losing_sector"
+          },
+          {
+            "artifact_field": "winning_sector_candidates",
+            "state_path": "reference_data.winning_sector_candidates"
+          },
+          {
+            "artifact_field": "current_sector_weights",
+            "state_path": "reference_data.sector_weights"
+          },
+          {
+            "artifact_field": "recommended_sector_weights",
+            "state_path": "reference_data.target_weight_template"
+          },
+          {
+            "artifact_field": "rotation_status",
+            "state_path": "reference_data.rotation_status"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "sector_watch_update",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_checks",
+          "news_checklist",
+          "correlation_map",
+          "rebalance_actions",
+          "risk_scenarios",
+          "sectors_to_watch",
+          "next_checkpoints"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "news_state",
+            "state_path": "reference_data.news_state"
+          },
+          {
+            "artifact_field": "sector_links",
+            "state_path": "reference_data.sector_links"
+          },
+          {
+            "artifact_field": "correlation_map",
+            "state_path": "reference_data.correlation_map"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [
+      "Do not confirm a bearish view on large pharma before the relevant product and pricing news is verified.",
+      "Include large_pharma, biotech, hospitals, and health_insurers in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0.",
+      "The recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
+    ],
+    "task_dependencies": [
+      {
+        "before": "verify_drug_pricing_news",
+        "after": "update_sector_view",
+        "reason": "薬価と政策圧力の変化を確認してから主導セクター見通しを更新する必要がある"
+      },
+      {
+        "before": "compare_rotation_candidates",
+        "after": "finalize_watchlist",
+        "reason": "The candidate sectors should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "check_new_allocation_constraint",
+        "after": "finalize_watchlist",
+        "reason": "The added allocation constraint should be reflected before the final watchlist is locked."
+      }
+    ],
+    "reference_data": {
+      "market_theme": "defensive health care rotation",
+      "headline_summary": "baseline checks still favor large pharma on cash flow resilience and pipeline visibility",
+      "news_state": "unconfirmed",
+      "current_leader_sector": "large_pharma",
+      "losing_sector": null,
+      "baseline_stability_reason": "Cash flow visibility, defensive positioning, and pipeline milestones continue to support large pharma relative strength.",
+      "winning_sector_candidates": [
+        "biotech",
+        "hospitals",
+        "health_insurers"
+      ],
+      "rotation_status": "rotation_under_review",
+      "sector_links": [
+        "If drug pricing pressure rises, health insurers can outperform because the policy impact differs across the value chain.",
+        "If risk appetite broadens after policy clarity, biotech can rebound faster than large pharma."
+      ],
+      "sector_universe": [
+        "large_pharma",
+        "biotech",
+        "hospitals",
+        "health_insurers"
+      ],
+      "sector_weights": {
+        "large_pharma": 0.4,
+        "biotech": 0.2,
+        "hospitals": 0.18,
+        "health_insurers": 0.22
+      },
+      "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
+      "target_weight_template": {
+        "large_pharma": 0.24,
+        "biotech": 0.21,
+        "hospitals": 0.2,
+        "health_insurers": 0.35
+      },
+      "correlation_map": [
+        {
+          "pair": [
+            "large_pharma",
+            "biotech"
+          ],
+          "relation": "rotation",
+          "strength": "medium",
+          "note": "Biotech can rebound if policy clarity improves and risk appetite returns."
+        },
+        {
+          "pair": [
+            "large_pharma",
+            "health_insurers"
+          ],
+          "relation": "rotation",
+          "strength": "high",
+          "note": "Insurers can lead if the market worries more about drug pricing than medical cost inflation."
+        },
+        {
+          "pair": [
+            "hospitals",
+            "health_insurers"
+          ],
+          "relation": "negative",
+          "strength": "low",
+          "note": "Provider cost pressure and insurer margins can diverge depending on reimbursement headlines."
+        }
+      ],
+      "watchlist_names": [
+        "drug pricing headlines",
+        "biotech capital raising",
+        "hospital labor cost",
+        "managed care MLR"
+      ],
+      "forecast_horizon": "1m",
+      "decision_goal": "decide whether to reduce large pharma exposure and raise health insurers or biotech exposure"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 3,
+      "type": "new_constraint",
+      "message": "A new portfolio rule was added: no single recommended defensive sector weight may exceed 0.30.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "added_constraints": [
+          "recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
+        ],
+        "reference_data": {
+          "target_weight_template": {
+            "large_pharma": 0.24,
+            "biotech": 0.26,
+            "hospitals": 0.2,
+            "health_insurers": 0.3
+          }
+        }
+      },
+      "expected_tasks": [
+        "check_new_allocation_constraint"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
+      "type": "state_change",
+      "message": "A negative headline on a key large-pharma product has weakened the prior leadership thesis.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "news_state": "confirmed_material_change",
+          "losing_sector": "large_pharma"
+        }
+      },
+      "expected_tasks": [
+        "verify_large_pharma_news"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "news_reaction_note",
+      "sector_watch_update"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": {
+    "outcome": [
+      "The final artifacts reflect the latest tracked state for finance_008.",
+      "The delivered artifacts cover the four-sector comparison required in finance_008.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
+    ],
+    "process": [
+      "ニュース発生前は平常時の large_pharma のキャッシュフロー安定とパイプライン可視性の前提を維持し、薬価圧力ニュース発生後に stance 更新している",
+      "health_insurers・biotech・hospitals を比較している",
+      "large_pharma からの資金回転を、政策影響差・リスク許容度・医療利用動向との因果リンクと初期相関ヒント付きで整理している",
+      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 3 new_constraint is reflected in the allocation plan.",
+      "turn 5 state_change leads to verify_large_pharma_news before finalize."
+    ],
+    "recovery": [
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
+    ]
+  },
+  "notes": "Medium case. This scenario tests whether the agent updates the allocation draft when a new constraint arrives and then rechecks the pharma-led baseline when the state changes."
+}

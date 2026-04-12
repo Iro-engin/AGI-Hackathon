@@ -6,13 +6,23 @@
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-05-20T17:00:00+09:00",
-    "participants": ["CEO", "CRO", "CFO", "CustomerSuccessLead"],
+    "participants": [
+      "CEO",
+      "CRO",
+      "CFO",
+      "CustomerSuccessLead"
+    ],
     "budget": 50000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": ["meeting_goal", "agenda_items", "owners", "decision_blocks"],
+        "required_fields": [
+          "meeting_goal",
+          "agenda_items",
+          "owners",
+          "decision_blocks"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "decision_mode",
@@ -22,12 +32,18 @@
             "artifact_field": "participants",
             "state_path": "participants"
           }
-        ]
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "decision_memo",
         "artifact_type": "document",
-        "required_fields": ["decision_topics", "options", "customer_risks", "recommended_path"],
+        "required_fields": [
+          "decision_topics",
+          "options",
+          "customer_risks",
+          "recommended_path"
+        ],
         "semantic_checks": [
           {
             "artifact_field": "decision_mode",
@@ -37,7 +53,8 @@
             "artifact_field": "decision_goal",
             "state_path": "reference_data.decision_goal"
           }
-        ]
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
@@ -55,13 +72,27 @@
         "before": "define_decision_topics",
         "after": "draft_decision_memo",
         "reason": "論点整理後でないと意思決定メモを書けない"
+      },
+      {
+        "before": "check_new_briefing_constraint",
+        "after": "finalize",
+        "reason": "The added briefing requirement should be reflected before finalization."
+      },
+      {
+        "before": "clarify_decision_axis",
+        "after": "finalize",
+        "reason": "The pricing decision axis should be clarified before finalization."
       }
     ],
     "reference_data": {
       "decision_mode": "final decision in meeting",
       "topic": "enterprise price increase planning",
       "decision_goal": "finalize price increase scope and timing",
-      "customer_segments": ["SMB", "mid-market", "enterprise"],
+      "customer_segments": [
+        "SMB",
+        "mid-market",
+        "enterprise"
+      ],
       "known_options": [
         "raise enterprise only",
         "raise mid-market and enterprise",
@@ -80,38 +111,91 @@
   ],
   "events": [
     {
-      "turn": 3,
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "A new briefing requirement was added: the pricing brief must include a churn-risk comparison.",
+        "delta": {
+          "delta_applies_to": "initial_state",
+          "added_constraints": [
+            "pricing brief must include a churn-risk comparison"
+          ]
+        },
+      "expected_tasks": [
+        "check_new_briefing_constraint"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
+        "decision_memo"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 5,
       "type": "state_change",
-      "message": "CEO が急きょ参加できなくなりました。この会議では最終決定ではなく、CFO と CRO 向けの方針レビューまでに切り替えてください。",
+      "message": "The pricing baseline changed, so the earlier comparison memo must be refreshed.",
       "delta": {
-        "participants_removed": ["CEO"],
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "decision_mode": "review only, no final decision",
-          "decision_goal": "narrow to one recommended option for CEO follow-up"
+          "pricing_snapshot_status": "updated"
         }
       },
-      "expected_artifact_updates": ["agenda", "decision_memo"],
+      "expected_tasks": [
+        "refresh_pricing_snapshot"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
+        "decision_memo"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 7,
+      "type": "ambiguity",
+      "message": "However, views are split on whether gross-margin improvement or churn protection should be the primary decision axis.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "decision_axis_status": "ambiguous"
+        }
+      },
+      "expected_tasks": [
+        "clarify_decision_axis"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
+        "decision_memo"
+      ],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": ["agenda", "decision_memo"],
+    "required_artifacts": [
+      "agenda",
+      "decision_memo"
+    ],
     "no_constraint_violation": true,
-    "must_acknowledge_changes": true
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true
   },
   "rubric": {
     "outcome": [
-      "agenda が最終決定会議のままではなく review only に切り替わっている",
-      "decision_memo が CEO 不在を踏まえた推奨案絞り込み用に更新されている"
+      "The final briefing reflects the added churn-risk comparison requirement.",
+      "The refreshed pricing snapshot is reflected in the required artifacts.",
+      "The artifacts do not lock onto a single pricing axis after the ambiguity event.",
+      "The required artifacts reflect the latest tracked state."
     ],
     "process": [
       "参加者除外によって意思決定モード自体が変わることを明示的に扱っている",
-      "以前の final decision 前提を残したままにしていない"
+      "以前の final decision 前提を残したままにしていない",
+      "turn 2 new_constraint is reflected in the updated artifacts.",
+      "turn 5 state_change leads to a refresh of the planning baseline before finalization.",
+      "turn 7 ambiguity is followed by ask_clarification."
     ],
     "recovery": [
-      "イベント後1ターン以内に会議目的の取消しと再定義を反映している"
+      "イベント後1ターン以内に会議目的の取消しと再定義を反映している",
+      "The agent replans or updates artifacts within the expected turn window after each event."
     ]
   },
-  "notes": "参加者削除によって会議の目的自体が変わる、前提取消し型のケース。"
+  "notes": "Hard case. This scenario combines an added briefing requirement, a changed pricing baseline, and ambiguity about the main decision axis."
 }

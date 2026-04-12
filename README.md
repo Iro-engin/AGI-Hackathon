@@ -7,7 +7,8 @@
 正しい順番で実行し、必要に応じて再計画できるか」を評価するための
 最小ベンチマーク実装です。
 
-題材としては、まず `meeting_prep` ドメインを使っています。
+題材としては、まず `meeting_prep` ドメインを使っており、
+次の拡張先として `finance_analyst` ドメインも含めています。
 
 想定している流れは次のようなものです。
 
@@ -56,6 +57,8 @@
   共通ログ設定
 - [`scenarios/meeting/`](scenarios/meeting/)
   benchmark case の JSON
+- [`scenarios/finance/`](scenarios/finance/)
+  finance analyst 用 case の JSON
 - [`results/sample_execution_meeting_001.json`](results/sample_execution_meeting_001.json)
   sample execution log
 - [`schemas/benchmark_case.schema.json`](schemas/benchmark_case.schema.json)
@@ -309,6 +312,7 @@ OPENAI_API_KEY=... uv run python -m src.openai_case_inspector \
 今後やりたいことは次です。
 
 - `meeting_prep` 以外のドメイン追加
+- `finance_analyst` のような状態変化型の分析タスク拡充
 - 「質問すべきケース」を case 側でも明示して、質問評価を厳密化
 - rubric と evaluator の対応関係をさらに明確化
 - 複数 sample log を用意して、failure pattern ごとのデモを増やす

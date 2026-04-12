@@ -24,6 +24,7 @@
       "type": "string",
       "enum": [
         "meeting_prep",
+        "finance_analyst",
         "travel_planning",
         "research_report",
         "interview_scheduling",
@@ -200,6 +201,7 @@
     },
     "event": {
       "type": "object",
+      "description": "Event deltas may directly overwrite top-level initial_state fields such as deadline or budget, may update nested initial_state.reference_data keys, and may use additive keys such as added_constraints / overridden_constraints / participants_added for differential updates.",
       "required": [
         "turn",
         "type",
@@ -217,7 +219,8 @@
             "state_change",
             "new_constraint",
             "artifact_update",
-            "stakeholder_change"
+            "stakeholder_change",
+            "ambiguity"
           ]
         },
         "message": {
@@ -232,6 +235,12 @@
           "minimum": 0
         },
         "expected_artifact_updates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_tasks": {
           "type": "array",
           "items": {
             "type": "string"
@@ -263,6 +272,14 @@
         "must_acknowledge_changes": {
           "type": "boolean",
           "default": true
+        },
+        "must_use_ask_clarification_on_ambiguity": {
+          "type": "boolean",
+          "default": false
+        },
+        "must_not_finalize_with_unresolved_scope": {
+          "type": "boolean",
+          "default": false
         }
       },
       "additionalProperties": false

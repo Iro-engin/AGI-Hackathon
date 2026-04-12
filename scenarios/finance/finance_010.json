@@ -1,0 +1,295 @@
+{
+  "task_id": "finance_010",
+  "domain": "finance_analyst",
+  "difficulty": "hard",
+  "initial_request": "Compare ad platforms, ecommerce, retail media, and payment networks. Explain why ad platforms are currently leading, when the other sectors could overtake them, and prepare a news reaction note plus a sector watch update.",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2026-06-14T08:10:00+09:00",
+    "participants": [
+      "InternetPM",
+      "InternetAnalyst",
+      "RiskManager"
+    ],
+    "budget": 100,
+    "required_artifacts": [
+      {
+        "artifact_id": "news_reaction_note",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_view",
+          "headline_summary",
+          "losing_sector",
+          "winning_sector_candidates",
+          "current_sector_weights",
+          "recommended_sector_weights",
+          "weight_change_rationale",
+          "rotation_reasoning",
+          "positioning_implication"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "losing_sector",
+            "state_path": "reference_data.losing_sector"
+          },
+          {
+            "artifact_field": "winning_sector_candidates",
+            "state_path": "reference_data.winning_sector_candidates"
+          },
+          {
+            "artifact_field": "current_sector_weights",
+            "state_path": "reference_data.sector_weights"
+          },
+          {
+            "artifact_field": "recommended_sector_weights",
+            "state_path": "reference_data.target_weight_template"
+          },
+          {
+            "artifact_field": "rotation_status",
+            "state_path": "reference_data.rotation_status"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "sector_watch_update",
+        "artifact_type": "document",
+        "required_fields": [
+          "baseline_checks",
+          "news_checklist",
+          "correlation_map",
+          "rebalance_actions",
+          "risk_scenarios",
+          "sectors_to_watch",
+          "next_checkpoints"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "news_state",
+            "state_path": "reference_data.news_state"
+          },
+          {
+            "artifact_field": "sector_links",
+            "state_path": "reference_data.sector_links"
+          },
+          {
+            "artifact_field": "correlation_map",
+            "state_path": "reference_data.correlation_map"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [
+      "Do not confirm a bearish view on ad platforms before the relevant ad-pricing news is verified.",
+      "If rotation_status is ambiguous, do not lock into a single winner sector.",
+      "Include ad_platforms, ecommerce, retail_media, and payment_networks in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0.",
+      "The recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
+    ],
+    "task_dependencies": [
+      {
+        "before": "verify_ad_pricing_news",
+        "after": "update_sector_view",
+        "reason": "The ad-pricing change should be verified before the sector stance is updated."
+      },
+      {
+        "before": "compare_rotation_candidates",
+        "after": "finalize_watchlist",
+        "reason": "The competing sectors should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "check_new_allocation_constraint",
+        "after": "finalize_watchlist",
+        "reason": "The added allocation constraint should be reflected before the final watchlist is locked."
+      }
+    ],
+    "reference_data": {
+      "market_theme": "internet ad mix and commerce monetization",
+      "headline_summary": "baseline checks still favor ad platforms on AI tools and advertiser demand resilience",
+      "news_state": "unconfirmed",
+      "current_leader_sector": "ad_platforms",
+      "losing_sector": null,
+      "baseline_stability_reason": "Advertiser demand and AI-enabled monetization still support ad platform leadership in the current environment.",
+      "winning_sector_candidates": [
+        "ecommerce",
+        "retail_media",
+        "payment_networks"
+      ],
+      "rotation_status": "rotation_under_review",
+      "sector_links": [
+        "If broad ad pricing softens, retail media can hold up better because it stays closer to conversion budgets.",
+        "If spending shifts from upper funnel to transaction-linked exposure, payment networks can outperform."
+      ],
+      "sector_universe": [
+        "ad_platforms",
+        "ecommerce",
+        "retail_media",
+        "payment_networks"
+      ],
+      "sector_weights": {
+        "ad_platforms": 0.39,
+        "ecommerce": 0.2,
+        "retail_media": 0.21,
+        "payment_networks": 0.2
+      },
+      "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
+      "target_weight_template": {
+        "ad_platforms": 0.23,
+        "ecommerce": 0.18,
+        "retail_media": 0.31,
+        "payment_networks": 0.28
+      },
+      "correlation_map": [
+        {
+          "pair": [
+            "ad_platforms",
+            "retail_media"
+          ],
+          "relation": "rotation",
+          "strength": "high",
+          "note": "Retail media can lead if brand budgets weaken but performance spend remains sticky."
+        },
+        {
+          "pair": [
+            "ecommerce",
+            "payment_networks"
+          ],
+          "relation": "positive",
+          "strength": "medium",
+          "note": "Transaction volumes support both, but payment networks can be less exposed to gross margin swings."
+        },
+        {
+          "pair": [
+            "ad_platforms",
+            "payment_networks"
+          ],
+          "relation": "rotation",
+          "strength": "medium",
+          "note": "Capital can rotate into payment networks if monetization remains strong closer to checkout."
+        }
+      ],
+      "watchlist_names": [
+        "ad pricing",
+        "ecommerce GMV",
+        "retail media share",
+        "payment volume growth"
+      ],
+      "forecast_horizon": "1m",
+      "decision_goal": "decide whether to reduce ad platform exposure and raise retail media or payment network exposure"
+    }
+  },
+  "allowed_actions": [
+    "ask_clarification",
+    "propose_plan",
+    "update_plan",
+    "create_artifact",
+    "revise_artifact",
+    "confirm_state",
+    "finalize"
+  ],
+  "events": [
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "The committee added a new condition: no single recommended sector weight may exceed 0.30.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "added_constraints": [
+          "recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
+        ],
+        "reference_data": {
+          "target_weight_template": {
+            "ad_platforms": 0.23,
+            "ecommerce": 0.23,
+            "retail_media": 0.3,
+            "payment_networks": 0.24
+          }
+        }
+      },
+      "expected_tasks": [
+        "check_new_allocation_constraint"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "state_change",
+      "message": "Slower ad pricing has weakened the prior ad-platform leadership thesis.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "news_state": "confirmed_material_change",
+          "losing_sector": "ad_platforms"
+        }
+      },
+      "expected_tasks": [
+        "verify_ad_pricing_news"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 7,
+      "type": "ambiguity",
+      "message": "However, views are split on whether ecommerce, retail media, or payment networks would lead the rotation.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "rotation_status": "ambiguous",
+          "news_state": "partially_confirmed"
+        }
+      },
+      "expected_tasks": [
+        "compare_rotation_candidates"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "news_reaction_note",
+      "sector_watch_update"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": {
+    "outcome": [
+      "The final artifacts reflect the latest tracked state for finance_010.",
+      "The delivered artifacts cover the four-sector comparison required in finance_010.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
+    ],
+    "process": [
+      "ニュース発生前は平常時の ad_platforms の AI ツールと広告需要の前提を維持し、単価鈍化ニュース発生後に stance 更新している",
+      "retail_media・payment_networks・ecommerce を比較している",
+      "ad_platforms からの資金回転を、コンバージョン予算・取引連動収益・コマース送客との因果リンクと初期相関ヒント付きで整理している",
+      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 2 new_constraint is reflected in the allocation plan.",
+      "turn 4 state_change leads to verify_ad_pricing_news or update_sector_view before finalize.",
+      "turn 7 ambiguity is followed by ask_clarification."
+    ],
+    "recovery": [
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
+    ]
+  },
+  "notes": "Hard case. This scenario combines an added allocation constraint, a direct state change, and a late ambiguity event on the likely winner."
+}

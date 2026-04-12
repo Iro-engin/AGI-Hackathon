@@ -2,7 +2,7 @@
   "task_id": "meeting_004",
   "domain": "meeting_prep",
   "difficulty": "medium",
-  "initial_request": "四半期の採用計画レビュー会議を準備してください。HR、HiringManager、Ops が参加し、今四半期の採用人数見込みと面接体制を確認します。会議アジェンダと採用計画メモを作り、採用枠の調整要否を判断できるようにしたいです。",
+  "initial_request": "採用計画レビュー会議を準備してください。HR、HiringManager、Ops が参加し、次四半期の採用人数と面接枠拡張可否を議論します。アジェンダと会議メモを作成してください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-22T15:00:00+09:00",
@@ -15,47 +15,29 @@
         "artifact_type": "document",
         "required_fields": ["objective", "topics", "owner"],
         "semantic_checks": [
-          {
-            "artifact_field": "approval_mode",
-            "state_path": "reference_data.approval_mode"
-          },
-          {
-            "artifact_field": "ops_approval_available",
-            "state_path": "ops_approval_available"
-          }
-        ]
+          {"artifact_field": "approval_mode", "state_path": "reference_data.approval_mode"},
+          {"artifact_field": "ops_approval_available", "state_path": "ops_approval_available"}
+        ],
+        "latest_version_required": true
       },
       {
         "artifact_id": "meeting_memo",
         "artifact_type": "document",
         "required_fields": ["hiring_plan", "interview_capacity", "risks", "approval_mode"],
         "semantic_checks": [
-          {
-            "artifact_field": "forecast_hires",
-            "state_path": "reference_data.forecast_hires"
-          },
-          {
-            "artifact_field": "approval_mode",
-            "state_path": "reference_data.approval_mode"
-          }
-        ]
+          {"artifact_field": "forecast_hires", "state_path": "reference_data.forecast_hires"},
+          {"artifact_field": "approval_mode", "state_path": "reference_data.approval_mode"}
+        ],
+        "latest_version_required": true
       }
     ],
     "constraints": [
-      "Ops の承認なしに面接体制を確定しない",
+      "Ops の確認なしに面接枠拡張を確定しない",
       "meeting_memo には最新の採用人数見込みを反映する"
     ],
     "task_dependencies": [
-      {
-        "before": "collect_hiring_forecast",
-        "after": "draft_meeting_memo",
-        "reason": "採用人数見込みがないとメモを作れない"
-      },
-      {
-        "before": "ops_approval",
-        "after": "finalize_interview_capacity",
-        "reason": "Ops の確認後に面接体制を確定する必要がある"
-      }
+      {"before": "collect_hiring_forecast", "after": "draft_meeting_memo", "reason": "採用人数見込み取得後にメモを更新する必要がある"},
+      {"before": "ops_approval", "after": "finalize_interview_capacity", "reason": "Ops 確認後に面接枠判断を確定する必要がある"}
     ],
     "reference_data": {
       "forecast_hires": 6,
@@ -65,39 +47,35 @@
       "approval_mode": "live approval in meeting"
     }
   },
-  "allowed_actions": [
-    "ask_clarification",
-    "propose_plan",
-    "update_plan",
-    "create_artifact",
-    "revise_artifact",
-    "confirm_state",
-    "finalize"
-  ],
+  "allowed_actions": ["ask_clarification", "propose_plan", "update_plan", "create_artifact", "revise_artifact", "confirm_state", "finalize"],
   "events": [
     {
       "turn": 3,
       "type": "state_change",
-      "message": "採用人数の最新見込みが 6 名から 9 名に増えました。面接枠の再評価が必要です。",
+      "message": "採用人数見込みが 6 から 9 に上方修正されました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "forecast_hires": 9
         }
       },
       "expected_artifact_updates": ["meeting_memo"],
+      "expected_tasks": ["collect_hiring_forecast"],
       "expected_replan_within_turns": 1
     },
     {
       "turn": 5,
       "type": "stakeholder_change",
-      "message": "Ops は当日参加できなくなりました。承認は事前コメントベースで進める必要があります。",
+      "message": "Ops は当日参加できず、事前コメントベースで判断する必要があると分かりました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "ops_approval_available": false,
         "reference_data": {
           "approval_mode": "async comments before meeting"
         }
       },
       "expected_artifact_updates": ["agenda", "meeting_memo"],
+      "expected_tasks": ["ops_approval"],
       "expected_replan_within_turns": 1
     }
   ],
@@ -109,16 +87,14 @@
   },
   "rubric": {
     "outcome": [
-      "meeting_memo が最新の forecast_hires=9 を反映している",
-      "Ops 欠席を踏まえた承認方法が agenda または meeting_memo に反映されている"
+      "meeting_memo が forecast_hires=9 を反映している",
+      "agenda と meeting_memo が async comments before meeting に更新されている"
     ],
     "process": [
-      "採用人数変更を受けて面接体制の論点を見直している",
-      "ops_approval -> finalize_interview_capacity の依存関係を崩していない"
+      "turn 3 後に採用人数見込み更新を先に反映している",
+      "turn 5 後に Ops 参加前提のまま finalize せず approval_mode を更新している"
     ],
-    "recovery": [
-      "欠席イベント後に承認フローの変更を明示的に扱っている"
-    ]
+    "recovery": ["各イベント後 1 ターン以内に更新または再計画を行っている"]
   },
-  "notes": "採用見込み変更と承認者欠席の組み合わせを扱うケース。"
+  "notes": "medium ケース。数値変更と承認モード変更への追随を同時に見る。"
 }

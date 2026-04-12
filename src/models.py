@@ -61,6 +61,7 @@ class BenchmarkEvent(BaseModel):
     delta: dict[str, Any]
     expected_replan_within_turns: int = 0
     expected_artifact_updates: list[str] = Field(default_factory=list)
+    expected_tasks: list[str] = Field(default_factory=list)
 
 
 class GoalCondition(BaseModel):
@@ -72,6 +73,8 @@ class GoalCondition(BaseModel):
     required_artifacts: list[str]
     no_constraint_violation: bool
     must_acknowledge_changes: bool = True
+    must_use_ask_clarification_on_ambiguity: bool = False
+    must_not_finalize_with_unresolved_scope: bool = False
 
 
 class Rubric(BaseModel):

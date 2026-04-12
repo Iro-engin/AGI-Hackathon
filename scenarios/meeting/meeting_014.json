@@ -63,6 +63,16 @@
         "before": "confirm_session_format",
         "after": "finalize_attendee_brief",
         "reason": "開催形式が確定しないと参加者ブリーフを固められない"
+      },
+      {
+        "before": "refresh_experiment_snapshot",
+        "after": "finalize",
+        "reason": "The updated experiment snapshot should be reflected before finalization."
+      },
+      {
+        "before": "check_duration_limit",
+        "after": "finalize",
+        "reason": "The added meeting-duration limit should be reflected before finalization."
       }
     ],
     "reference_data": {
@@ -91,13 +101,16 @@
     {
       "turn": 2,
       "type": "state_change",
-      "message": "会場の都合でオフサイト開催ができなくなりました。完全オンライン開催に切り替えてください。",
+      "message": "The experiment baseline changed, so the comparison memo must be refreshed.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "session_format": "remote workshop",
-          "logistics_mode": "video link and online facilitation guide required"
+          "experiment_snapshot_status": "updated"
         }
       },
+      "expected_tasks": [
+        "refresh_experiment_snapshot"
+      ],
       "expected_artifact_updates": [
         "agenda",
         "attendee_brief"
@@ -105,16 +118,19 @@
       "expected_replan_within_turns": 1
     },
     {
-      "turn": 4,
+      "turn": 5,
       "type": "new_constraint",
-      "message": "DataLead は前半45分しか参加できません。実験優先順位づけに必要なデータ前提を前半に寄せてください。",
+      "message": "A new meeting constraint was added: the session must fit within 45 minutes.",
       "delta": {
-        "reference_data": {
-          "availability_note": "DataLead available first 45 minutes only"
-        }
+        "delta_applies_to": "initial_state",
+        "meeting_duration_limit_minutes": 45
       },
+      "expected_tasks": [
+        "check_duration_limit"
+      ],
       "expected_artifact_updates": [
-        "agenda"
+        "agenda",
+        "attendee_brief"
       ],
       "expected_replan_within_turns": 1
     }
@@ -130,16 +146,21 @@
   },
   "rubric": {
     "outcome": [
-      "attendee_brief が現地案内ではなくオンライン案内に全面更新されている",
-      "agenda が DataLead の前半制約に合わせて順序調整されている"
+      "The updated experiment snapshot is reflected in the final artifacts.",
+      "The final agenda reflects the 45-minute duration limit.",
+      "The required artifacts reflect the latest tracked state.",
+      "The latest event-driven updates are reflected in the outputs."
     ],
     "process": [
       "in-person 前提の物流情報を残したままにしていない",
-      "開催形式変更を部分修正ではなくロジスティクスの全面見直しとして扱っている"
+      "開催形式変更を部分修正ではなくロジスティクスの全面見直しとして扱っている",
+      "turn 2 state_change leads to a refresh of the planning baseline before finalization.",
+      "turn 5 new_constraint is reflected in the updated artifacts."
     ],
     "recovery": [
-      "形式変更と参加制約追加の両方に対して必要成果物だけを再計画している"
+      "形式変更と参加制約追加の両方に対して必要成果物だけを再計画している",
+      "The agent replans or updates artifacts within the expected turn window after each event."
     ]
   },
-  "notes": "会場前提が丸ごと無効化される、ロジスティクス取消し型のケース。"
+  "notes": "Medium case. This scenario combines a changed experiment baseline and a later duration constraint."
 }

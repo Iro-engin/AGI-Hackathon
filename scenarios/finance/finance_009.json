@@ -2,7 +2,7 @@
   "task_id": "finance_009",
   "domain": "finance_analyst",
   "difficulty": "medium",
-  "initial_request": "オンライン旅行、ホテル、航空、生活必需品の4セクターを比較してください。現時点ではオンライン旅行が相対的に主導と見られている理由と、ホテル・航空・生活必需品がどの条件なら逆転候補になるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "initial_request": "Compare online travel, hotels, airlines, and consumer staples. Explain why online travel is currently leading, when the other sectors could overtake it, and prepare a news reaction note plus a sector watch update.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-06-13T08:20:00+09:00",
@@ -81,23 +81,26 @@
       }
     ],
     "constraints": [
-      "旅行需要鈍化が未確認のままオンライン旅行主導の継続を断定しない",
-      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
-      "sector_watch_update には需要見通しだけでなく消費マインド悪化の反証条件も含める",
-      "ホテル・航空・生活必需品への回転は、景気感応度と防御性の差まで説明する",
-      "少なくともオンライン旅行、ホテル、航空、生活必需品の4セクターを比較対象に含める",
-      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+      "Do not confirm a bearish view on online travel before the relevant booking and demand news is verified.",
+      "If rotation_status is ambiguous, do not lock into a single winner sector.",
+      "Include online_travel, hotels, airlines, and consumer_staples in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0."
     ],
     "task_dependencies": [
       {
         "before": "verify_travel_demand_news",
         "after": "update_sector_view",
-        "reason": "旅行予約と消費環境の変化を確認してから主導セクター見通しを更新する必要がある"
+        "reason": "Travel demand news should be verified before the sector stance is updated."
       },
       {
         "before": "compare_rotation_candidates",
         "after": "finalize_watchlist",
-        "reason": "ホテルと航空、生活必需品のどこが受益しやすいかを比較してから監視対象を確定する必要がある"
+        "reason": "The competing sectors should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "collect_defensive_view",
+        "after": "finalize_watchlist",
+        "reason": "The added defensive-sector viewpoint should be incorporated before the final watchlist is locked."
       }
     ],
     "reference_data": {
@@ -172,7 +175,7 @@
         "staples pricing power"
       ],
       "forecast_horizon": "1m",
-      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+      "decision_goal": "decide whether to reduce online travel exposure and raise consumer staples or hotel exposure"
     }
   },
   "allowed_actions": [
@@ -186,17 +189,18 @@
   ],
   "events": [
     {
-      "turn": 4,
-      "type": "state_change",
-      "message": "主要旅行予約プラットフォームが短期予約の伸び鈍化を示し、消費者心理の弱含みが意識され始めました。",
+      "turn": 2,
+      "type": "stakeholder_change",
+      "message": "A travel-demand analyst joined the review, so the consumer staples angle needs to be covered more explicitly.",
       "delta": {
-        "reference_data": {
-          "headline_summary": "online booking growth softens as consumer confidence indicators weaken",
-          "news_state": "confirmed_material_change",
-          "rotation_status": "rotation_under_review",
-          "losing_sector": "online_travel"
-        }
+        "delta_applies_to": "initial_state",
+        "participants_added": [
+          "TravelDemandAnalyst"
+        ]
       },
+      "expected_tasks": [
+        "collect_defensive_view"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -204,20 +208,19 @@
       "expected_replan_within_turns": 1
     },
     {
-      "turn": 5,
+      "turn": 6,
       "type": "ambiguity",
-      "message": "回転先について、生活必需品優位かホテル優位かで見方が割れており、航空の需給改善を重視する声も残っています。",
+      "message": "However, views are split on whether hotels, airlines, or consumer staples would outperform next.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "rotation_status": "ambiguous",
-          "news_state": "partially_confirmed",
-          "winning_sector_candidates": [
-            "consumer_staples",
-            "hotels",
-            "airlines"
-          ]
+          "news_state": "partially_confirmed"
         }
       },
+      "expected_tasks": [
+        "compare_rotation_candidates"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -238,23 +241,25 @@
   },
   "rubric": {
     "outcome": [
-      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
-      "sector_watch_update が news_state と sector_links を反映している",
-      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
-      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
-      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+      "The final artifacts reflect the latest tracked state for finance_009.",
+      "The delivered artifacts cover the four-sector comparison required in finance_009.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
     ],
     "process": [
-      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
-      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
-      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
+      "ニュース発生前は平常時の online_travel の堅調な予約動向前提を維持し、需要鈍化ニュース発生後に stance 更新している",
+      "consumer_staples・hotels・airlines を比較している",
+      "online_travel からの資金回転を、防御需要・団体宿泊・旅客需要感応度との因果リンクと初期相関ヒント付きで整理している",
       "current_sector_weights からどの比率をどれだけ動かすかを説明している",
-      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 2 stakeholder_change is reflected in the consumer staples comparison view.",
+      "turn 6 ambiguity is followed by ask_clarification."
     ],
     "recovery": [
-      "各イベント後1ターン以内に状態更新または再計画を行う",
-      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
     ]
   },
-  "notes": "オンライン旅行が安定して見える理由を先に与え、その前提が需要鈍化ニュースで崩れるケース。初期配分をどれだけ生活必需品やホテルへ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+  "notes": "Medium case. This scenario tests whether the agent incorporates a new participant viewpoint and later handles ambiguity about the likely rotation target."
 }

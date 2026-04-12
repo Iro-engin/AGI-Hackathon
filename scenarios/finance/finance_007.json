@@ -1,8 +1,8 @@
 {
   "task_id": "finance_007",
   "domain": "finance_analyst",
-  "difficulty": "medium",
-  "initial_request": "住宅建設、建材、住宅REIT、地方銀行の4セクターを比較してください。現時点では住宅建設が相対的に主導と見られている理由と、建材・住宅REIT・地方銀行がどの条件なら逆転候補になるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "difficulty": "hard",
+  "initial_request": "Compare homebuilders, building materials, housing REITs, and regional banks. Explain why homebuilders are currently leading, when the other sectors could overtake them, and prepare a news reaction note plus a sector watch update.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-06-11T08:25:00+09:00",
@@ -81,23 +81,26 @@
       }
     ],
     "constraints": [
-      "住宅販売減速が未確認のまま住宅建設主導の継続を断定しない",
-      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
-      "sector_watch_update には金利だけでなく住宅在庫と信用条件も含める",
-      "建材・住宅REIT・地方銀行への回転は、住宅着工と住宅ローン動向の差まで説明する",
-      "少なくとも住宅建設、建材、住宅REIT、地方銀行の4セクターを比較対象に含める",
-      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+      "Do not confirm a bearish view on homebuilders before the relevant housing demand and financing news is verified.",
+      "If rotation_status is ambiguous, do not lock into a single winner sector.",
+      "Include homebuilders, building_materials, housing_reits, and regional_banks in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0."
     ],
     "task_dependencies": [
       {
         "before": "verify_housing_demand_news",
         "after": "update_sector_view",
-        "reason": "住宅需要と販売速度の変化を確認してから主導セクター見通しを更新する必要がある"
+        "reason": "Housing demand news should be verified before the sector stance is updated."
       },
       {
         "before": "compare_rotation_candidates",
         "after": "finalize_watchlist",
-        "reason": "建材と住宅REIT、地方銀行のどこが受益しやすいかを比較してから監視対象を確定する必要がある"
+        "reason": "The competing rotation candidates should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "collect_regional_bank_view",
+        "after": "finalize_watchlist",
+        "reason": "The added regional bank viewpoint should be incorporated before the final watchlist is locked."
       }
     ],
     "reference_data": {
@@ -172,7 +175,7 @@
         "regional bank deposit beta"
       ],
       "forecast_horizon": "1m",
-      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+      "decision_goal": "decide whether to reduce homebuilder exposure and raise regional bank or building materials exposure"
     }
   },
   "allowed_actions": [
@@ -186,17 +189,18 @@
   ],
   "events": [
     {
-      "turn": 4,
-      "type": "state_change",
-      "message": "住宅ローン金利が再上昇し、新築販売のキャンセル率上昇が報じられました。一方で地方銀行の純金利マージン改善観測が強まっています。",
+      "turn": 2,
+      "type": "stakeholder_change",
+      "message": "A housing finance analyst joined the review, so the regional bank angle needs explicit coverage.",
       "delta": {
-        "reference_data": {
-          "headline_summary": "mortgage rates rebound and builder cancellation risk rises while regional bank margin expectations improve",
-          "news_state": "confirmed_material_change",
-          "rotation_status": "rotation_under_review",
-          "losing_sector": "homebuilders"
-        }
+        "delta_applies_to": "initial_state",
+        "participants_added": [
+          "HousingFinanceAnalyst"
+        ]
       },
+      "expected_tasks": [
+        "collect_regional_bank_view"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -205,19 +209,38 @@
     },
     {
       "turn": 5,
-      "type": "ambiguity",
-      "message": "回転先について、地方銀行優位か建材優位かで見方が割れており、住宅REIT の割安修正を重視する声も残っています。",
+      "type": "state_change",
+      "message": "Mortgage rate pressure and incentive expansion are now weighing on the prior homebuilder-led thesis.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "rotation_status": "ambiguous",
-          "news_state": "partially_confirmed",
-          "winning_sector_candidates": [
-            "regional_banks",
-            "building_materials",
-            "housing_reits"
-          ]
+          "news_state": "confirmed_material_change",
+          "losing_sector": "homebuilders"
         }
       },
+      "expected_tasks": [
+        "verify_housing_demand_news"
+      ],
+      "expected_artifact_updates": [
+        "news_reaction_note",
+        "sector_watch_update"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 7,
+      "type": "ambiguity",
+      "message": "However, views are split on whether building materials, housing REITs, or regional banks would benefit first.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "rotation_status": "ambiguous",
+          "news_state": "partially_confirmed"
+        }
+      },
+      "expected_tasks": [
+        "compare_rotation_candidates"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -238,23 +261,26 @@
   },
   "rubric": {
     "outcome": [
-      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
-      "sector_watch_update が news_state と sector_links を反映している",
-      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
-      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
-      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+      "The final artifacts reflect the latest tracked state for finance_007.",
+      "The delivered artifacts cover the four-sector comparison required in finance_007.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
     ],
     "process": [
-      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
-      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
-      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
+      "ニュース発生前は平常時の homebuilders の需給逼迫と安定受注の前提を維持し、金利再上昇ニュース発生後に stance 更新している",
+      "regional_banks・building_materials・housing_reits を比較している",
+      "homebuilders からの資金回転を、預金改善・改修需要・金利感応度との因果リンクと初期相関ヒント付きで整理している",
       "current_sector_weights からどの比率をどれだけ動かすかを説明している",
-      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 2 stakeholder_change is reflected in the regional bank comparison view.",
+      "turn 5 state_change leads to verify_housing_demand_news or update_sector_view before finalize.",
+      "turn 7 ambiguity is followed by ask_clarification."
     ],
     "recovery": [
-      "各イベント後1ターン以内に状態更新または再計画を行う",
-      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
     ]
   },
-  "notes": "住宅建設が安定して見える理由を先に与え、その前提が金利再上昇で崩れるケース。初期配分をどれだけ地方銀行や建材へ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+  "notes": "Hard case. This scenario adds a new participant viewpoint, then changes the market thesis, and finally introduces ambiguity about the likely winner."
 }

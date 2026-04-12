@@ -61,6 +61,7 @@ class BenchmarkEvent(BaseModel):
     delta: dict[str, Any]
     expected_replan_within_turns: int = 0
     expected_artifact_updates: list[str] = Field(default_factory=list)
+    expected_tasks: list[str] = Field(default_factory=list)
 
 
 class GoalCondition(BaseModel):

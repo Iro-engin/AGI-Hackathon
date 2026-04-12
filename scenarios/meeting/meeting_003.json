@@ -2,144 +2,94 @@
   "task_id": "meeting_003",
   "domain": "meeting_prep",
   "difficulty": "medium",
-  "initial_request": "月次営業レビュー会議の準備をお願いします。CEO、COO、CFO、営業責任者が参加し、4月の売上進捗と来月の見通しを確認します。会議アジェンダとレビュー用スライドを作り、経営判断に必要な数字と論点を整理してください。",
+  "initial_request": "月次営業レビュー会議の準備をお願いします。CEO、COO、CFO、SalesLead が参加し、月次売上の確認と翌月計画を議論します。アジェンダとレビュー用スライドを用意してください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-20T10:00:00+09:00",
-    "participants": [
-      "CEO",
-      "COO",
-      "CFO",
-      "SalesLead"
-    ],
+    "participants": ["CEO", "COO", "CFO", "SalesLead"],
     "budget": 80000,
     "required_artifacts": [
       {
         "artifact_id": "agenda",
         "artifact_type": "document",
-        "required_fields": [
-          "agenda_items",
-          "decision_points",
-          "timebox",
-          "participant_availability_note"
-        ],
-        "semantic_checks": [
-          {
-            "artifact_field": "participant_availability_note",
-            "state_path": "reference_data.participant_availability_note"
-          }
-        ],
+        "required_fields": ["agenda_items", "decision_points", "timebox", "participant_availability_note"],
+        "semantic_checks": [{"artifact_field": "participant_availability_note", "state_path": "reference_data.participant_availability_note"}],
         "latest_version_required": true
       },
       {
         "artifact_id": "review_deck",
         "artifact_type": "slides",
-        "required_fields": [
-          "revenue_summary",
-          "forecast",
-          "issues",
-          "asks"
-        ],
-        "semantic_checks": [
-          {
-            "artifact_field": "sales_snapshot_date",
-            "state_path": "reference_data.sales_snapshot_date"
-          }
-        ],
+        "required_fields": ["revenue_summary", "forecast", "issues", "asks"],
+        "semantic_checks": [{"artifact_field": "sales_snapshot_date", "state_path": "reference_data.sales_snapshot_date"}],
         "latest_version_required": true
       }
     ],
     "constraints": [
       "レビュー資料には最新の売上スナップショットを使う",
-      "会議時間は90分以内に収める",
-      "参加者全員が見られる要点サマリを最初に置く"
+      "会議時間は 90 分以内に収める",
+      "参加者制約が変わった場合は agenda を更新する"
     ],
     "task_dependencies": [
-      {
-        "before": "fetch_latest_sales",
-        "after": "draft_review_deck",
-        "reason": "最新データを取得してからレビュー資料を作る必要がある"
-      },
-      {
-        "before": "draft_review_deck",
-        "after": "final_review_deck",
-        "reason": "ドラフト確認を経ずに最終版にはできない"
-      }
+      {"before": "fetch_latest_sales", "after": "draft_review_deck", "reason": "最新数値取得後に資料を更新する必要がある"},
+      {"before": "collect_availability", "after": "finalize_agenda", "reason": "参加制約確認後にアジェンダを確定する必要がある"}
     ],
     "reference_data": {
       "deck_version": "v1",
       "sales_snapshot_date": "2026-04-18",
       "participant_availability_note": "all participants available for full session",
       "topic": "monthly sales performance",
-      "decision_goal": "confirm April recovery actions and May forecast assumptions",
-      "key_metrics": [
-        "MRR",
-        "new deals",
-        "churn risk"
-      ]
+      "decision_goal": "confirm recovery actions and next-month forecast assumptions",
+      "key_metrics": ["MRR", "new deals", "churn risk"]
     }
   },
-  "allowed_actions": [
-    "ask_clarification",
-    "propose_plan",
-    "update_plan",
-    "create_artifact",
-    "revise_artifact",
-    "confirm_state",
-    "finalize"
-  ],
+  "allowed_actions": ["ask_clarification", "propose_plan", "update_plan", "create_artifact", "revise_artifact", "confirm_state", "finalize"],
   "events": [
     {
       "turn": 2,
       "type": "artifact_update",
-      "message": "営業データの最新集計が届き、資料の版が v2 に更新されました。売上見込みも一部修正が必要です。",
+      "message": "営業データの更新版が届き、資料バージョンが v2、スナップショット日付が 2026-04-19 に変わりました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "deck_version": "v2",
           "sales_snapshot_date": "2026-04-19"
         }
       },
-      "expected_artifact_updates": [
-        "review_deck"
-      ],
+      "expected_artifact_updates": ["review_deck"],
+      "expected_tasks": ["fetch_latest_sales"],
       "expected_replan_within_turns": 1
     },
     {
       "turn": 4,
       "type": "stakeholder_change",
-      "message": "CFO は冒頭30分しか参加できなくなりました。利益率に関する論点を前半に移してください。",
+      "message": "CFO は最初の 30 分しか参加できないことが分かりました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "participant_availability_note": "CFO available first 30 minutes only"
         }
       },
-      "expected_artifact_updates": [
-        "agenda"
-      ],
+      "expected_artifact_updates": ["agenda"],
+      "expected_tasks": ["collect_availability"],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": [
-      "agenda",
-      "review_deck"
-    ],
+    "required_artifacts": ["agenda", "review_deck"],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true
   },
   "rubric": {
     "outcome": [
-      "review_deck が最新の sales_snapshot_date を反映している",
-      "agenda が CFO の参加制約に合わせて論点順を調整している"
+      "review_deck が最新 sales_snapshot_date を反映している",
+      "agenda が CFO の参加制約に合わせて更新されている"
     ],
     "process": [
-      "v1 のまま固めず、v2 の更新を受けて資料を見直している",
-      "参加可能時間の変化を踏まえて会議構成を更新している"
+      "turn 2 の artifact_update 後に古い資料を使い続けず review_deck を更新している",
+      "turn 4 の stakeholder_change 後に collect_availability を反映して agenda を更新している"
     ],
-    "recovery": [
-      "2つのイベントの両方に対して適切な成果物更新を行っている"
-    ]
+    "recovery": ["各イベント後 1 ターン以内に更新または再計画を行っている"]
   },
-  "notes": "数字更新と参加者制約の両方が発生する営業レビューケース。"
+  "notes": "medium ケース。資料更新と参加制約変更の両方に追随する。"
 }

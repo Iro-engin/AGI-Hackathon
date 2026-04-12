@@ -2,7 +2,7 @@
   "task_id": "finance_006",
   "domain": "finance_analyst",
   "difficulty": "medium",
-  "initial_request": "クラウドソフトウェア、サイバーセキュリティ、ITサービス、ネットワーキングの4セクターを比較してください。現時点ではクラウドソフトウェアが主導と見られている理由と、サイバーセキュリティやITサービス、ネットワーキングがどの条件なら逆転候補になるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "initial_request": "Compare cloud software, cybersecurity, IT services, and networking. Explain why cloud software is currently seen as the leader, under what conditions cybersecurity, IT services, or networking could take the lead, and prepare a news reaction note plus a sector watch update.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-06-10T08:15:00+09:00",
@@ -81,12 +81,11 @@
       }
     ],
     "constraints": [
-      "クラウドソフトウェアの契約減速が未確認のまま主導継続を断定しない",
-      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
-      "sector_watch_update には AI 成長期待だけでなく更新サイクル鈍化の反証条件も含める",
-      "サイバーセキュリティやITサービスへの回転は、予算の必需性と受注可視性の差まで説明する",
-      "少なくともクラウドソフトウェア、サイバーセキュリティ、ITサービス、ネットワーキングの4セクターを比較対象に含める",
-      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+      "Do not confirm a bearish view on cloud software before the relevant enterprise spending news is verified.",
+      "If rotation_status is ambiguous, do not lock into a single winner sector.",
+      "Include cloud_software, cybersecurity, it_services, and networking in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0.",
+      "The recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
     ],
     "task_dependencies": [
       {
@@ -97,7 +96,12 @@
       {
         "before": "compare_rotation_candidates",
         "after": "finalize_watchlist",
-        "reason": "サイバーセキュリティとITサービス、ネットワーキングのどこが受益しやすいかを比較してから監視対象を確定する必要がある"
+        "reason": "The rival sectors should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "check_new_allocation_constraint",
+        "after": "finalize_watchlist",
+        "reason": "The added allocation constraint should be reflected before the final watchlist is locked."
       }
     ],
     "reference_data": {
@@ -172,7 +176,7 @@
         "enterprise networking orders"
       ],
       "forecast_horizon": "1m",
-      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+      "decision_goal": "decide whether to reduce cloud software exposure and raise cybersecurity or IT services exposure"
     }
   },
   "allowed_actions": [
@@ -186,17 +190,26 @@
   ],
   "events": [
     {
-      "turn": 4,
-      "type": "state_change",
-      "message": "複数の企業向けソフトウェア企業が大型契約の決裁遅延を示し、更新率の鈍化懸念が広がりました。一方で、セキュリティ案件は優先順位維持とのコメントが増えています。",
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "The committee added a new condition: no single recommended sector weight may exceed 0.30 in this review cycle.",
       "delta": {
+        "delta_applies_to": "initial_state",
+        "added_constraints": [
+          "recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
+        ],
         "reference_data": {
-          "headline_summary": "software deal cycles lengthen while cybersecurity budgets remain comparatively resilient",
-          "news_state": "confirmed_material_change",
-          "rotation_status": "rotation_under_review",
-          "losing_sector": "cloud_software"
+          "target_weight_template": {
+            "cloud_software": 0.22,
+            "cybersecurity": 0.3,
+            "it_services": 0.25,
+            "networking": 0.23
+          }
         }
       },
+      "expected_tasks": [
+        "check_new_allocation_constraint"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -204,20 +217,19 @@
       "expected_replan_within_turns": 1
     },
     {
-      "turn": 5,
+      "turn": 6,
       "type": "ambiguity",
-      "message": "回転先について、サイバーセキュリティ優位か IT サービス優位かで見方が割れており、ネットワーキング更新サイクルの再開を重視する声もあります。",
+      "message": "However, the likely rotation target is still unclear, and views are split across cybersecurity, IT services, and networking.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "rotation_status": "ambiguous",
-          "news_state": "partially_confirmed",
-          "winning_sector_candidates": [
-            "cybersecurity",
-            "it_services",
-            "networking"
-          ]
+          "news_state": "partially_confirmed"
         }
       },
+      "expected_tasks": [
+        "compare_rotation_candidates"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -238,23 +250,25 @@
   },
   "rubric": {
     "outcome": [
-      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
-      "sector_watch_update が news_state と sector_links を反映している",
-      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
-      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
-      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+      "The final artifacts reflect the latest tracked state for finance_006.",
+      "The delivered artifacts cover the four-sector comparison required in finance_006.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
     ],
     "process": [
-      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
-      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
-      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
+      "ニュース発生前は平常時の cloud_software の AI 主導マルチプル拡張前提を維持し、契約減速ニュース発生後に stance 更新している",
+      "cybersecurity・it_services・networking を比較している",
+      "cloud_software からの資金回転を、防御的予算・導入支援需要・ネットワーク更新との因果リンクと初期相関ヒント付きで整理している",
       "current_sector_weights からどの比率をどれだけ動かすかを説明している",
-      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 2 new_constraint is reflected in the allocation plan.",
+      "turn 6 ambiguity is followed by ask_clarification."
     ],
     "recovery": [
-      "各イベント後1ターン以内に状態更新または再計画を行う",
-      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
     ]
   },
-  "notes": "クラウドソフトウェアが安定して見える理由を先に与え、その前提が契約減速ニュースで崩れるケース。初期配分をどれだけサイバーセキュリティや IT サービスへ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+  "notes": "Medium case. This scenario tests whether the agent notices an added allocation constraint early, updates the draft allocation, and later asks for clarification when the winner set becomes ambiguous."
 }

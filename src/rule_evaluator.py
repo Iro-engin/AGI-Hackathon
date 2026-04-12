@@ -49,7 +49,13 @@ class RuleBasedEvaluator:
     """1 件の benchmark case と execution log を評価する。"""
 
     def __init__(self) -> None:
-        self._tracked_state_keys = {"deadline", "participants", "budget", "reference_data"}
+        self._tracked_state_keys = {
+            "deadline",
+            "participants",
+            "budget",
+            "constraints",
+            "reference_data",
+        }
 
     def evaluate(
         self,
@@ -143,6 +149,7 @@ class RuleBasedEvaluator:
         process_score, recovery_score = self._score_events(
             events=events,
             actions=actions,
+            completed_tasks=completed_tasks,
             questions_asked=execution_log.questions_asked,
             final_state=final_state,
             required_artifact_ids=required_artifact_ids,
@@ -371,6 +378,7 @@ class RuleBasedEvaluator:
         self,
         events: list[BenchmarkEvent],
         actions: list[ActionLog],
+        completed_tasks: list[str],
         questions_asked: list[Any],
         final_state: dict[str, Any],
         required_artifact_ids: set[str],
@@ -390,6 +398,7 @@ class RuleBasedEvaluator:
             acknowledged = False
             asked_clarification = False
             expected_artifact_updates = set(event.expected_artifact_updates)
+            expected_tasks = set(event.expected_tasks)
             observed_artifact_updates: set[str] = set()
 
             for action in actions:
@@ -434,6 +443,12 @@ class RuleBasedEvaluator:
                 recovery_score -= 10
                 deductions.append(
                     f"no artifact update observed after event turn {event.turn} (-10)"
+                )
+                failure_labels.add("partial_replan")
+            if expected_tasks and not expected_tasks.issubset(set(completed_tasks)):
+                process_score -= 10
+                deductions.append(
+                    f"expected event follow-up tasks missing after event turn {event.turn} (-10)"
                 )
                 failure_labels.add("partial_replan")
 
@@ -494,12 +509,30 @@ class RuleBasedEvaluator:
         """1 件のイベント差分を追跡対象 state にマージする。"""
 
         for key, value in delta.items():
+            if key == "delta_applies_to":
+                continue
             if key == "participants_added":
                 participants = self._safe_list(expected_state.get("participants"))
                 expected_state["participants"] = participants + [
                     participant
                     for participant in self._safe_list(value)
                     if participant not in participants
+                ]
+                continue
+            if key == "added_constraints":
+                constraints = self._safe_list(expected_state.get("constraints"))
+                expected_state["constraints"] = constraints + [
+                    constraint
+                    for constraint in self._safe_list(value)
+                    if constraint not in constraints
+                ]
+                continue
+            if key == "overridden_constraints":
+                constraints = self._safe_list(expected_state.get("constraints"))
+                expected_state["constraints"] = [
+                    constraint
+                    for constraint in constraints
+                    if constraint not in self._safe_list(value)
                 ]
                 continue
 
@@ -550,6 +583,12 @@ class RuleBasedEvaluator:
 
             if isinstance(expected_value, list):
                 if f"{path_prefix}{key}" == "participants":
+                    if set(self._safe_list(actual_value)) != set(expected_value):
+                        penalty += 10
+                        deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")
+                        failure_labels.add("state_staleness")
+                    continue
+                if f"{path_prefix}{key}" == "constraints":
                     if set(self._safe_list(actual_value)) != set(expected_value):
                         penalty += 10
                         deductions.append(f"final state mismatch for {path_prefix}{key} (-10)")

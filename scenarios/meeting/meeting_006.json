@@ -91,6 +91,21 @@
         "before": "check_share_policy",
         "after": "finalize_attendee_brief",
         "reason": "配布可能な情報範囲を確認してからブリーフを確定する"
+      },
+      {
+        "before": "collect_security_input",
+        "after": "finalize",
+        "reason": "The new security stakeholder input should be reflected before finalization."
+      },
+      {
+        "before": "refresh_priority_snapshot",
+        "after": "finalize",
+        "reason": "The refreshed priority snapshot should be reflected before finalization."
+      },
+      {
+        "before": "clarify_priority_axis",
+        "after": "finalize",
+        "reason": "The priority axis should be clarified before finalization."
       }
     ],
     "reference_data": {
@@ -119,29 +134,58 @@
     {
       "turn": 2,
       "type": "stakeholder_change",
-      "message": "外部アドバイザーが1名参加することになりました。配布資料は共有方針を見直してください。",
+      "message": "SecurityLead joined the review, so the security-risk angle must now be covered explicitly.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "participants_added": [
-          "ExternalAdvisor"
-        ],
-        "reference_data": {
-          "share_policy": "split internal and advisor versions"
-        }
+          "SecurityLead"
+        ]
       },
+      "expected_tasks": [
+        "collect_security_input"
+      ],
       "expected_artifact_updates": [
         "agenda",
+        "decision_memo",
         "attendee_brief"
       ],
       "expected_replan_within_turns": 1
     },
     {
-      "turn": 4,
-      "type": "new_constraint",
-      "message": "会場候補の見積もりが上がったため、総予算上限を12万円に下げて検討してください。",
+      "turn": 5,
+      "type": "state_change",
+      "message": "The investment priority snapshot changed, so the earlier comparison memo must be refreshed.",
       "delta": {
-        "budget": 120000
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "priority_snapshot_status": "updated"
+        }
       },
+      "expected_tasks": [
+        "refresh_priority_snapshot"
+      ],
       "expected_artifact_updates": [
+        "agenda",
+        "decision_memo",
+        "attendee_brief"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 7,
+      "type": "ambiguity",
+      "message": "However, views are split on whether growth upside or risk reduction should be the primary decision axis.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "reference_data": {
+          "priority_axis_status": "ambiguous"
+        }
+      },
+      "expected_tasks": [
+        "clarify_priority_axis"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
         "decision_memo",
         "attendee_brief"
       ],
@@ -156,22 +200,27 @@
       "attendee_brief"
     ],
     "no_constraint_violation": true,
-    "must_acknowledge_changes": true
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true
   },
   "rubric": {
     "outcome": [
-      "最終成果物が外部アドバイザー参加と最新の共有方針を反映している",
-      "予算12万円上限に合わせて意思決定メモが更新されている",
-      "agenda と attendee_brief が最新参加者・締切を反映している"
+      "The final artifacts reflect the newly added SecurityLead stakeholder.",
+      "The latest priority snapshot is reflected in the required artifacts.",
+      "The artifacts do not lock onto a single priority axis after the ambiguity event.",
+      "The required artifacts reflect the latest tracked state."
     ],
     "process": [
       "会場確定前に予算ガードレール確認タスクを置いている",
-      "共有方針確認を attendee_brief 確定前の依存関係として扱っている"
+      "共有方針確認を attendee_brief 確定前の依存関係として扱っている",
+      "turn 2 stakeholder_change is reflected in the updated stakeholder assumptions.",
+      "turn 5 state_change leads to a refresh of the planning baseline before finalization.",
+      "turn 7 ambiguity is followed by ask_clarification."
     ],
     "recovery": [
       "各イベント後1ターン以内に再計画または状態確認を行う",
       "共有範囲と予算変更の両方を明示的に認識している"
     ]
   },
-  "notes": "複数成果物と2段階の制約変更を含む、役員合宿準備の高難度ケース。"
+  "notes": "Hard case. This scenario combines a new stakeholder, a changed planning baseline, and a late ambiguity about the main decision axis."
 }

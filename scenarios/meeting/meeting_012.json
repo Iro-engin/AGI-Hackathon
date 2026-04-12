@@ -77,6 +77,16 @@
         "before": "collect_support_impact",
         "after": "finalize_migration_memo",
         "reason": "サポート影響を踏まえて推奨案を整理する必要がある"
+      },
+      {
+        "before": "clarify_scope_decision",
+        "after": "finalize",
+        "reason": "The scope-decision ambiguity should be resolved before finalization."
+      },
+      {
+        "before": "check_duration_limit",
+        "after": "finalize",
+        "reason": "The added meeting-duration limit should be reflected before finalization."
       }
     ],
     "reference_data": {
@@ -105,13 +115,16 @@
     {
       "turn": 2,
       "type": "state_change",
-      "message": "PlatformLead から、既存顧客全体移行は6月に間に合わないと共有がありました。対象範囲を見直してください。",
+      "message": "The migration-scope baseline changed, so the comparison memo must be refreshed.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "migration_scope": null,
-          "scope_decision_status": "reduction_required_unconfirmed"
+          "migration_scope_status": "updated"
         }
       },
+      "expected_tasks": [
+        "refresh_scope_options"
+      ],
       "expected_artifact_updates": [
         "agenda",
         "migration_memo"
@@ -121,18 +134,35 @@
     {
       "turn": 3,
       "type": "ambiguity",
-      "message": "FinanceSystemsLead は『新規顧客のみ』を想定し、SupportOps は『特定パイロット顧客のみ』を想定しています。どちらを主たる比較軸にするか現時点では確定していません。",
+      "message": "However, views are split on whether the primary comparison should focus on new customers only or a pilot-customer subset.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "migration_scope": null,
-          "scope_decision_status": "ambiguous_between_reduced_options",
-          "scope_options": [
-            "new customers only",
-            "one pilot segment only"
-          ]
+          "scope_decision_status": "ambiguous"
         }
       },
+      "expected_tasks": [
+        "clarify_scope_decision"
+      ],
       "expected_artifact_updates": [
+        "agenda",
+        "migration_memo"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 6,
+      "type": "new_constraint",
+      "message": "A new meeting constraint was added: the session must fit within 40 minutes.",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "meeting_duration_limit_minutes": 40
+      },
+      "expected_tasks": [
+        "check_duration_limit"
+      ],
+      "expected_artifact_updates": [
+        "agenda",
         "migration_memo"
       ],
       "expected_replan_within_turns": 1
@@ -151,16 +181,22 @@
   },
   "rubric": {
     "outcome": [
-      "migration_memo が全量移行前提を捨て、未確定状態を構造化して更新している",
-      "曖昧な段階で1案を断定せず、主要未確定点を open_questions に残している"
+      "The updated migration-scope options are reflected in the artifacts.",
+      "The final agenda reflects the 40-minute meeting limit.",
+      "The artifacts do not collapse onto a single scope axis after ambiguity.",
+      "The required artifacts reflect the latest tracked state."
     ],
     "process": [
       "scope_decision_status を使って未確定状態を表現し、意思決定枠組み自体を再構成している",
-      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 2 state_change leads to a refresh of the planning baseline before finalization.",
+      "turn 3 ambiguity is followed by ask_clarification.",
+      "turn 6 new_constraint is reflected in the updated artifacts."
     ],
     "recovery": [
-      "2つ目のイベントで曖昧さを認識し、誤った確定を避けている"
+      "2つ目のイベントで曖昧さを認識し、誤った確定を避けている",
+      "The agent replans or updates artifacts within the expected turn window after each event."
     ]
   },
-  "notes": "対象範囲の縮小と、その縮小先が曖昧なまま競合するケース。確認質問能力を測る。"
+  "notes": "Hard case. This scenario combines a changed scope baseline, an immediate ambiguity event, and a later time constraint."
 }

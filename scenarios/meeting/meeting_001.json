@@ -1,8 +1,8 @@
 {
   "task_id": "meeting_001",
   "domain": "meeting_prep",
-  "difficulty": "easy",
-  "initial_request": "来週の経営定例を準備してください。新しい法人向け料金プランの方向性を決めるための会議で、CEO、営業責任者、プロダクト責任者が参加します。会議アジェンダと事前共有メモを作り、当日中に意思決定できる状態にしたいです。",
+  "difficulty": "hard",
+  "initial_request": "新しいエンタープライズ料金プランの役員レビュー会議を準備してください。CEO、SalesLead、ProductLead が参加し、3つの料金案のどれを次の経営判断に進めるかを決めたいです。会議アジェンダとブリーフィングメモを作成し、その日のうちに意思決定できる状態にしてください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-04-10T17:00:00+09:00",
@@ -57,20 +57,30 @@
       }
     ],
     "constraints": [
-      "参加者全員の出席可能時間が確定するまで開始時刻を確定しない",
-      "会議時間は30分以内に収める",
-      "事前共有メモには料金改定の背景、候補案、想定リスクを含める"
+      "参加者全員の空き時間が確認できるまでは確定時刻を固定しない",
+      "会議時間は 30 分以内に収める",
+      "ブリーフィングメモには料金案比較、主要リスク、意思決定論点を含める"
     ],
     "task_dependencies": [
       {
         "before": "collect_availability",
         "after": "propose_schedule",
-        "reason": "参加可能時間を確認してから会議時刻を提案する必要がある"
+        "reason": "参加者の空き時間を確認してから会議時刻を提示する必要がある"
       },
       {
         "before": "define_agenda",
         "after": "write_briefing_doc",
-        "reason": "論点を固めてから事前共有メモを書く必要がある"
+        "reason": "議題を固めてからブリーフィングメモを整える必要がある"
+      },
+      {
+        "before": "check_new_timebox_constraint",
+        "after": "finalize",
+        "reason": "途中で追加された時間制約を反映してから最終化する必要がある"
+      },
+      {
+        "before": "clarify_decision_scope",
+        "after": "finalize",
+        "reason": "論点の比較軸が曖昧なまま最終化しないため"
       }
     ],
     "reference_data": {
@@ -82,7 +92,8 @@
         "seat-based pricing",
         "usage-based pricing",
         "hybrid pricing"
-      ]
+      ],
+      "primary_comparison_axis": "growth speed"
     }
   },
   "allowed_actions": [
@@ -96,10 +107,38 @@
   ],
   "events": [
     {
-      "turn": 3,
-      "type": "state_change",
-      "message": "FinanceLead も意思決定に参加することになり、経営陣の空き時間都合で締切が前倒しになりました。",
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "CEO から役員レビュー枠が短縮され、会議は 20 分以内に収めること、さらに briefing_doc には各料金案の粗利インパクト比較を必ず入れることが求められました。",
       "delta": {
+        "delta_applies_to": "initial_state",
+        "overridden_constraints": [
+          "会議時間は 30 分以内に収める"
+        ],
+        "added_constraints": [
+          "会議時間は 20 分以内に収める",
+          "briefing_doc には各料金案の粗利インパクト比較を含める"
+        ],
+        "reference_data": {
+          "agenda_min_items": 4,
+          "primary_comparison_axis": "gross margin impact"
+        }
+      },
+      "expected_artifact_updates": [
+        "agenda",
+        "briefing_doc"
+      ],
+      "expected_tasks": [
+        "check_new_timebox_constraint"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 4,
+      "type": "stakeholder_change",
+      "message": "FinanceLead も意思決定に参加することになり、経営陣の都合で締切が 2026-04-09 12:00 JST に前倒しされました。アジェンダとメモの参加者前提を更新し、スケジュール確認もやり直す必要があります。",
+      "delta": {
+        "delta_applies_to": "initial_state",
         "participants_added": [
           "FinanceLead"
         ],
@@ -109,7 +148,28 @@
         "agenda",
         "briefing_doc"
       ],
-      "expected_replan_within_turns": 2
+      "expected_tasks": [
+        "collect_availability"
+      ],
+      "expected_replan_within_turns": 1
+    },
+    {
+      "turn": 6,
+      "type": "ambiguity",
+      "message": "ただし比較軸について、SalesLead は成長速度を主軸に見たい一方、FinanceLead は粗利改善を主軸に見るべきだと主張しています。どちらを主要な意思決定軸にするかは追加確認が必要です。",
+      "delta": {
+        "reference_data": {
+          "primary_comparison_axis": "ambiguous"
+        }
+      },
+      "expected_artifact_updates": [
+        "agenda",
+        "briefing_doc"
+      ],
+      "expected_tasks": [
+        "clarify_decision_scope"
+      ],
+      "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
@@ -119,22 +179,27 @@
       "briefing_doc"
     ],
     "no_constraint_violation": true,
-    "must_acknowledge_changes": true
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
   },
   "rubric": {
     "outcome": [
       "最終成果物が FinanceLead 追加と最新締切を反映している",
-      "briefing_doc が料金案の比較と意思決定論点を含んでいる",
-      "agenda と briefing_doc の参加者・期限が整合している"
+      "agenda が 20 分以内の時間配分に更新されている",
+      "briefing_doc が粗利インパクト比較と意思決定論点を含んでいる",
+      "比較軸が曖昧な段階では単一の判断軸に断定していない"
     ],
     "process": [
-      "参加可能時間確認を会議時刻確定より前に置いている",
-      "会議論点を固めてから事前共有メモを作成している"
+      "turn 2 の新制約後に既存の agenda と briefing_doc の前提を見直している",
+      "turn 4 の stakeholder_change 後に finalize や単純な文書更新を優先せず、参加者前提とスケジュール確認を先に更新している",
+      "define_agenda を先に行い、その内容を踏まえて briefing_doc を更新している",
+      "turn 6 の ambiguity 後に ask_clarification を使って比較軸の追加確認を取っている"
     ],
     "recovery": [
-      "イベント発生後2ターン以内に状態更新または再計画を行う",
-      "参加者追加と締切前倒しの両方を明示的に認識している"
+      "各イベント後 1 ターン以内に状態更新または再計画を行う",
+      "参加者追加、締切前倒し、比較軸曖昧化の3つに追随して成果物を更新している"
     ]
   },
-  "notes": "最も基本的なケース。会議目的が明確で、参加者変更と締切前倒しへの追従を確認できる。"
+  "notes": "既存の meeting_001 を hard 化したケース。turn 2 で時間制約と briefing 要件が追加され、既存の 30 分制約は 20 分制約に明示的に置き換わる。turn 4 で参加者と締切が変わり、turn 6 で意思決定軸が曖昧化する。将来的には must_not_finalize_with_unresolved_scope を true に切り替える候補。会議準備の途中で agenda と briefing の前提を自発的に切り替えられるかを見たい。"
 }

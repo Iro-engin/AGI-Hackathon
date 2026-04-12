@@ -2,7 +2,7 @@
   "task_id": "finance_008",
   "domain": "finance_analyst",
   "difficulty": "medium",
-  "initial_request": "大手製薬、バイオテック、病院、医療保険の4セクターを比較してください。現時点では大手製薬が相対的に主導と見られている理由と、バイオテック・病院・医療保険がどの条件なら逆転候補になるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "initial_request": "Compare large pharma, biotech, hospitals, and health insurers. Explain why large pharma is currently leading, when the other sectors could overtake it, and prepare a news reaction note plus a sector watch update.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-06-12T08:15:00+09:00",
@@ -81,12 +81,10 @@
       }
     ],
     "constraints": [
-      "薬価圧力の高まりが未確認のまま大手製薬主導の継続を断定しない",
-      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
-      "sector_watch_update にはパイプライン期待だけでなく規制リスクも含める",
-      "バイオテック・病院・医療保険への回転は、収益可視性と政策影響の差まで説明する",
-      "少なくとも大手製薬、バイオテック、病院、医療保険の4セクターを比較対象に含める",
-      "recommended_sector_weights は合計 1.0 を大きく外れないこと"
+      "Do not confirm a bearish view on large pharma before the relevant product and pricing news is verified.",
+      "Include large_pharma, biotech, hospitals, and health_insurers in the comparison set.",
+      "The recommended_sector_weights should stay close to a total of 1.0.",
+      "The recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
     ],
     "task_dependencies": [
       {
@@ -97,7 +95,12 @@
       {
         "before": "compare_rotation_candidates",
         "after": "finalize_watchlist",
-        "reason": "バイオテックと病院、医療保険のどこが受益しやすいかを比較してから監視対象を確定する必要がある"
+        "reason": "The candidate sectors should be compared before the final watchlist is locked."
+      },
+      {
+        "before": "check_new_allocation_constraint",
+        "after": "finalize_watchlist",
+        "reason": "The added allocation constraint should be reflected before the final watchlist is locked."
       }
     ],
     "reference_data": {
@@ -172,7 +175,7 @@
         "managed care MLR"
       ],
       "forecast_horizon": "1m",
-      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+      "decision_goal": "decide whether to reduce large pharma exposure and raise health insurers or biotech exposure"
     }
   },
   "allowed_actions": [
@@ -186,17 +189,26 @@
   ],
   "events": [
     {
-      "turn": 4,
-      "type": "state_change",
-      "message": "大手薬剤への価格交渉強化が報じられ、政策リスクの再燃が意識されました。一方で医療保険のマージン見通しは改善方向との見方が増えています。",
+      "turn": 3,
+      "type": "new_constraint",
+      "message": "A new portfolio rule was added: no single recommended defensive sector weight may exceed 0.30.",
       "delta": {
+        "delta_applies_to": "initial_state",
+        "added_constraints": [
+          "recommended_sector_weights for any single sector must not exceed 0.30 after the added constraint arrives."
+        ],
         "reference_data": {
-          "headline_summary": "drug pricing pressure returns while managed-care margin expectations improve",
-          "news_state": "confirmed_material_change",
-          "rotation_status": "rotation_under_review",
-          "losing_sector": "large_pharma"
+          "target_weight_template": {
+            "large_pharma": 0.24,
+            "biotech": 0.26,
+            "hospitals": 0.2,
+            "health_insurers": 0.3
+          }
         }
       },
+      "expected_tasks": [
+        "check_new_allocation_constraint"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -205,19 +217,18 @@
     },
     {
       "turn": 5,
-      "type": "ambiguity",
-      "message": "回転先について、医療保険優位かバイオテック反発かで見方が割れており、病院セクターのディフェンシブ性を重視する声も出ています。",
+      "type": "state_change",
+      "message": "A negative headline on a key large-pharma product has weakened the prior leadership thesis.",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
-          "rotation_status": "ambiguous",
-          "news_state": "partially_confirmed",
-          "winning_sector_candidates": [
-            "health_insurers",
-            "biotech",
-            "hospitals"
-          ]
+          "news_state": "confirmed_material_change",
+          "losing_sector": "large_pharma"
         }
       },
+      "expected_tasks": [
+        "verify_large_pharma_news"
+      ],
       "expected_artifact_updates": [
         "news_reaction_note",
         "sector_watch_update"
@@ -238,23 +249,25 @@
   },
   "rubric": {
     "outcome": [
-      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
-      "sector_watch_update が news_state と sector_links を反映している",
-      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
-      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
-      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+      "The final artifacts reflect the latest tracked state for finance_008.",
+      "The delivered artifacts cover the four-sector comparison required in finance_008.",
+      "The allocation explanation is consistent with current sector_weights and the correlation_map.",
+      "The recommended sector weights remain internally coherent with the stated rotation thesis.",
+      "The latest event-driven changes are reflected in both required artifacts."
     ],
     "process": [
-      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
-      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
-      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
+      "ニュース発生前は平常時の large_pharma のキャッシュフロー安定とパイプライン可視性の前提を維持し、薬価圧力ニュース発生後に stance 更新している",
+      "health_insurers・biotech・hospitals を比較している",
+      "large_pharma からの資金回転を、政策影響差・リスク許容度・医療利用動向との因果リンクと初期相関ヒント付きで整理している",
       "current_sector_weights からどの比率をどれだけ動かすかを説明している",
-      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+      "曖昧イベント後に ask_clarification か同等の確認要求を行っている",
+      "turn 3 new_constraint is reflected in the allocation plan.",
+      "turn 5 state_change leads to verify_large_pharma_news before finalize."
     ],
     "recovery": [
-      "各イベント後1ターン以内に状態更新または再計画を行う",
-      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
+      "The agent replans or updates artifacts within the expected turn window after each event.",
+      "The agent does not keep stale assumptions after the latest event state is available."
     ]
   },
-  "notes": "大手製薬が安定して見える理由を先に与え、その前提が薬価圧力で崩れるケース。初期配分をどれだけ医療保険やバイオテックへ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+  "notes": "Medium case. This scenario tests whether the agent updates the allocation draft when a new constraint arrives and then rechecks the pharma-led baseline when the state changes."
 }

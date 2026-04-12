@@ -201,6 +201,7 @@
     },
     "event": {
       "type": "object",
+      "description": "Event deltas may directly overwrite top-level initial_state fields such as deadline or budget, may update nested initial_state.reference_data keys, and may use additive keys such as added_constraints / overridden_constraints / participants_added for differential updates.",
       "required": [
         "turn",
         "type",
@@ -234,6 +235,12 @@
           "minimum": 0
         },
         "expected_artifact_updates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_tasks": {
           "type": "array",
           "items": {
             "type": "string"

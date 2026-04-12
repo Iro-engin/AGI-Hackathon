@@ -1,104 +1,49 @@
 {
   "task_id": "finance_005",
   "domain": "finance_analyst",
-  "difficulty": "medium",
-  "initial_request": "EV OEM、電池、銅、電力設備の4セクターを比較してください。現時点では EV OEM が販売拡大期待で主導と見られている理由と、電池・銅・電力設備がどの条件なら逆転候補になるかを整理し、朝会用のニュース反応メモとセクター監視更新を作りたいです。",
+  "difficulty": "hard",
+  "initial_request": "EV OEM、電池、銅、電力設備の4セクターについて、EV 主導から周辺インフラ主導へローテーションするかを整理してください。ニュース確認メモとセクター更新メモを作成し、比較軸が明確な状態にしてください。",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2026-06-09T08:20:00+09:00",
-    "participants": [
-      "EVPM",
-      "MaterialsAnalyst",
-      "RiskManager"
-    ],
+    "participants": ["EVPM", "MaterialsAnalyst", "RiskManager"],
     "budget": 100,
     "required_artifacts": [
       {
         "artifact_id": "news_reaction_note",
         "artifact_type": "document",
-        "required_fields": [
-          "baseline_view",
-          "headline_summary",
-          "losing_sector",
-          "winning_sector_candidates",
-          "current_sector_weights",
-          "recommended_sector_weights",
-          "weight_change_rationale",
-          "rotation_reasoning",
-          "positioning_implication"
-        ],
+        "required_fields": ["baseline_view", "headline_summary", "losing_sector", "winning_sector_candidates", "current_sector_weights", "recommended_sector_weights", "weight_change_rationale", "rotation_reasoning", "positioning_implication"],
         "semantic_checks": [
-          {
-            "artifact_field": "losing_sector",
-            "state_path": "reference_data.losing_sector"
-          },
-          {
-            "artifact_field": "winning_sector_candidates",
-            "state_path": "reference_data.winning_sector_candidates"
-          },
-          {
-            "artifact_field": "current_sector_weights",
-            "state_path": "reference_data.sector_weights"
-          },
-          {
-            "artifact_field": "recommended_sector_weights",
-            "state_path": "reference_data.target_weight_template"
-          },
-          {
-            "artifact_field": "rotation_status",
-            "state_path": "reference_data.rotation_status"
-          }
+          {"artifact_field": "losing_sector", "state_path": "reference_data.losing_sector"},
+          {"artifact_field": "winning_sector_candidates", "state_path": "reference_data.winning_sector_candidates"},
+          {"artifact_field": "current_sector_weights", "state_path": "reference_data.sector_weights"},
+          {"artifact_field": "recommended_sector_weights", "state_path": "reference_data.target_weight_template"},
+          {"artifact_field": "rotation_status", "state_path": "reference_data.rotation_status"}
         ],
         "latest_version_required": true
       },
       {
         "artifact_id": "sector_watch_update",
         "artifact_type": "document",
-        "required_fields": [
-          "baseline_checks",
-          "news_checklist",
-          "correlation_map",
-          "rebalance_actions",
-          "risk_scenarios",
-          "sectors_to_watch",
-          "next_checkpoints"
-        ],
+        "required_fields": ["baseline_checks", "news_checklist", "correlation_map", "rebalance_actions", "risk_scenarios", "sectors_to_watch", "next_checkpoints"],
         "semantic_checks": [
-          {
-            "artifact_field": "news_state",
-            "state_path": "reference_data.news_state"
-          },
-          {
-            "artifact_field": "sector_links",
-            "state_path": "reference_data.sector_links"
-          },
-          {
-            "artifact_field": "correlation_map",
-            "state_path": "reference_data.correlation_map"
-          }
+          {"artifact_field": "news_state", "state_path": "reference_data.news_state"},
+          {"artifact_field": "sector_links", "state_path": "reference_data.sector_links"},
+          {"artifact_field": "correlation_map", "state_path": "reference_data.correlation_map"}
         ],
         "latest_version_required": true
       }
     ],
     "constraints": [
-      "EV値下げ競争の再燃が未確認のまま EV OEM 主導の継続を断定しない",
-      "rotation_status が ambiguous の場合は単一セクターへの断定推奨にしない",
-      "sector_watch_update には需要見通しだけでなく在庫と補助金リスクも含める",
-      "電池・銅・電力設備への資金回転は、充電投資と送配電投資のつながりまで説明する",
-      "少なくとも EV OEM、電池、銅、電力設備の4セクターを比較対象に含める",
+      "EV 値下げニュースが未確認のまま EV OEM 弱気を確定しない",
+      "rotation_status が ambiguous の場合は単一セクターへの確定判断にしない",
+      "ev_oem・batteries・copper_miners・power_grid_equipment の4セクターを比較対象に含める",
       "recommended_sector_weights は合計 1.0 を大きく外れないこと"
     ],
     "task_dependencies": [
-      {
-        "before": "verify_ev_margin_news",
-        "after": "update_sector_view",
-        "reason": "EV OEMの値下げ圧力と販売計画の変化を確認してから主導セクター見通しを更新する必要がある"
-      },
-      {
-        "before": "compare_rotation_candidates",
-        "after": "finalize_watchlist",
-        "reason": "電池・銅・電力設備のどこが受益しやすいかを比較してから監視対象を確定する必要がある"
-      }
+      {"before": "verify_ev_margin_news", "after": "update_sector_view", "reason": "EV OEM の採算ニュース確認後にスタンス更新へ移る必要がある"},
+      {"before": "check_new_balance_constraint", "after": "finalize_watchlist", "reason": "途中追加された配分バランス制約を反映してから最終判断を固める必要がある"},
+      {"before": "compare_rotation_candidates", "after": "finalize_watchlist", "reason": "比較候補の優先度整理後に最終判断を固める必要がある"}
     ],
     "reference_data": {
       "market_theme": "EV demand and grid buildout",
@@ -106,90 +51,50 @@
       "news_state": "unconfirmed",
       "current_leader_sector": "ev_oem",
       "losing_sector": null,
-      "baseline_stability_reason": "Delivery momentum and policy support still keep EV OEM volume growth in focus while the broader supply chain remains a step behind.",
-      "winning_sector_candidates": [
-        "batteries",
-        "copper_miners",
-        "power_grid_equipment"
-      ],
+      "baseline_stability_reason": "Delivery momentum and policy support keep EV OEM volume growth in focus.",
+      "winning_sector_candidates": ["batteries", "copper_miners", "power_grid_equipment"],
       "rotation_status": "rotation_under_review",
       "sector_links": [
         "If EV pricing weakens, battery names can still hold up if storage demand and mix improve.",
         "If charging and grid upgrades accelerate, power equipment and copper can outperform EV OEMs."
       ],
-      "sector_universe": [
-        "ev_oem",
-        "batteries",
-        "copper_miners",
-        "power_grid_equipment"
-      ],
-      "sector_weights": {
-        "ev_oem": 0.39,
-        "batteries": 0.23,
-        "copper_miners": 0.18,
-        "power_grid_equipment": 0.2
-      },
+      "sector_universe": ["ev_oem", "batteries", "copper_miners", "power_grid_equipment"],
+      "sector_weights": {"ev_oem": 0.39, "batteries": 0.23, "copper_miners": 0.18, "power_grid_equipment": 0.2},
       "budget_unit": "portfolio weight points (100 = full sector allocation budget)",
-      "target_weight_template": {
-        "ev_oem": 0.24,
-        "batteries": 0.24,
-        "copper_miners": 0.22,
-        "power_grid_equipment": 0.3
-      },
+      "target_weight_template": {"ev_oem": 0.24, "batteries": 0.24, "copper_miners": 0.2, "power_grid_equipment": 0.32},
       "correlation_map": [
-        {
-          "pair": [
-            "ev_oem",
-            "batteries"
-          ],
-          "relation": "positive",
-          "strength": "medium",
-          "note": "Battery earnings can still hold up if storage demand offsets weaker EV pricing."
-        },
-        {
-          "pair": [
-            "ev_oem",
-            "power_grid_equipment"
-          ],
-          "relation": "rotation",
-          "strength": "high",
-          "note": "Capital can rotate into grid names if EV volume stays fine but margins deteriorate."
-        },
-        {
-          "pair": [
-            "batteries",
-            "copper_miners"
-          ],
-          "relation": "positive",
-          "strength": "medium",
-          "note": "Battery and copper both benefit when electrification capex broadens beyond vehicle assembly."
-        }
+        {"pair": ["ev_oem", "batteries"], "relation": "positive", "strength": "medium", "note": "Battery earnings can hold up if storage demand offsets weaker EV pricing."},
+        {"pair": ["ev_oem", "power_grid_equipment"], "relation": "rotation", "strength": "high", "note": "Capital can rotate into grid names if EV margins deteriorate."},
+        {"pair": ["batteries", "copper_miners"], "relation": "positive", "strength": "medium", "note": "Battery and copper both benefit when electrification capex broadens."}
       ],
-      "watchlist_names": [
-        "EV OEM pricing",
-        "battery storage demand",
-        "copper inventories",
-        "grid capex orders"
-      ],
+      "watchlist_names": ["EV OEM pricing", "battery storage demand", "copper inventories", "grid capex orders"],
       "forecast_horizon": "1m",
-      "decision_goal": "decide whether to reduce AI infrastructure exposure and raise power equipment exposure"
+      "decision_goal": "decide whether to reduce EV OEM exposure and raise battery or power grid equipment exposure"
     }
   },
-  "allowed_actions": [
-    "ask_clarification",
-    "propose_plan",
-    "update_plan",
-    "create_artifact",
-    "revise_artifact",
-    "confirm_state",
-    "finalize"
-  ],
+  "allowed_actions": ["ask_clarification", "propose_plan", "update_plan", "create_artifact", "revise_artifact", "confirm_state", "finalize"],
   "events": [
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "今回の委員会では単一セクター配分を 0.30 以下に抑えるよう指示がありました。",
+      "delta": {
+        "delta_applies_to": "initial_state",
+        "added_constraints": ["recommended_sector_weights の単一セクター配分は 0.30 を超えてはならない"],
+        "reference_data": {
+          "target_weight_template": {"ev_oem": 0.24, "batteries": 0.24, "copper_miners": 0.22, "power_grid_equipment": 0.3}
+        }
+      },
+      "expected_artifact_updates": ["news_reaction_note", "sector_watch_update"],
+      "expected_tasks": ["check_new_balance_constraint"],
+      "expected_replan_within_turns": 1
+    },
     {
       "turn": 4,
       "type": "state_change",
-      "message": "大手 EV メーカーが追加値下げを発表し、販売台数維持の一方で利益率悪化懸念が強まりました。同時に送配電更新案件の前倒し報道が増えています。",
+      "message": "大手 EV メーカーが追加値下げを表明し、同時に電力設備発注の前倒し観測が強まりました。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "headline_summary": "new EV price cuts pressure margins while grid upgrade orders appear to be pulled forward",
           "news_state": "confirmed_material_change",
@@ -197,40 +102,30 @@
           "losing_sector": "ev_oem"
         }
       },
-      "expected_artifact_updates": [
-        "news_reaction_note",
-        "sector_watch_update"
-      ],
+      "expected_artifact_updates": ["news_reaction_note", "sector_watch_update"],
+      "expected_tasks": ["verify_ev_margin_news"],
       "expected_replan_within_turns": 1
     },
     {
-      "turn": 5,
+      "turn": 7,
       "type": "ambiguity",
-      "message": "回転先について、電力設備優位か電池優位かで見方が割れており、銅への循環物色を重視する声も残っています。",
+      "message": "ただし資金の移動先については、電力設備、電池、銅のどれが先行するかで見解が割れています。",
       "delta": {
+        "delta_applies_to": "initial_state",
         "reference_data": {
           "rotation_status": "ambiguous",
           "news_state": "partially_confirmed",
-          "winning_sector_candidates": [
-            "power_grid_equipment",
-            "batteries",
-            "copper_miners"
-          ]
+          "winning_sector_candidates": ["power_grid_equipment", "batteries", "copper_miners"]
         }
       },
-      "expected_artifact_updates": [
-        "news_reaction_note",
-        "sector_watch_update"
-      ],
+      "expected_artifact_updates": ["news_reaction_note", "sector_watch_update"],
+      "expected_tasks": ["compare_rotation_candidates"],
       "expected_replan_within_turns": 1
     }
   ],
   "goal_condition": {
     "must_satisfy_latest_state": true,
-    "required_artifacts": [
-      "news_reaction_note",
-      "sector_watch_update"
-    ],
+    "required_artifacts": ["news_reaction_note", "sector_watch_update"],
     "no_constraint_violation": true,
     "must_acknowledge_changes": true,
     "must_use_ask_clarification_on_ambiguity": true,
@@ -238,23 +133,15 @@
   },
   "rubric": {
     "outcome": [
-      "news_reaction_note が平常時の AIサーバー関連優位の前提を更新し、最新の rotation_status を反映している",
-      "sector_watch_update が news_state と sector_links を反映している",
-      "回転先が未確定な段階で1セクターを断定せず、少なくとも3候補を比較したうえで監視ポイントを残している",
-      "recommended_sector_weights と rebalance_actions に具体的な比率変更が入っている",
-      "初期の sector_weights と correlation_map を踏まえて更新方針を説明している"
+      "追加配分制約を反映しつつ最新の losing_sector と候補セクターを反映している",
+      "曖昧化後に単一セクターへ断定していない"
     ],
     "process": [
-      "ニュース発生前は平常時の AIインフラ監視を維持し、AIサーバー需要鈍化ニュース発生後に stance 更新している",
-      "電力設備・送配電、冷却・熱マネジメント、半導体製造装置を比較している",
-      "電力設備への資金回転を、電力制約との因果リンクと初期相関ヒント付きで整理している",
-      "current_sector_weights からどの比率をどれだけ動かすかを説明している",
-      "曖昧イベント後に ask_clarification か同等の確認要求を行っている"
+      "turn 2 の新制約後に既存配分案を自発的に修正している",
+      "turn 4 の state_change 後に finalize や文書仕上げを優先せず verify_ev_margin_news または update_sector_view を先に進めている",
+      "turn 7 の ambiguity 後に ask_clarification を使っている"
     ],
-    "recovery": [
-      "各イベント後1ターン以内に状態更新または再計画を行う",
-      "AIサーバー関連の崩れと複数の回転候補の未確定性の両方を明示的に認識している"
-    ]
+    "recovery": ["各イベント後 1 ターン以内に更新または再計画を行っている"]
   },
-  "notes": "EV OEM が安定して見える理由を先に与え、その前提が値下げ競争で崩れるケース。初期配分をどれだけ電力設備や電池へ動かすかまで扱う。must_not_finalize_with_unresolved_scope は現行 MVP では未使用の予約フラグ。"
+  "notes": "hard ケース。後付け制約、主導セクター崩れ、比較軸曖昧化を非固定ターンで組み合わせる。初期 target_weight_template は turn 2 の制約注入前の案であり、制約後に修正が必要。"
 }

@@ -1,0 +1,80 @@
+{
+  "task_id": "finance_openai_easy_005",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.3333333333333333,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 1.0
+  },
+  "meta": {
+    "total_events": 3,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "easy"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for consumer_goods sector",
+        "Related news for renewable_energy sector"
+      ],
+      "questions_asked": [
+        "Please provide related past news inference_rate, efficient_rate_change, and resource_mix_rate data for the renewable_energy sector to better estimate its efficient_rate_now.",
+        "Please provide related past news inference_rate, efficient_rate_change, and resource_mix_rate data for the consumer_goods sector to better estimate its efficient_rate_now.",
+        "Please provide related past news inference_rate, efficient_rate_change, and resource_mix_rate data for the retail_technology sector to better estimate its efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for consumer_goods sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for banking_services sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "questions_asked": [
+        "Please provide sector-specific related news for banking_services to better estimate efficient_rate_now.",
+        "Please provide sector-specific related news for pharmaceuticals to better estimate efficient_rate_now.",
+        "Please provide sector-specific related news for consumer_goods to better estimate efficient_rate_now.",
+        "Please provide sector-specific related news for retail_technology to better estimate efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for banking_services sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for consumer_goods sector",
+        "Related news for retail_technology sector"
+      ],
+      "questions_asked": [
+        "Please provide sectors related news for the retail_technology sector to better assess the impact of AI-driven inventory systems and increased interest in sustainable products.",
+        "Please provide sectors related news for the consumer_goods sector to assess the impact of increased interest in sustainable products as mentioned in the current news.",
+        "Please provide sectors related news for the renewable_energy sector to assess the impact of the news about energy firms expanding solar power capacity."
+      ],
+      "covered_requires": [
+        "Related news for consumer_goods sector",
+        "Related news for retail_technology sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

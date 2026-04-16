@@ -32,16 +32,16 @@ INITIAL_REQUIRE_COUNT_BY_DIFFICULTY: dict[Difficulty, int] = {
 }
 
 NAME_POOL = [
-    "田中",
-    "佐藤",
-    "鈴木",
-    "高橋",
-    "伊藤",
-    "渡辺",
-    "中村",
-    "小林",
-    "加藤",
-    "吉田",
+    "Alice",
+    "Bob",
+    "Carol",
+    "David",
+    "Eve",
+    "Frank",
+    "Grace",
+    "Henry",
+    "Iris",
+    "Jack",
 ]
 
 PLACE_POOL = [
@@ -54,8 +54,8 @@ PLACE_POOL = [
 ]
 
 PERSON_CONSTRAINT_POOL = [
-    "移動があるため会議室(conference_room)は避けたい",
-    "大体木曜日は、午後は空いていることが多い",
+    "Prefer to avoid conference rooms due to travel time",
+    "Thursday afternoons are generally free",
 ]
 
 
@@ -120,6 +120,15 @@ def generate_meeting_case(
         need_duration=need_duration,
     )
 
+    initial_best = _find_best_slot(people_full)
+    if initial_best is None:
+        raise ValueError("meeting base generation failed: no common slot in initial snapshot")
+    initial_do = MeetingDo(
+        where=initial_best.where,
+        when_from=initial_best.when_from,
+        when_to=initial_best.when_to,
+    )
+
     events: list[MeetingEvent] = []
     current_people = people_full
     for index in range(event_count):
@@ -136,6 +145,7 @@ def generate_meeting_case(
         difficulty=difficulty,
         initial_request=initial_request,
         initial_state=initial_state,
+        initial_do=initial_do,
         events=events,
         initial_requires=initial_requires,
     )
@@ -186,12 +196,17 @@ def write_meeting_cases(
 def parse_args() -> argparse.Namespace:
     """meeting ケース生成 CLI 用の引数を解釈する。"""
     parser = argparse.ArgumentParser(description="Generate meeting cases for the inaba models.")
-    parser.add_argument("--count", type=int, default=5, help="Number of cases to generate.")
+    parser.add_argument("--count", type=int, default=5, help="Number of cases per difficulty.")
     parser.add_argument(
         "--difficulty",
         choices=("easy", "medium", "hard"),
         default="medium",
-        help="Difficulty used for generated cases.",
+        help="Difficulty used for generated cases (ignored when --all-difficulties is set).",
+    )
+    parser.add_argument(
+        "--all-difficulties",
+        action="store_true",
+        help="Generate easy / medium / hard in sequence with difficulty suffix in task_id.",
     )
     parser.add_argument("--seed", type=int, default=None, help="Optional random seed.")
     parser.add_argument(
@@ -211,15 +226,24 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     """CLI から meeting ケース生成を実行する。"""
     args = parse_args()
-    paths = write_meeting_cases(
-        output_dir=args.output_dir,
-        count=args.count,
-        difficulty=args.difficulty,
-        seed=args.seed,
-        task_id_prefix=args.task_id_prefix,
+    difficulties: tuple[Difficulty, ...] = (
+        ("easy", "medium", "hard") if args.all_difficulties else (args.difficulty,)
     )
-    print(f"generated {len(paths)} meeting cases into {args.output_dir}")
-    for path in paths:
+    all_paths: list[Path] = []
+    for difficulty in difficulties:
+        prefix = (
+            f"{args.task_id_prefix}_{difficulty}" if args.all_difficulties else args.task_id_prefix
+        )
+        paths = write_meeting_cases(
+            output_dir=args.output_dir,
+            count=args.count,
+            difficulty=difficulty,
+            seed=args.seed,
+            task_id_prefix=prefix,
+        )
+        all_paths.extend(paths)
+    print(f"generated {len(all_paths)} meeting cases into {args.output_dir}")
+    for path in all_paths:
         print(path)
 
 
@@ -325,9 +349,9 @@ def _build_extra_slots(
 def _build_constraints(need_duration: int) -> list[str]:
     """meeting ケース共通の制約文を組み立てる。"""
     return [
-        "参加者全員が同じ候補で参加できること",
-        f"{need_duration} 分連続で確保できる候補のみ有効とする",
-        "できるだけ早い時間帯の候補を優先する",
+        "All participants must share the same candidate slot",
+        f"Only slots with {need_duration} consecutive minutes available are valid",
+        "Prefer the earliest available time slot",
     ]
 
 
@@ -436,7 +460,7 @@ def _build_requires_from_people(people: list[PeopleInfo]) -> list[str]:
     requires: list[str] = []
     for person in people:
         for hidden_index in person.hidden_attendance_indexes:
-            requires.append(f"{person.name}の参加候補{hidden_index + 1}の場所")
+            requires.append(f"{person.name}'s attendance slot {hidden_index + 1} location")
     return requires
 
 
@@ -451,17 +475,17 @@ def _build_initial_request(
     need_duration: int,
 ) -> str:
     """ユーザーに見せる初期依頼文を自然文で組み立てる。"""
-    participant_names = "、".join(person.name for person in people)
-    hidden_names = "、".join(
+    participant_names = ", ".join(person.name for person in people)
+    hidden_names = ", ".join(
         person.name
         for person in visible_state.state_people
         if person.hidden_attendance_indexes
     )
     return (
-        f"{participant_names}で {need_duration} 分の会議を設定したいです。"
-        " 参加可能な時間帯はかなり見えていますが、"
-        f" {hidden_names} の一部候補は場所情報がまだ欠けています。"
-        " できるだけ早い時間で、必要なら不足情報を確認しつつ場所と開始時刻を決めてください。"
+        f"We want to schedule a {need_duration}-minute meeting with {participant_names}."
+        " Most attendance candidates are visible,"
+        f" but some slots for {hidden_names} are missing location information."
+        " Select the earliest available slot and ask for missing information if needed."
     )
 
 
@@ -499,10 +523,10 @@ def _build_event(
     )
     should_require = _build_requires_from_state(state_before)
     message = (
-        f"{target_person.name}さんの予定に変更が入りました。"
-        " これまで見ていた最速候補がそのまま使えるとは限らず、"
-        " 一部候補の場所情報も未確認です。"
-        " 最新候補を確認して、会議設定を見直してください。"
+        f"{target_person.name}'s schedule has changed."
+        " The previously preferred slot may no longer be available,"
+        " and some candidate locations are still unconfirmed."
+        " Please review the latest candidates and update the meeting plan."
     )
 
     return updated_people, MeetingEvent(

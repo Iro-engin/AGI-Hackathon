@@ -49,16 +49,16 @@ PARTICIPANT_COUNT_BY_DIFFICULTY: dict[Difficulty, int] = {
 }
 
 NAME_POOL = [
-    "田中",
-    "佐藤",
-    "鈴木",
-    "高橋",
-    "伊藤",
-    "渡辺",
-    "中村",
-    "小林",
-    "加藤",
-    "吉田",
+    "Alice",
+    "Bob",
+    "Carol",
+    "David",
+    "Eve",
+    "Frank",
+    "Grace",
+    "Henry",
+    "Iris",
+    "Jack",
 ]
 
 PLACE_POOL = [
@@ -71,14 +71,14 @@ PLACE_POOL = [
 ]
 
 MEETING_CONSTRAINTS_TEMPLATE = [
-    "参加者全員が同じ候補で参加できること",
-    "{need_duration} 分連続で確保できる候補のみ有効とする",
-    "できるだけ早い時間帯の候補を優先する",
+    "All participants must share the same candidate slot",
+    "Only slots with {need_duration} consecutive minutes available are valid",
+    "Prefer the earliest available time slot",
 ]
 
 OPENAI_INSTRUCTIONS = """
-あなたは会議ケース生成の補助エンジンです。
-必ずJSONのみを返し、Markdownや説明文は一切出さないでください。
+You are a meeting case generation assistant.
+Return only valid JSON. Do not include Markdown or explanatory text.
 """.strip()
 
 
@@ -212,6 +212,15 @@ def generate_meeting_case(
         need_duration=meeting_plan.need_duration,
     )
 
+    initial_best = _find_best_slot(initial_people)
+    if initial_best is None:
+        raise ValueError("meeting openai generation failed: no common slot in initial snapshot")
+    initial_do = MeetingDo(
+        where=initial_best.where,
+        when_from=initial_best.when_from,
+        when_to=initial_best.when_to,
+    )
+
     events: list[MeetingEvent] = []
     for index, event_plan in enumerate(meeting_plan.events):
         state_people = snapshots[index + 1]
@@ -250,6 +259,7 @@ def generate_meeting_case(
         difficulty=difficulty,
         initial_request=initial_request,
         initial_state=initial_state,
+        initial_do=initial_do,
         events=events,
         initial_requires=initial_requires,
     )
@@ -328,22 +338,36 @@ def parse_args() -> argparse.Namespace:
         default="meeting_openai",
         help="Prefix used for generated task_id values.",
     )
+    parser.add_argument(
+        "--all-difficulties",
+        action="store_true",
+        help="Generate easy / medium / hard in sequence with difficulty suffix in task_id.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     """CLI から OpenAI 版 meeting ケース生成を実行する。"""
     args = parse_args()
-    paths = write_meeting_cases(
-        output_dir=args.output_dir,
-        count=args.count,
-        difficulty=args.difficulty,
-        seed=args.seed,
-        task_id_prefix=args.task_id_prefix,
-        model=args.model,
+    difficulties: tuple[Difficulty, ...] = (
+        ("easy", "medium", "hard") if args.all_difficulties else (args.difficulty,)
     )
-    print(f"generated {len(paths)} meeting cases into {args.output_dir}")
-    for path in paths:
+    all_paths: list[Path] = []
+    for difficulty in difficulties:
+        prefix = (
+            f"{args.task_id_prefix}_{difficulty}" if args.all_difficulties else args.task_id_prefix
+        )
+        paths = write_meeting_cases(
+            output_dir=args.output_dir,
+            count=args.count,
+            difficulty=difficulty,
+            seed=args.seed,
+            task_id_prefix=prefix,
+            model=args.model,
+        )
+        all_paths.extend(paths)
+    print(f"generated {len(all_paths)} meeting cases into {args.output_dir}")
+    for path in all_paths:
         print(path)
 
 
@@ -384,34 +408,34 @@ def _generate_meeting_plan(
 ) -> MeetingPlan:
     """Step1: 参加者、event 種別、do_exp、event 文面を OpenAI に生成させる。"""
     prompt = f"""
-難易度 {difficulty} の meeting ケースを作ります。乱数シードの参照値は {seed} です。
-参加者数は {participant_count} 人、event 数は {event_count} 件です。
-会議候補のスロット一覧は以下です。
+We are creating a difficulty={difficulty} meeting scheduling case. Reference seed: {seed}.
+Number of participants: {participant_count}, number of events: {event_count}.
+Available slot catalog:
 {json.dumps(_slot_catalog_to_prompt(slot_catalog), ensure_ascii=False)}
 
-以下を満たす JSON を返してください。
-- participant_names は重複なしの日本人名 {participant_count} 人
-- need_duration は 30, 45, 60 のいずれか
-- events は {event_count} 件
-- 各 event は target_person, event_type, message, exp_do_slot_id, constraint_hint を持つ
-- event_type は schedule_change, schedule_pause, info_update, context_note のいずれか
-- exp_do_slot_id は上のスロット一覧から選ぶ
-- message は日本語の自然文
-- message には「予定が変更した」「木曜日は空いていることが分かった」のように、
-  実際の変化があるものと、見るべき情報に変化のないコンテキストの両方を混ぜる
-- schedule_change または schedule_pause を少なくとも1件含める
-- info_update または context_note を少なくとも1件含める
-- constraint_hint は info_update で有用な補足がある場合だけ日本語で入れ、それ以外は null でよい
+Return JSON satisfying the following:
+- participant_names: {participant_count} unique English first names (no duplicates)
+- need_duration: one of 30, 45, or 60
+- events: exactly {event_count} items
+- each event has: target_person, event_type, message, exp_do_slot_id, constraint_hint
+- event_type: one of schedule_change, schedule_pause, info_update, context_note
+- exp_do_slot_id: chosen from the slot catalog above
+- message: natural English sentence
+- mix events with actual changes ("schedule changed", "Thursday is now free") and
+  context-only events where no schedule actually changes
+- include at least one schedule_change or schedule_pause
+- include at least one info_update or context_note
+- constraint_hint: English hint only for info_update events with useful context; null otherwise
 
-返却形式:
+Return format:
 {{
-  "participant_names": ["田中", "佐藤", "鈴木"],
+  "participant_names": ["Alice", "Bob", "Carol"],
   "need_duration": 45,
   "events": [
     {{
-      "target_person": "田中",
+      "target_person": "Alice",
       "event_type": "schedule_change",
-      "message": "田中さんのスケジュールが変更しました。午前の候補を見直す必要があります。",
+      "message": "Alice's schedule has changed. Morning slots may need to be reconsidered.",
       "exp_do_slot_id": "S03",
       "constraint_hint": null
     }}
@@ -430,32 +454,32 @@ def _generate_schedule_plan(
 ) -> MeetingSchedulePlan:
     """Step2: 初期状態と各 event 時点の全員スケジュールを OpenAI に組み直させる。"""
     prompt = f"""
-難易度 {difficulty} の meeting ケースを作ります。乱数シードの参照値は {seed} です。
-参加者は {json.dumps(meeting_plan.participant_names, ensure_ascii=False)} です。
-会議時間は {meeting_plan.need_duration} 分です。
-event 情報は {json.dumps(meeting_plan.model_dump(), ensure_ascii=False)} です。
-使えるスロット一覧は {json.dumps(_slot_catalog_to_prompt(slot_catalog), ensure_ascii=False)} です。
+We are creating a difficulty={difficulty} meeting scheduling case. Reference seed: {seed}.
+Participants: {json.dumps(meeting_plan.participant_names, ensure_ascii=False)}.
+Meeting duration: {meeting_plan.need_duration} minutes.
+Event plan: {json.dumps(meeting_plan.model_dump(), ensure_ascii=False)}.
+Available slots: {json.dumps(_slot_catalog_to_prompt(slot_catalog), ensure_ascii=False)}.
 
-以下を満たす JSON を返してください。
-- initial_people と event_people を返す
-- initial_people は参加者全員分の schedule
-- event_people は event 数と同じ長さ
-- 各人は name, constraints, slot_ids を持つ
-- slot_ids はスロット一覧のIDだけを使う
-- initial_people と各 event_people の各時点で、参加者全員に共通する候補が少なくとも1つある
-- 各 event_people[i] では、その event の exp_do_slot_id が全員共通候補に含まれる
-- さらに exp_do_slot_id がその時点で最も早い共通候補になるようにする
-- schedule_change / schedule_pause では target_person の slot_ids を直前時点から変更する
-- info_update では target_person の constraints に新しい補足を足してよい
-- context_note では schedules を変えなくてもよい
-- 1人あたり slot_ids は 3 件以上 6 件以下
+Return JSON satisfying the following:
+- return initial_people and event_people
+- initial_people: schedule for all participants
+- event_people: same length as number of events
+- each person has: name, constraints, slot_ids
+- slot_ids must only use IDs from the slot list above
+- at every time point (initial and each event), all participants share at least one common slot
+- for each event_people[i], the event's exp_do_slot_id must be in all participants' common slots
+- exp_do_slot_id must be the earliest common slot at that time point
+- for schedule_change / schedule_pause, change target_person's slot_ids from the previous step
+- for info_update, you may add a new constraint to target_person's constraints
+- for context_note, schedules may remain unchanged
+- each person must have between 3 and 6 slot_ids
 
-返却形式:
+Return format:
 {{
   "initial_people": [
     {{
-      "name": "田中",
-      "constraints": ["午前は比較的調整しやすい"],
+      "name": "Alice",
+      "constraints": ["Mornings are generally flexible"],
       "slot_ids": ["S01", "S03", "S06"]
     }}
   ],
@@ -463,8 +487,8 @@ event 情報は {json.dumps(meeting_plan.model_dump(), ensure_ascii=False)} で�
     {{
       "people": [
         {{
-          "name": "田中",
-          "constraints": ["木曜日は午後なら比較的動きやすい"],
+          "name": "Alice",
+          "constraints": ["Thursday afternoons are relatively open"],
           "slot_ids": ["S03", "S06", "S08"]
         }}
       ]
@@ -517,8 +541,8 @@ def _normalize_meeting_plan(
                 target_person=participant_names[index % len(participant_names)],
                 event_type=fallback_types[index % len(fallback_types)],
                 message=(
-                    f"{participant_names[index % len(participant_names)]}"
-                    "さん周辺の状況に補足が入りました。"
+                    f"There is an update regarding "
+                    f"{participant_names[index % len(participant_names)]}'s situation."
                 ),
                 exp_do_slot_id=valid_slot_catalog[
                     min(index, len(valid_slot_catalog) - 1)
@@ -539,7 +563,7 @@ def _normalize_meeting_plan(
             if event.exp_do_slot_id in slot_ids
             else valid_slot_catalog[min(index, len(valid_slot_catalog) - 1)].slot_id
         )
-        message = event.message.strip() or f"{target_person}さんの予定まわりに更新がありました。"
+        message = event.message.strip() or f"There has been a schedule update for {target_person}."
         normalized_events.append(
             MeetingEventPlan(
                 target_person=target_person,
@@ -559,7 +583,7 @@ def _normalize_meeting_plan(
         normalized_events[0] = MeetingEventPlan(
             target_person=first.target_person,
             event_type="schedule_change",
-            message=f"{first.target_person}さんのスケジュールが変更しました。候補を見直してください。",
+            message=f"{first.target_person}'s schedule has changed. Please review the candidates.",
             exp_do_slot_id=first.exp_do_slot_id,
             constraint_hint=None,
         )
@@ -572,9 +596,11 @@ def _normalize_meeting_plan(
         normalized_events[-1] = MeetingEventPlan(
             target_person=last.target_person,
             event_type="info_update",
-            message=f"{last.target_person}さんは木曜日なら比較的調整しやすいことが分かりました。",
+            message=(
+                f"It turns out {last.target_person} is relatively flexible on Thursdays."
+            ),
             exp_do_slot_id=last.exp_do_slot_id,
-            constraint_hint="木曜日は比較的調整しやすい",
+            constraint_hint="Thursday is relatively flexible",
         )
 
     return MeetingPlan(
@@ -963,7 +989,7 @@ def _build_requires_from_people(people: list[PeopleInfo]) -> list[str]:
     requires: list[str] = []
     for person in people:
         for hidden_index in person.hidden_attendance_indexes:
-            requires.append(f"{person.name}の参加候補{hidden_index + 1}の場所")
+            requires.append(f"{person.name}'s attendance slot {hidden_index + 1} location")
     return requires
 
 
@@ -978,17 +1004,17 @@ def _build_initial_request(
     need_duration: int,
 ) -> str:
     """ユーザーに見せる初期依頼文を自然文で組み立てる。"""
-    participant_names = "、".join(person.name for person in people)
-    hidden_names = "、".join(
+    participant_names = ", ".join(person.name for person in people)
+    hidden_names = ", ".join(
         person.name
         for person in visible_state.state_people
         if person.hidden_attendance_indexes
     )
     return (
-        f"{participant_names}で {need_duration} 分の会議を設定したいです。"
-        " 参加候補はある程度見えていますが、"
-        f" {hidden_names} の一部候補は場所情報がまだ欠けています。"
-        " できるだけ早い候補を選び、必要なら不足情報を確認してください。"
+        f"We want to schedule a {need_duration}-minute meeting with {participant_names}."
+        " Attendance candidates are partially visible,"
+        f" but some slots for {hidden_names} are missing location information."
+        " Select the earliest available slot and ask for missing information if needed."
     )
 
 

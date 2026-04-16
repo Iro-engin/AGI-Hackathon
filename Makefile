@@ -1,8 +1,9 @@
 UV := uv
 
-.PHONY: setup export-requirements lint build-notebook eval-sample eval-batch scaffold-logs inspect-case inspect-case-gemini inspect-all inspect-all-gemini gen-inaba-meeting-cases gen-inaba-finance-cases gen-inaba-finance-cases-openai gen-inaba-meeting-cases-openai execute-inaba-meeting execute-inaba-finance eval-inaba-meeting eval-inaba-finance
+.PHONY: setup export-requirements lint build-notebook eval-sample eval-batch scaffold-logs inspect-case inspect-case-gemini inspect-all inspect-all-gemini gen-inaba-meeting-cases gen-inaba-finance-cases gen-inaba-finance-cases-openai gen-inaba-meeting-cases-openai gen-inaba-meeting-cases-all gen-inaba-finance-cases-all gen-inaba-meeting-cases-openai-all gen-inaba-finance-cases-openai-all execute-inaba-meeting execute-inaba-finance eval-inaba-meeting eval-inaba-finance
 
 INABA_MEETING_COUNT ?= 15
+INABA_MEETING_COUNT_PER_DIFFICULTY ?= 5
 INABA_MEETING_DIFFICULTY ?= medium
 INABA_MEETING_OUTPUT_DIR ?= results/generated/inaba/meeting
 INABA_MEETING_SEED ?=
@@ -11,8 +12,10 @@ INABA_MEETING_OPENAI_MODEL ?= gpt-4.1-mini
 INABA_MEETING_OPENAI_OUTPUT_DIR ?= results/generated/inaba/meeting_openai
 INABA_MEETING_OPENAI_TASK_ID_PREFIX ?= meeting_openai
 INABA_MEETING_EVAL_INPUT_DIR ?= results/generated/inaba/meeting_openai
-INABA_MEETING_EVAL_OUTPUT_DIR ?= results/execute/inaba/meeting_openai
+INABA_EVAL_MODEL_DIR_SUFFIX ?= $(INABA_EVAL_DECISION_MODEL)_$(INABA_EVAL_ANSWER_MODEL)
+INABA_MEETING_EVAL_OUTPUT_DIR ?= results/execute/inaba/meeting_openai/$(INABA_EVAL_MODEL_DIR_SUFFIX)
 INABA_FINANCE_COUNT ?= 15
+INABA_FINANCE_COUNT_PER_DIFFICULTY ?= 5
 INABA_FINANCE_DIFFICULTY ?= medium
 INABA_FINANCE_OUTPUT_DIR ?= results/generated/inaba/finance
 INABA_FINANCE_SEED ?=
@@ -21,18 +24,19 @@ INABA_FINANCE_OPENAI_MODEL ?= gpt-4.1-mini
 INABA_FINANCE_OPENAI_OUTPUT_DIR ?= results/generated/inaba/finance_openai
 INABA_FINANCE_OPENAI_TASK_ID_PREFIX ?= finance_openai
 INABA_FINANCE_EVAL_INPUT_DIR ?= results/generated/inaba/finance_openai
-INABA_FINANCE_EVAL_OUTPUT_DIR ?= results/execute/inaba/finance_openai
+INABA_FINANCE_EVAL_OUTPUT_DIR ?= results/execute/inaba/finance_openai/$(INABA_EVAL_MODEL_DIR_SUFFIX)
 INABA_EVAL_DECISION_MODEL ?= gpt-4.1-mini
 INABA_EVAL_ANSWER_MODEL ?= gpt-4o-mini
 INABA_EVAL_MAX_QUESTIONS ?= 4
 INABA_EVAL_LIMIT ?=
 
 INABA_MEETING_SCORE_CASES_DIR ?= results/generated/inaba/meeting_openai
-INABA_MEETING_SCORE_EXEC_DIR ?= results/execute/inaba/meeting_openai
-INABA_MEETING_SCORE_OUTPUT_DIR ?= results/evaluate/inaba/meeting_openai
+INABA_MEETING_SCORE_EXEC_DIR ?= $(INABA_MEETING_EVAL_OUTPUT_DIR)
+INABA_SCORE_MODEL_DIR_SUFFIX ?= $(INABA_SCORE_JUDGE_MODEL)
+INABA_MEETING_SCORE_OUTPUT_DIR ?= results/evaluate/inaba/meeting_openai/$(INABA_SCORE_MODEL_DIR_SUFFIX)
 INABA_FINANCE_SCORE_CASES_DIR ?= results/generated/inaba/finance_openai
-INABA_FINANCE_SCORE_EXEC_DIR ?= results/execute/inaba/finance_openai
-INABA_FINANCE_SCORE_OUTPUT_DIR ?= results/evaluate/inaba/finance_openai
+INABA_FINANCE_SCORE_EXEC_DIR ?= $(INABA_FINANCE_EVAL_OUTPUT_DIR)
+INABA_FINANCE_SCORE_OUTPUT_DIR ?= results/evaluate/inaba/finance_openai/$(INABA_SCORE_MODEL_DIR_SUFFIX)
 INABA_SCORE_JUDGE_MODEL ?= gpt-4.1-mini
 INABA_SCORE_EARLY_DISCOVERY_N ?= 2
 INABA_SCORE_LIMIT ?=
@@ -114,6 +118,40 @@ gen-inaba-finance-cases-openai:
 		--model $(INABA_FINANCE_OPENAI_MODEL) \
 		--output-dir $(INABA_FINANCE_OPENAI_OUTPUT_DIR) \
 		--task-id-prefix $(INABA_FINANCE_OPENAI_TASK_ID_PREFIX) \
+		$(if $(INABA_FINANCE_SEED),--seed $(INABA_FINANCE_SEED),)
+
+gen-inaba-meeting-cases-all:
+	$(UV) run python -m src.inaba.gen_case.base.meeting \
+		--count $(INABA_MEETING_COUNT_PER_DIFFICULTY) \
+		--output-dir $(INABA_MEETING_OUTPUT_DIR) \
+		--task-id-prefix $(INABA_MEETING_TASK_ID_PREFIX) \
+		--all-difficulties \
+		$(if $(INABA_MEETING_SEED),--seed $(INABA_MEETING_SEED),)
+
+gen-inaba-finance-cases-all:
+	$(UV) run python -m src.inaba.gen_case.base.finance \
+		--count $(INABA_FINANCE_COUNT_PER_DIFFICULTY) \
+		--output-dir $(INABA_FINANCE_OUTPUT_DIR) \
+		--task-id-prefix $(INABA_FINANCE_TASK_ID_PREFIX) \
+		--all-difficulties \
+		$(if $(INABA_FINANCE_SEED),--seed $(INABA_FINANCE_SEED),)
+
+gen-inaba-meeting-cases-openai-all:
+	$(UV) run python -m src.inaba.gen_case.openai.meeting \
+		--count $(INABA_MEETING_COUNT_PER_DIFFICULTY) \
+		--model $(INABA_MEETING_OPENAI_MODEL) \
+		--output-dir $(INABA_MEETING_OPENAI_OUTPUT_DIR) \
+		--task-id-prefix $(INABA_MEETING_OPENAI_TASK_ID_PREFIX) \
+		--all-difficulties \
+		$(if $(INABA_MEETING_SEED),--seed $(INABA_MEETING_SEED),)
+
+gen-inaba-finance-cases-openai-all:
+	$(UV) run python -m src.inaba.gen_case.openai.finance \
+		--count $(INABA_FINANCE_COUNT_PER_DIFFICULTY) \
+		--model $(INABA_FINANCE_OPENAI_MODEL) \
+		--output-dir $(INABA_FINANCE_OPENAI_OUTPUT_DIR) \
+		--task-id-prefix $(INABA_FINANCE_OPENAI_TASK_ID_PREFIX) \
+		--all-difficulties \
 		$(if $(INABA_FINANCE_SEED),--seed $(INABA_FINANCE_SEED),)
 
 execute-inaba-meeting:

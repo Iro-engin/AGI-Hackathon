@@ -1,0 +1,96 @@
+{
+  "task_id": "meeting_openai_hard_004",
+  "domain": "meeting",
+  "decision_model": "gpt-4.1-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "For the slot on 2026-04-20 from 10:30 to 11:15, Alice, Bob, and Carol have missing location information. Could you please provide the location for their availability at this time?",
+          "answer": "The location for Alice, Bob, and Carol's availability on 2026-04-20 from 10:30 to 11:15 is unknown. Please specify the missing location information for each."
+        },
+        {
+          "question": "For the slot on 2026-04-20 from 10:30 to 11:15, could you please specify the meeting location for Alice, Bob, and Carol's availability, as it is currently unknown?",
+          "answer": "The meeting location for Alice, Bob, and Carol's availability on 2026-04-20 from 10:30 to 11:15 is currently unknown. Please specify the missing location information for each."
+        },
+        {
+          "question": "The earliest common slot for all is 2026-04-20 from 10:30 to 11:15, but the meeting location for Alice, Bob, and Carol is unknown. Could you please provide the meeting location for Alice, Bob, and Carol's availability for this time slot?",
+          "answer": "The meeting location for Alice, Bob, and Carol's availability on 2026-04-20 from 10:30 to 11:15 is currently unknown. Please specify the missing location information for each."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Alice's meeting originally planned for tomorrow afternoon has been moved to 11 AM in meeting_room_b.",
+      "question_answers": [],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Bob is now available for online meetings on April 22nd in the early morning.",
+      "question_answers": [
+        {
+          "question": "For the slot on 2026-04-22 from 09:00 to 09:45, should the meeting be held in meeting_room_a or online to accommodate Bob's preference for online meetings?",
+          "answer": "The meeting should be held online to accommodate Bob's preference for online meetings."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "Carol needs a pause on April 21st afternoon; no meetings should be scheduled between 14:30 and 16:00.",
+      "question_answers": [
+        {
+          "question": "Carol has availability slots on 2026-04-21T14:30 and 2026-04-22T09:00 without a specified location. Could you please provide the location details for Carol's slots at those times?",
+          "answer": "The location details for Carol's availability slots on 2026-04-21 at 14:30 and 2026-04-22 at 09:00 are unknown."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "David prefers conference rooms on the 3rd floor for long discussions.",
+      "question_answers": [
+        {
+          "question": "David's candidate slots on 2026-04-22 and 2026-04-23 are missing location information. Does he prefer to use meeting_room_a or conference_room_3f for the meeting?",
+          "answer": "David prefers conference rooms on the 3rd floor for long discussions, which would indicate a preference for conference_room_3f."
+        }
+      ],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-23T13:00:00",
+        "when_to": "2026-04-23T13:45:00"
+      }
+    }
+  ]
+}

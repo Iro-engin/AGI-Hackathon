@@ -1,0 +1,88 @@
+{
+  "task_id": "meeting_openai_medium_004",
+  "domain": "meeting",
+  "decision_model": "gpt-4.1-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "For the slot on 2026-04-20 from 10:30 to 11:15, can you please provide the location details for Alice and Bob's availability?",
+          "answer": "The location details for Alice and Bob's availability for the slot on 2026-04-20 from 10:30 to 11:15 are currently unknown. Both have availability without specified locations."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Alice's meeting has been rescheduled to the conference room 3F on April 21st at 14:30.",
+      "question_answers": [],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-21T14:30:00",
+        "when_to": "2026-04-21T15:15:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Bob is available for a meeting in the morning on April 22nd.",
+      "question_answers": [
+        {
+          "question": "For Bob's available slots on April 21st at 14:30 and April 22nd at 9:00, could you please provide the missing location information?",
+          "answer": "The missing location information for Bob's available slots is unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "Carol has a pause in her schedule on April 20th from 10:30 to 11:15 in meeting room A.",
+      "question_answers": [
+        {
+          "question": "What is the location for Carol's available time slot on April 20th from 10:30 to 11:15?",
+          "answer": "The location for Carol's available time slot on April 20th from 10:30 to 11:15 is unknown, as her availability is marked without a specified location."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "David mentioned he prefers online meetings when possible.",
+      "question_answers": [
+        {
+          "question": "David's available slots are missing location information. Could you please confirm the location for David's availability on 2026-04-21 from 14:30 to 15:15 and on 2026-04-23 from 13:00 to 13:45?",
+          "answer": "David's available slots are confirmed to be in \"conference_room_3f\" for both dates."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    }
+  ]
+}

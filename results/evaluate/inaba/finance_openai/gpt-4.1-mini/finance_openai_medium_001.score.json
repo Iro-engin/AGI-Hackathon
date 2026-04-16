@@ -1,0 +1,116 @@
+{
+  "task_id": "finance_openai_medium_001",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.4,
+    "vague_ask_rate": 0.4,
+    "rubric_score": 0.8,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.6
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector"
+      ],
+      "questions_asked": [
+        "Please provide related past news and inference rates for the renewable_energy sector to better estimate the efficient_rate_now.",
+        "Please provide related past news and inference rates for the pharmaceutical_research sector to better estimate the efficient_rate_now.",
+        "Please provide the efficient_rate_change values for renewable_energy and pharmaceutical_research sectors to better estimate efficient_rate_now and adjust portfolio ratios accurately."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the rail_transportation sector based on the current news about surge in freight volume.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the consumer_electronics sector based on the current news about preparing for a strong holiday season.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for renewable_energy sector based on the current news.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the pharmaceutical_research sector based on the current news about drug formulation breakthrough."
+      ],
+      "covered_requires": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for food_processing sector"
+      ],
+      "questions_asked": [
+        "What is the inference_rate and efficient_rate_change for the renewable_energy sector related to the news about solar panel manufacturers reporting rising orders abroad?",
+        "What are the inference_rate and efficient_rate_change for the pharmaceutical_research sector related to the news about a recent breakthrough in drug formulation promising enhanced patient outcomes?"
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "What is the inference_rate and efficient_rate_change for the rail_transportation sector based on the news 'A new transit regulation aims to improve safety standards on public rails'?",
+        "What are the inference_rate and efficient_rate_change values for consumer_electronics based on the news 'Latest smart device releases incorporate advanced AI features'?",
+        "What are the inference_rate and efficient_rate_change values for renewable_energy and pharmaceutical_research sectors based on the current news 'New incentives for clean power projects could boost green infrastructure growth. A recent breakthrough in drug formulation promises enhanced patient outcomes.'?"
+      ],
+      "covered_requires": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for pharmaceutical_research sector",
+        "Related news for food_processing sector"
+      ],
+      "questions_asked": [
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the pharmaceutical_research sector news to better assess its impact on stock allocation.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the renewable_energy sector news to better evaluate the impact of new clean power incentives."
+      ],
+      "covered_requires": [
+        "Related news for pharmaceutical_research sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

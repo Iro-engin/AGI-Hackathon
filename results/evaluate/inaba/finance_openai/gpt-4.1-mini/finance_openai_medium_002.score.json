@@ -1,0 +1,122 @@
+{
+  "task_id": "finance_openai_medium_002",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.8,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.8
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "questions_asked": [
+        "Please provide related past news or inference rates for the renewable_energy sector to better understand the influence of demand for sustainable battery components.",
+        "Please provide related past news or inference rates for the pharmaceuticals sector to better understand the influence of new drug approvals expected to disrupt traditional treatment protocols.",
+        "Please provide related past news or inference rates for the consumer_electronics sector to evaluate its likely influence amid rising demand for sustainable battery components and new drug approvals.",
+        "Please provide related past news or inference rates for the retail_banking sector to evaluate its likely influence amid the current news trends."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for aerospace_manufacturing sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "What are the past news inference_rate and efficient_rate_change values for the consumer_electronics sector related to recent smart gadget demand?",
+        "What are the past news inference_rate and efficient_rate_change values for the aerospace_manufacturing sector related to recent fuel-efficient technologies contracts?"
+      ],
+      "covered_requires": [
+        "Related news for aerospace_manufacturing sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for retail_banking sector",
+        "Related news for renewable_energy sector"
+      ],
+      "questions_asked": [
+        "Request related news for pharmaceutical sector to better estimate efficient_rate_now given the news about new drug approvals disrupting traditional treatment protocols.",
+        "Request related news for renewable_energy sector to better estimate efficient_rate_now given the news about investments in solar panel production attracting institutional investors.",
+        "Request related news for consumer_electronics sector to better estimate efficient_rate_now given the previous news about consumer demand for smart gadgets and new news about retail outlets expanding online presence.",
+        "Request related news for retail_banking sector to better estimate efficient_rate_now given the news about major retail outlets expanding their online presence."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for retail_banking sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the pharmaceuticals sector related to the recent news on uptick in research partnerships.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the consumer_electronics sector related to the recent news on cutting-edge wearable device launches.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the renewable_energy sector related to the news on rising demand for sustainable battery components.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate for the retail_banking sector related to the recent news."
+      ],
+      "covered_requires": [
+        "Related news for consumer_electronics sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for retail_banking sector",
+        "Related news for aerospace_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate related to the retail_banking sector for the current news.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate related to the aerospace_manufacturing sector for the current news.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate related to the renewable_energy sector for the current news.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate related to the pharmaceuticals sector for the current news."
+      ],
+      "covered_requires": [
+        "Related news for retail_banking sector",
+        "Related news for aerospace_manufacturing sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

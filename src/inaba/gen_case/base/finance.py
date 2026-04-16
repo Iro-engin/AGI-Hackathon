@@ -42,24 +42,24 @@ THEME_LIBRARY = [
         ],
         "history": {
             "ai_server_supply_chain": [
-                "過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた。",
-                "GPU調達再開局面ではサーバー供給網が先導した。",
+                "Server stocks led the decline during a past hyperscaler investment slowdown.",
+                "During GPU procurement restarts, the server supply chain led the rally.",
             ],
             "power_grid_equipment": [
-                "電力逼迫が長引いた局面では送配電設備が相対優位になった。",
-                "大型案件の後ろ倒しで一時的に失速したことがある。",
+                "During prolonged power shortages, grid equipment stocks gained relative strength.",
+                "A delay in large-scale projects caused a temporary stall.",
             ],
             "thermal_management": [
-                "高密度ラック需要が強い時期に冷却関連が追随上昇した。",
-                "設置タイミングの遅れで短期失速したことがある。",
+                "Cooling-related stocks rose alongside high-density rack demand.",
+                "Installation delays caused short-term underperformance.",
             ],
             "semiconductor_equipment": [
-                "先端投資が再開すると製造装置が遅れて追随した。",
-                "設備投資延期で短期的に逆風になった。",
+                "Manufacturing equipment lagged but rallied when advanced capex restarts resumed.",
+                "Capex deferrals created short-term headwinds.",
             ],
             "data_center_reits": [
-                "電力余力のある拠点を持つREITが選好されたことがある。",
-                "開発計画の遅れで見直しが入ったことがある。",
+                "REITs with power-sufficient sites were previously preferred by the market.",
+                "Development plan delays led to a re-rating.",
             ],
         },
     },
@@ -68,24 +68,24 @@ THEME_LIBRARY = [
         "stocks": ["reit", "banks", "insurers", "utilities", "brokers"],
         "history": {
             "reit": [
-                "金利低下局面ではREITが先に反応したことがある。",
-                "資金調達不安が強い時はREITが大きく売られた。",
+                "REITs previously reacted first to rate-cut cycles.",
+                "Funding concerns triggered heavy selling in REITs.",
             ],
             "banks": [
-                "イールドカーブ改善時は銀行が先導した。",
-                "信用不安が広がると銀行は急速に逆回転した。",
+                "Banks led the market during yield curve steepening.",
+                "Credit concerns caused a rapid reversal in bank stocks.",
             ],
             "insurers": [
-                "金利上昇が続く場面では保険の見直し益期待が効いた。",
-                "評価損懸念が前面化すると相対優位が崩れた。",
+                "Persistent rate rises boosted expectations for insurer unrealized gains.",
+                "Valuation loss concerns eroded their relative advantage.",
             ],
             "utilities": [
-                "守りの資金が向かう局面では utilities が安定した。",
-                "金利負担懸念で utilities が売られた局面もあった。",
+                "Utilities provided stability when defensive flows dominated.",
+                "Rate burden concerns pushed utilities lower in some periods.",
             ],
             "brokers": [
-                "売買代金増加で brokers が追随上昇したことがある。",
-                "相場停滞で brokers の業績期待がしぼんだことがある。",
+                "Rising trading volume previously lifted brokers in tandem.",
+                "Market stagnation dampened earnings expectations for brokers.",
             ],
         },
     },
@@ -136,6 +136,13 @@ def generate_finance_case(
         state=initial_state,
     )
 
+    initial_do = FinanceDo(
+        stock_rates=_recommend_stock_rates(
+            current_stock_rates=current_stock_rates,
+            efficient_rate_now=efficient_rate_now,
+        )
+    )
+
     events: list[FinanceEvent] = []
     now_rates = current_stock_rates
     now_prices = current_stock_prices
@@ -158,6 +165,7 @@ def generate_finance_case(
         difficulty=difficulty,
         initial_request=initial_request,
         initial_state=initial_state,
+        initial_do=initial_do,
         events=events,
         initial_requires=initial_requires,
     )
@@ -227,21 +235,35 @@ def parse_args() -> argparse.Namespace:
         default="finance",
         help="Prefix used for generated task_id values.",
     )
+    parser.add_argument(
+        "--all-difficulties",
+        action="store_true",
+        help="Generate easy / medium / hard in sequence with difficulty suffix in task_id.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     """CLI から finance ケース生成を実行する。"""
     args = parse_args()
-    paths = write_finance_cases(
-        output_dir=args.output_dir,
-        count=args.count,
-        difficulty=args.difficulty,
-        seed=args.seed,
-        task_id_prefix=args.task_id_prefix,
+    difficulties: tuple[Difficulty, ...] = (
+        ("easy", "medium", "hard") if args.all_difficulties else (args.difficulty,)
     )
-    print(f"generated {len(paths)} finance cases into {args.output_dir}")
-    for path in paths:
+    all_paths: list[Path] = []
+    for difficulty in difficulties:
+        prefix = (
+            f"{args.task_id_prefix}_{difficulty}" if args.all_difficulties else args.task_id_prefix
+        )
+        paths = write_finance_cases(
+            output_dir=args.output_dir,
+            count=args.count,
+            difficulty=difficulty,
+            seed=args.seed,
+            task_id_prefix=prefix,
+        )
+        all_paths.extend(paths)
+    print(f"generated {len(all_paths)} finance cases into {args.output_dir}")
+    for path in all_paths:
         print(path)
 
 
@@ -389,9 +411,9 @@ def _build_state(
     )
     return FinanceState(
         constraint=[
-            "現在見えているニュースは1つのみとする",
-            "必要なら分野を1つずつ指定して関連ニュースを確認する",
-            "持ち株は比率のみで判断する",
+            "Only one news item is visible at a time",
+            "Request related news for one sector at a time if needed",
+            "Holdings are managed by ratio only",
         ],
         hidden_info=FinanceInfo(
             news=CurrentNewsInfo(
@@ -421,7 +443,10 @@ def _build_state(
 
 def _build_requires_from_state(state: FinanceState) -> list[str]:
     """hidden_resource から追加で確認すべき分野ニュース名を作る。"""
-    return [f"{department}分野の関連ニュース" for department in state.hidden_info.hidden_resource]
+    return [
+        f"Related news for {department} sector"
+        for department in state.hidden_info.hidden_resource
+    ]
 
 
 def _build_initial_request(
@@ -436,10 +461,10 @@ def _build_initial_request(
         f"{stock}={price:.2f}" for stock, price in state.got_info.stock_price_before.items()
     )
     return (
-        f"現在の持ち株比率は {rates_text} です。"
-        f" ニュース反映前の株価は {prices_text} です。"
-        f" ニュースは「{state.got_info.news.content if state.got_info.news else ''}」。"
-        " どの株の比率を上げ下げすべきか判断してください。"
+        f"Current portfolio ratios: {rates_text}."
+        f" Pre-news stock prices: {prices_text}."
+        f" News: \"{state.got_info.news.content if state.got_info.news else ''}\"."
+        " Decide which stock ratios to increase or decrease."
     )
 
 
@@ -497,9 +522,9 @@ def _build_event(
     )
 
     message = (
-        f"新しいニュース: {news.content}"
-        f" ただし {focus_stock} に関連する材料だけ見えており、"
-        " 他分野の関連ニュースは確認しないと分かりません。"
+        f"New news: {news.content}"
+        f" Only material related to {focus_stock} is directly visible;"
+        " related news for other sectors requires explicit inquiry."
     )
 
     return next_stock_rates, next_stock_prices, updated_weights, FinanceEvent(

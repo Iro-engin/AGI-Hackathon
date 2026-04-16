@@ -44,5 +44,6 @@ class FinanceEvent(Event):
 class FinanceCase(Case):
     domain: Literal["finance"] = "finance"
     initial_state: FinanceState
+    initial_do: FinanceDo | None = None
     events: list[FinanceEvent] = Field(default_factory=list)
     initial_requires: list[str] = Field(default_factory=list)

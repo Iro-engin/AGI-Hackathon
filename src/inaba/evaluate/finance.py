@@ -31,43 +31,42 @@ class FinanceAdapter(DomainAdapter):
     ) -> str:
         """finance の Question / Do 選択 prompt を作る。"""
         question_rule = (
-            "質問を選んでもよい"
+            "You may choose to ask a question"
             if allow_question
-            else "この時点では質問せず、必ず Do を返す"
+            else "Do not ask a question at this point; return a Do"
         )
         return f"""
-あなたは金融タスクを進める agent です。
-今回のターンでは、Question か Do のどちらか1つを選んでください。
-{question_rule}。
+You are an agent working on a financial task.
+In this turn, choose exactly one of: Question or Do.
+{question_rule}.
 
-初期依頼:
+Initial request:
 {case.initial_request}
 
-初期状態で見えている情報:
+Visible information at the start:
 {json.dumps(context.initial_got_info, ensure_ascii=False, indent=2)}
 
-今回のターン種別:
+Current turn type:
 {context.stage}
 
-今回の制約:
+Current constraints:
 {json.dumps(context.current_constraint, ensure_ascii=False, indent=2)}
 
-今回の event message:
+Current event message:
 {json.dumps(context.event_message, ensure_ascii=False)}
 
-今回見えている情報:
+Currently visible information:
 {json.dumps(context.current_got_info, ensure_ascii=False, indent=2)}
 
-このターンのこれまでの質問と回答:
+Questions and answers so far this turn:
 {json.dumps([item.model_dump() for item in context.question_answers], ensure_ascii=False, indent=2)}
 
-直前ターンの Do:
+Previous turn Do:
 {json.dumps(context.previous_do, ensure_ascii=False, indent=2)}
 
-Do を返す場合は stock_rates を返してください。
-stock_rates は全銘柄の比率を持つ辞書にしてください。
+When returning a Do, return stock_rates as a dict covering all stocks.
 
-返却形式は必ず次のどちらか:
+Return exactly one of the following formats:
 {{
   "action": "question",
   "question": "..."
@@ -96,26 +95,26 @@ stock_rates は全銘柄の比率を持つ辞書にしてください。
     ) -> str:
         """finance で hidden_info を使って質問へ答える prompt を作る。"""
         return f"""
-あなたは金融タスクの環境側です。
-質問に対して、現在ターンの hidden_info と visible 情報だけを使って日本語で答えてください。
-答えられないことは推測せず、その旨を述べてください。
+You are the environment side of a financial task.
+Answer the question using only the current turn's hidden_info and visible information.
+Do not speculate about things you cannot answer; state that they are unknown.
 
-初期依頼:
+Initial request:
 {case.initial_request}
 
-今回の event message:
+Current event message:
 {json.dumps(context.event_message, ensure_ascii=False)}
 
-今回見えている情報:
+Currently visible information:
 {json.dumps(context.current_got_info, ensure_ascii=False, indent=2)}
 
-今回の hidden_info:
+Current hidden_info:
 {json.dumps(context.current_hidden_info, ensure_ascii=False, indent=2)}
 
-このターンのこれまでの質問と回答:
+Questions and answers so far this turn:
 {json.dumps([item.model_dump() for item in context.question_answers], ensure_ascii=False, indent=2)}
 
-質問:
+Question:
 {question}
 """.strip()
 

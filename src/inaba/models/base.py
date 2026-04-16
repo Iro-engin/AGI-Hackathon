@@ -43,6 +43,7 @@ class Case(BaseModel):
     domain: Literal["meeting", "conference", "finance", "science"]
     initial_request: str
     initial_state: State
+    initial_do: Do | None = None
     events: list[Event] = Field(default_factory=list)
     initial_requires: list[str] = Field(default_factory=list)
 

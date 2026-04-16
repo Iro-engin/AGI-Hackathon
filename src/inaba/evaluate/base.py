@@ -278,10 +278,10 @@ class DomainAdapter(ABC):
         ドメイン固有のフォーマットに対応する場合は override する。
         """
         prompt = (
-            "次の「確認すべき項目」が「エージェントの質問」で触れられているか判定してください。\n"
-            f"確認すべき項目: {require}\n"
-            f"エージェントの質問: {question}\n"
-            "触れられていれば True、そうでなければ False とだけ答えてください。"
+            "Determine whether the 'required item' below is addressed by the 'agent question'.\n"
+            f"Required item: {require}\n"
+            f"Agent question: {question}\n"
+            "Answer only True if it is addressed, or False if it is not."
         )
         return _call_openai_judge(prompt, model=model)
 

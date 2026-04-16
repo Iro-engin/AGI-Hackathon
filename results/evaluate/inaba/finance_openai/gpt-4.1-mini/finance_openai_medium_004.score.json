@@ -1,0 +1,123 @@
+{
+  "task_id": "finance_openai_medium_004",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.2,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.6
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for consumer_electronics sector",
+        "Related news for financial_services sector"
+      ],
+      "questions_asked": [
+        "Please provide the related past news and inference rates for the renewable_energy sector to better evaluate the impact of the solar panel efficiency breakthrough.",
+        "Please provide the related past news and inference rates for the consumer_electronics sector to better evaluate the impact of new smartphone features ahead of the holiday season.",
+        "Please provide the related past news and inference rates for the pharmaceuticals sector to understand potential impacts on it given the current news.",
+        "Please provide the related past news and inference rates for the financial_services sector to evaluate its influence given the current news."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for financial_services sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Please provide related news for the automotive_manufacturing sector to better estimate the efficient_rate_now for this sector.",
+        "Please provide related news for the pharmaceuticals sector to better estimate the efficient_rate_now for this sector."
+      ],
+      "covered_requires": [
+        "Related news for automotive_manufacturing sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for consumer_electronics sector",
+        "Related news for financial_services sector"
+      ],
+      "questions_asked": [
+        "Please provide related news for the financial_services sector to estimate its efficient_rate_now.",
+        "Please provide related news for the consumer_electronics sector to estimate its efficient_rate_now.",
+        "Please provide related news for the renewable_energy sector to estimate its efficient_rate_now.",
+        "Please provide related news for the pharmaceuticals sector to estimate its efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for financial_services sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "questions_asked": [
+        "Please provide related news for the renewable_energy sector to better assess the efficient_rate_now.",
+        "Please provide related news for the consumer_electronics sector to better assess the efficient_rate_now.",
+        "Please provide related news for the pharmaceuticals sector to better assess the efficient_rate_now.",
+        "Please provide related news for the financial_services sector to better assess the efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for financial_services sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Please provide related news and inference rates for the 'automotive_manufacturing' sector for this current news event.",
+        "Please provide related news and inference rates for the 'financial_services' sector for this current news event.",
+        "Please provide related news and inference rates for the 'renewable_energy' sector for this current news event."
+      ],
+      "covered_requires": [
+        "Related news for financial_services sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

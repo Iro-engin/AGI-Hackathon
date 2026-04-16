@@ -1,0 +1,122 @@
+{
+  "task_id": "meeting_openai_hard_005",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.2,
+    "rubric_score": 0.9,
+    "redundant_question_rate": 0.2857142857142857,
+    "early_discovery_rate": 0.8
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "The earliest common available slot for all participants is from 2026-04-20T10:30:00 to 2026-04-20T11:15:00, but the location information for Alice, Bob, and Carol at this time is missing. Could you please provide the location for their attendance slots during this time?",
+        "Since the location information for Alice, Bob, and Carol on 2026-04-20 from 10:30 to 11:15 is missing and unknown, can you please confirm if the location for this slot is the same as David and Emma's, which is meeting_room_a? If not, please provide the correct location."
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Bob's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Since the location information for Alice, Bob, and Carol on 2026-04-20 from 10:30 to 11:15 is missing and unknown, can you please confirm if the location for this slot is the same as David and Emma's, which is meeting_room_a? If not, please provide the correct location."
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "For the slot on 2026-04-20 from 10:30 to 11:15, what is the meeting location for Alice and Bob since it is currently missing?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 2 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Bob will attend online only in the mornings this week. Should the meeting scheduled for 2026-04-20T10:30:00 to 2026-04-20T11:15:00 be held online to accommodate Bob?"
+      ],
+      "covered_requires": [
+        "Bob's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Carol's availability on 2026-04-21T14:30:00 to 2026-04-21T15:15:00 and 2026-04-22T09:00:00 to 2026-04-22T09:45:00 has missing location information. Could you please provide the location for these slots?",
+        "For the shared availability slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00 with Alice, Bob, Carol, David, and Emma, should the meeting location be online or is there a preferred physical location for all participants?"
+      ],
+      "covered_requires": [
+        "Carol's attendance slot 2 location",
+        "Carol's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "For the shared availability slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00 with Alice, Bob, Carol, David, and Emma, should the meeting location be online or is there a preferred physical location for all participants?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "David's attendance slot 1 location",
+        "David's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "David's available slots lack location information. Could you please provide the meeting location for David's availability on 2026-04-21T14:30:00 to 2026-04-21T15:15:00 and 2026-04-23T13:00:00 to 2026-04-23T13:45:00?"
+      ],
+      "covered_requires": [
+        "David's attendance slot 1 location",
+        "David's attendance slot 2 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

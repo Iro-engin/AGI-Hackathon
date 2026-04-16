@@ -39,14 +39,14 @@ INITIAL_REQUIRE_COUNT_BY_DIFFICULTY: dict[Difficulty, int] = {
 }
 
 FINANCE_CONSTRAINTS = [
-    "必要なら分野を1つずつ指定して関連ニュースを確認する",
-    "持ち株は比率のみで判断する",
+    "Request related news for one sector at a time if needed",
+    "Holdings are managed by ratio only",
 ]
 
 OPENAI_INSTRUCTIONS = """
-あなたは金融ケース生成の補助エンジンです。
-必ずJSONのみを返し、Markdownや説明文は一切出さないでください。
-数値は実数で返し、指定した範囲を守ってください。
+You are a financial case generation assistant.
+Return only valid JSON. Do not include Markdown or explanatory text.
+Return numeric values as real numbers and stay within the specified ranges.
 """.strip()
 
 
@@ -169,6 +169,13 @@ def generate_finance_case(
         state=initial_state,
     )
 
+    initial_do = FinanceDo(
+        stock_rates=_recommend_stock_rates(
+            current_stock_rates=current_stock_rates,
+            efficient_rate_now=initial_effective_rate_now,
+        )
+    )
+
     events: list[FinanceEvent] = []
     now_rates = current_stock_rates
     now_prices = current_stock_prices
@@ -200,6 +207,7 @@ def generate_finance_case(
         difficulty=difficulty,
         initial_request=initial_request,
         initial_state=initial_state,
+        initial_do=initial_do,
         events=events,
         initial_requires=initial_requires,
     )
@@ -278,22 +286,36 @@ def parse_args() -> argparse.Namespace:
         default="finance_openai",
         help="Prefix used for generated task_id values.",
     )
+    parser.add_argument(
+        "--all-difficulties",
+        action="store_true",
+        help="Generate easy / medium / hard in sequence with difficulty suffix in task_id.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     """CLI から OpenAI 版 finance ケース生成を実行する。"""
     args = parse_args()
-    paths = write_finance_cases(
-        output_dir=args.output_dir,
-        count=args.count,
-        difficulty=args.difficulty,
-        seed=args.seed,
-        task_id_prefix=args.task_id_prefix,
-        model=args.model,
+    difficulties: tuple[Difficulty, ...] = (
+        ("easy", "medium", "hard") if args.all_difficulties else (args.difficulty,)
     )
-    print(f"generated {len(paths)} finance cases into {args.output_dir}")
-    for path in paths:
+    all_paths: list[Path] = []
+    for difficulty in difficulties:
+        prefix = (
+            f"{args.task_id_prefix}_{difficulty}" if args.all_difficulties else args.task_id_prefix
+        )
+        paths = write_finance_cases(
+            output_dir=args.output_dir,
+            count=args.count,
+            difficulty=difficulty,
+            seed=args.seed,
+            task_id_prefix=prefix,
+            model=args.model,
+        )
+        all_paths.extend(paths)
+    print(f"generated {len(all_paths)} finance cases into {args.output_dir}")
+    for path in all_paths:
         print(path)
 
 
@@ -331,20 +353,20 @@ def _generate_resource_plan(
 ) -> ResourcePlan:
     """Step1: hidden_resource と分野一覧を OpenAI に生成させる。"""
     prompt = f"""
-難易度 {difficulty} の finance ケースを作ります。乱数シードの参照値は {seed} です。
+We are creating a difficulty={difficulty} finance case. Reference seed: {seed}.
 
-以下を満たす JSON を返してください。
-- 分野はちょうど5個
-- 分野IDは英小文字の snake_case
-- 分野どうしは近すぎないこと。たとえば半導体と半導体製造装置のような近接は避ける
-- 各分野について hidden_resource 用の過去ニュースを1件ずつ作る
-- content は日本語1文から2文
-- inference_rate は各分野IDに対する影響度で、各値は -1 から 1
-- efficient_rate_change は各分野IDに対する効き方の変化量で、各値は -0.25 から 0.25
-- resources の各要素は department, content, inference_rate, efficient_rate_change を持つ
-- inference_rate と efficient_rate_change のキーは5分野すべてを含める
+Return JSON satisfying the following:
+- exactly 5 departments
+- department IDs must be lowercase English snake_case
+- departments must not be too closely related (e.g. avoid semiconductors + semiconductor_equipment)
+- create one past news item per department for hidden_resource
+- content: 1-2 sentences in English
+- inference_rate: influence on each department's stock price, values in range -1 to 1
+- efficient_rate_change: correction to effective rate per department, values in range -0.25 to 0.25
+- each resource element has: department, content, inference_rate, efficient_rate_change
+- inference_rate and efficient_rate_change keys must cover all 5 departments
 
-返却形式:
+Return format:
 {{
   "departments": ["...", "...", "...", "...", "..."],
   "resources": [
@@ -370,47 +392,40 @@ def _generate_news_plan(
 ) -> NewsPlan:
     """Step2: initial と event 用の現在ニュース本文を OpenAI に生成させる。"""
     prompt = f"""
-難易度 {difficulty} の finance ケースを作ります。乱数シードの参照値は {seed} です。
-分野一覧は {json.dumps(departments, ensure_ascii=False)} です。
+We are creating a difficulty={difficulty} finance case. Reference seed: {seed}.
+Department list: {json.dumps(departments, ensure_ascii=False)}.
 
-以下を満たす JSON を返してください。
-- initial_news を1件、event_news を {event_count} 件
-- すべて日本語の自然なニュース文にする
-- ニュース文に分野IDをそのまま書かない
-- 「○○分野では」のように答えを露骨に示さない
-- news は「1分野のニュース文を2本または3本つないだ形式」にしてください
-- つまり 1 本の長い複合ニュースではなく、
-  1分野に対応する短文を並べた multi headline 形式にしてください
-- 先に related_departments を2個または3個決めてください
-- 本文は related_departments の各分野に対して、
-  1文ずつ対応する短いニュースを書く形にしてください
-- 各文は基本的に1分野だけを自然に示す内容にしてください
-- related_departments に入れた分野は、
-  その分野に対応する文から直接わかるようにしてください
-- related_departments に含めない分野は、
-  本文から連想しにくいようにしてください
-- 3個にすると不自然なら2個にしてください。無理に3個選ばないでください
-- related_departments はなるべく近すぎない組み合わせにしてください
-- ただし「近すぎない」ことより「本文との整合性」を優先してください
-- resources の文章表現や言い回しは参照しないでください
-- resources に引っ張られず、ニュース本文は独立に新しく書いてください
-- event_news 同士は話題が被りすぎないようにする
+Return JSON satisfying the following:
+- 1 initial_news and {event_count} event_news items
+- all news content must be natural English sentences
+- do not write department IDs literally in the news text
+- do not make the answer obvious (e.g. avoid "In the X sector, ...")
+- each news item should be in "2 or 3 short headline sentences, one per sector" format
+  (not one long compound sentence, but multiple short sentences each corresponding to one sector)
+- first decide 2 or 3 related_departments
+- write one short sentence per related_department, each naturally implying that sector
+- each sentence should naturally indicate only one sector
+- sectors in related_departments should be directly inferable from their corresponding sentence
+- sectors not in related_departments should be difficult to infer from the text
+- use 2 if 3 would feel unnatural; do not force 3
+- related_departments should not be too closely related, but text coherence takes priority
+- do not copy wording or phrasing from the hidden_resource content
+- write news text independently; do not let resources influence the style
+- event_news items should not overlap too much in topic
 
-悪い例:
-- 本文:
-  国内の主要銀行は、安定した資金調達環境を背景に、
-  法人向けローンの金利を据え置くことを決定しました。
+Bad example:
+- content: "Major domestic banks have decided to keep corporate loan rates unchanged
+  given stable funding conditions."
   related_departments: ["banks", "reit"]
-  理由: 1文しかなく、reit に対応する文がない
+  reason: only one sentence; no sentence corresponding to reit
 
-良い例:
-- 本文:
-  政府はIT事業への投資を拡大する方針を発表しました。
-  一方で、木材需要はコロナ後の反動で弱含んでいます。
+Good example:
+- content: "The government announced plans to expand investment in IT services.
+  Meanwhile, lumber demand remains soft amid post-pandemic correction."
   related_departments: ["it_services", "forestry"]
-  理由: 2つの文がそれぞれ1分野ずつ自然に示している
+  reason: two sentences each naturally implying one sector
 
-返却形式:
+Return format:
 {{
   "initial_news": {{
     "content": "...",
@@ -445,21 +460,21 @@ def _generate_mix_rate_plan(
         for department in departments
     }
     prompt = f"""
-難易度 {difficulty} の finance ケースを作ります。乱数シードの参照値は {seed} です。
-分野一覧は {json.dumps(departments, ensure_ascii=False)} です。
-hidden_resource は {json.dumps(resource_summary, ensure_ascii=False)} です。
-ニュース一覧は {json.dumps(news_plan.model_dump(), ensure_ascii=False)} です。
+We are creating a difficulty={difficulty} finance case. Reference seed: {seed}.
+Department list: {json.dumps(departments, ensure_ascii=False)}.
+hidden_resource: {json.dumps(resource_summary, ensure_ascii=False)}.
+News list: {json.dumps(news_plan.model_dump(), ensure_ascii=False)}.
 
-以下を満たす JSON を返してください。
-- initial_news と event_news のそれぞれについて resource_mix_rate を返す
-- resource_mix_rate は全5分野のキーを必ず含める
-- 値は -1 から 1
-- 無関係なら 0 でよい
-- related_departments は強めの非ゼロにする
-- hidden_resource の内容とニュースの向きが逆なら負の値を使ってよい
-- 極端な1点集中より、関連度に応じて複数分野へ配分する
+Return JSON satisfying the following:
+- return resource_mix_rate for each of initial_news and event_news
+- resource_mix_rate must include keys for all 5 departments
+- values in range -1 to 1
+- use 0 for unrelated departments
+- related_departments should have strong non-zero values
+- use negative values when the news direction is opposite to the hidden_resource content
+- distribute across multiple departments by relevance rather than concentrating on one
 
-返却形式:
+Return format:
 {{
   "initial_news": {{
     "resource_mix_rate": {{"d1": 0.7, "d2": -0.2, "d3": 0.0, "d4": 0.1, "d5": 0.0}}
@@ -559,8 +574,8 @@ def _normalize_news_plan(
         event_news.append(
             NewsDraft(
                 content=(
-                    "新しい投資判断を受けて市場参加者の見方が変わっています。"
-                    " 一方で、別の業界では需要見通しの弱さが意識されています。"
+                    "A new investment decision is shifting market participants' views."
+                    " Meanwhile, demand weakness in another sector is drawing attention."
                 ),
                 related_departments=[base, partner],
             )
@@ -583,7 +598,9 @@ def _normalize_news_draft(
     if len(related) > 3:
         related = related[:3]
 
-    content = news_draft.content.strip() or "需給見通しに影響する新しい材料が出ている。"
+    content = (
+        news_draft.content.strip() or "New developments are affecting supply and demand outlooks."
+    )
     for department in departments:
         content = content.replace(f"{department}:", "")
         content = content.replace(department, "")
@@ -779,7 +796,7 @@ def _build_requires_from_state(state: FinanceState) -> list[str]:
     """resource_mix_rate != 0 の分野に限定して確認すべき分野ニュース名を作る。"""
     mix_rate = state.hidden_info.news.resource_mix_rate if state.hidden_info.news else {}
     return [
-        f"{department}分野の関連ニュース"
+        f"Related news for {department} sector"
         for department in state.hidden_info.hidden_resource
         if mix_rate.get(department, 0.0) != 0.0
     ]
@@ -797,10 +814,10 @@ def _build_initial_request(
         f"{stock}={price:.2f}" for stock, price in state.got_info.stock_price_before.items()
     )
     return (
-        f"現在の持ち株比率は {rates_text} です。"
-        f" ニュース反映前の株価は {prices_text} です。"
-        f" ニュースは「{state.got_info.news.content if state.got_info.news else ''}」。"
-        " どの株の比率を上げ下げすべきか判断してください。"
+        f"Current portfolio ratios: {rates_text}."
+        f" Pre-news stock prices: {prices_text}."
+        f" News: \"{state.got_info.news.content if state.got_info.news else ''}\"."
+        " Decide which stock ratios to increase or decrease."
     )
 
 
@@ -844,7 +861,7 @@ def _build_event(
     )
 
     return next_stock_rates, next_stock_prices, updated_weights, FinanceEvent(
-        message=f"新しいニュース: {news.content}",
+        message=f"New news: {news.content}",
         state_before=state_before,
         exp_do=FinanceDo(stock_rates=next_stock_rates),
         should_require=_build_requires_from_state(state_before)[: _question_count(difficulty)],

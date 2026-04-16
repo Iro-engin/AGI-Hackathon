@@ -1,0 +1,119 @@
+{
+  "task_id": "finance_openai_medium_003",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 1.0
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for software_services sector"
+      ],
+      "questions_asked": [
+        "Please provide related news information for the renewable_energy sector to assess its efficient rate more accurately.",
+        "Please provide related news information for the software_services sector to assess its efficient rate more accurately.",
+        "Please provide related news information for the retail_bank sector to assess its efficient rate more accurately.",
+        "Please provide related news information for the pharmaceuticals sector to assess its efficient rate more accurately."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for software_services sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for retail_bank sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate data for the retail_bank sector related to the news about retail chains expanding e-commerce platforms.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate data for the automotive_manufacturing sector related to the news about the automaker planning to launch an electric model next year.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate data for the renewable_energy sector related to the news about the new efficient wind turbine design."
+      ],
+      "covered_requires": [
+        "Related news for retail_bank sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for software_services sector"
+      ],
+      "questions_asked": [
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate related to the pharmaceutical sector news about the new vaccine results.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate related to the software_services sector news about the cybersecurity updates."
+      ],
+      "covered_requires": [
+        "Related news for pharmaceuticals sector",
+        "Related news for software_services sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for retail_bank sector"
+      ],
+      "questions_asked": [
+        "Please provide related news and inference_rate, efficient_rate_change, and resource_mix_rate details for the renewable_energy sector to better estimate the efficient_rate_now.",
+        "Please provide related news and inference_rate, efficient_rate_change, and resource_mix_rate details for the retail_bank sector to better estimate the efficient_rate_now.",
+        "Please provide related news and inference_rate, efficient_rate_change, and resource_mix_rate details for the pharmaceuticals sector to better estimate the efficient_rate_now.",
+        "Please provide related news and inference_rate, efficient_rate_change, and resource_mix_rate details for the automotive_manufacturing sector to better estimate the efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for retail_bank sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Please provide the related news and inference rate for the automotive_manufacturing sector.",
+        "Please provide the related news and inference rate for the pharmaceuticals sector."
+      ],
+      "covered_requires": [
+        "Related news for automotive_manufacturing sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

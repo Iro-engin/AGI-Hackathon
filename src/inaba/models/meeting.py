@@ -49,5 +49,6 @@ class MeetingEvent(Event):
 class MeetingCase(Case):
     domain: Literal["meeting"] = "meeting"
     initial_state: MeetingState
+    initial_do: MeetingDo | None = None
     events: list[MeetingEvent] = Field(default_factory=list)
     initial_requires: list[str] = Field(default_factory=list)

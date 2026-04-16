@@ -1,11 +1,30 @@
+"""finance ドメインの execute DomainAdapter 実装。"""
+
 from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from typing import Any
 
 from ..models.base import Case
 from ..models.finance import FinanceDo
 from .base import DomainAdapter, TurnContext
+
+_TERM_GUIDE = """
+[Term Guide]
+- stock_price_before: Each stock's price before the current news is reflected.
+- inference_rate: The influence each past news item has on stock price movement (-1 to 1).
+  Positive values signal upward movement; negative values signal downward.
+- efficient_rate_change: A correction to inference_rate's effective strength (-0.25 to 0.25).
+  Accumulated from past news and updated across turns.
+- efficient_rate_now (hidden): The final effective price change rate, computed as
+  inference_rate + efficient_rate_change after correction.
+  Optimal stock_rates allocation strongly depends on this value.
+- resource_mix_rate: The mixing ratio indicating how much each sector's past news
+  (hidden_resource) is referenced by the current news.
+  Note: efficient_rate_now changes with accumulated news history,
+  so querying sector-specific related news improves its accuracy.
+""".strip()
 
 
 @dataclass(frozen=True)
@@ -21,43 +40,47 @@ class FinanceAdapter(DomainAdapter):
     ) -> str:
         """finance の Question / Do 選択 prompt を作る。"""
         question_rule = (
-            "質問を選んでもよい"
+            "You may choose to ask a question"
             if allow_question
-            else "この時点では質問せず、必ず Do を返す"
+            else "Do not ask a question at this point; return a Do"
         )
+        past_news_section = _format_past_news(context.past_event_messages)
         return f"""
-あなたは金融タスクを進める agent です。
-今回のターンでは、Question か Do のどちらか1つを選んでください。
-{question_rule}。
+You are an agent working on a financial task.
+In this turn, choose exactly one of: Question or Do.
+{question_rule}.
 
-初期依頼:
+{_TERM_GUIDE}
+
+Initial request:
 {case.initial_request}
 
-初期状態で見えている情報:
+Visible information at the start:
 {json.dumps(context.initial_got_info, ensure_ascii=False, indent=2)}
 
-今回のターン種別:
+Current turn type:
 {context.stage}
 
-今回の制約:
+Current constraints:
 {json.dumps(context.current_constraint, ensure_ascii=False, indent=2)}
-
-今回の event message:
+{past_news_section}
+Current event message (current news):
 {json.dumps(context.event_message, ensure_ascii=False)}
 
-今回見えている情報:
+Currently visible information:
 {json.dumps(context.current_got_info, ensure_ascii=False, indent=2)}
 
-このターンのこれまでの質問と回答:
+Questions and answers so far this turn:
 {json.dumps([item.model_dump() for item in context.question_answers], ensure_ascii=False, indent=2)}
 
-直前ターンの Do:
+Previous turn Do:
 {json.dumps(context.previous_do, ensure_ascii=False, indent=2)}
 
-Do を返す場合は stock_rates を返してください。
-stock_rates は全銘柄の比率を持つ辞書にしてください。
-なお、stock_ratesの最適解となる比率は各株の株価の比率とほぼ等しいです。
-返却形式は必ず次のどちらか:
+When returning a Do, return stock_rates as a dict covering all stocks with values summing to 1.0.
+Stocks with higher efficient_rate_now (hidden) should receive higher allocation.
+Querying sector-specific related news improves the accuracy of efficient_rate_now estimates.
+
+Return exactly one of the following formats:
 {{
   "action": "question",
   "question": "..."
@@ -85,31 +108,34 @@ stock_rates は全銘柄の比率を持つ辞書にしてください。
         question: str,
     ) -> str:
         """finance で hidden_info を使って質問へ答える prompt を作る。"""
+        past_news_section = _format_past_news(context.past_event_messages)
         return f"""
-あなたは金融タスクの環境側です。
-質問に対して、現在ターンの hidden_info と visible 情報だけを使って日本語で答えてください。
-答えられないことは推測せず、その旨を述べてください。
+You are the environment side of a financial task.
+Answer the question using only the current turn's hidden_info and visible information.
+Do not speculate about things you cannot answer; state that they are unknown.
 
-初期依頼:
+{_TERM_GUIDE}
+
+Initial request:
 {case.initial_request}
-
-今回の event message:
+{past_news_section}
+Current event message (current news):
 {json.dumps(context.event_message, ensure_ascii=False)}
 
-今回見えている情報:
+Currently visible information:
 {json.dumps(context.current_got_info, ensure_ascii=False, indent=2)}
 
-今回の hidden_info:
+Current hidden_info:
 {json.dumps(context.current_hidden_info, ensure_ascii=False, indent=2)}
 
-このターンのこれまでの質問と回答:
+Questions and answers so far this turn:
 {json.dumps([item.model_dump() for item in context.question_answers], ensure_ascii=False, indent=2)}
 
-質問:
+Question:
 {question}
 """.strip()
 
-    def parse_do(self, payload: dict[str, object]) -> FinanceDo:
+    def parse_do(self, payload: dict[str, Any]) -> FinanceDo:
         """モデル出力を FinanceDo として検証し、比率を正規化する。"""
         do = FinanceDo.model_validate(payload)
         total = sum(do.stock_rates.values())
@@ -120,6 +146,17 @@ stock_rates は全銘柄の比率を持つ辞書にしてください。
             for stock, value in do.stock_rates.items()
         }
         return do
+
+
+def _format_past_news(past_event_messages: list[str]) -> str:
+    """過去のニュース履歴をプロンプト用の文字列に整形する。空の場合は空文字を返す。"""
+    if not past_event_messages:
+        return ""
+    lines = ["\nPast news history (already reflected in efficient_rate_now changes):"]
+    for index, message in enumerate(past_event_messages, start=1):
+        lines.append(f"  [{index}] {message}")
+    lines.append("")
+    return "\n".join(lines)
 
 
 FINANCE_ADAPTER = FinanceAdapter()

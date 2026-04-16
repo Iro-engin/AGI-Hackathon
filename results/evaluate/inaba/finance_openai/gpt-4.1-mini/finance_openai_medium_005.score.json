@@ -1,0 +1,126 @@
+{
+  "task_id": "finance_openai_medium_005",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.4,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.8
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4.1-mini",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector",
+        "Related news for airline_transportation sector"
+      ],
+      "questions_asked": [
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the renewable_energy sector to understand the impact of the new breakthrough in sustainable technology.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the pharmaceutical_research sector to understand the impact of the news about experimental drugs entering the next phase of clinical trials.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the airline_transportation sector to understand the impact of the news about surging travel bookings and increased ticket sales.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the retail_ecommerce sector to better assess how the current news might impact it."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector",
+        "Related news for airline_transportation sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector"
+      ],
+      "questions_asked": [
+        "Please provide related news or inference_rate for the renewable_energy sector to better estimate its efficient_rate_now.",
+        "Please provide related news or inference_rate for the pharmaceutical_research sector to better estimate its efficient_rate_now.",
+        "Please provide related news or inference_rate for the airline_transportation sector to better estimate its efficient_rate_now.",
+        "Please provide related news or inference_rate for the financial_services sector to better estimate its efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for retail_ecommerce sector",
+        "Related news for airline_transportation sector"
+      ],
+      "questions_asked": [
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the retail_ecommerce sector based on the current and past news.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the airline_transportation sector based on the current and past news.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the renewable_energy sector based on the current and past news.",
+        "Please provide the inference_rate, efficient_rate_change, and resource_mix_rate for the pharmaceutical_research sector based on the current and past news."
+      ],
+      "covered_requires": [
+        "Related news for airline_transportation sector",
+        "Related news for retail_ecommerce sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for pharmaceutical_research sector",
+        "Related news for financial_services sector"
+      ],
+      "questions_asked": [
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate related to the financial_services sector for the current news about new regulations affecting asset management practices.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate related to the pharmaceutical_research sector for the current news about promising results in vaccine development.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate related to the renewable_energy sector for the current news about breakthroughs in sustainable technology.",
+        "Please provide inference_rate, efficient_rate_change, and resource_mix_rate related to the retail_ecommerce sector for the current news about surged travel bookings and digital marketplace sales."
+      ],
+      "covered_requires": [
+        "Related news for financial_services sector",
+        "Related news for pharmaceutical_research sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for retail_ecommerce sector"
+      ],
+      "questions_asked": [
+        "Please provide related news information and past inference_rate, efficient_rate_change, and resource_mix_rate for the renewable_energy sector to better estimate the efficient_rate_now.",
+        "Please provide related news information and past inference_rate, efficient_rate_change, and resource_mix_rate for the retail_ecommerce sector to better estimate the efficient_rate_now.",
+        "Please provide related news information and past inference_rate, efficient_rate_change, and resource_mix_rate for the pharmaceutical_research sector to better estimate the efficient_rate_now.",
+        "Please provide related news information and past inference_rate, efficient_rate_change, and resource_mix_rate for the airline_transportation sector to better estimate the efficient_rate_now."
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for retail_ecommerce sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

@@ -95,7 +95,13 @@ def main() -> None:
         records = build_turn_records(run=run, case=case, adapter=adapter)
         result = compute_eval_result(records, early_discovery_n=args.early_discovery_n)
 
-        output = _format_result(task_id=run.task_id, result=result, records=records)
+        output = _format_result(
+            task_id=run.task_id,
+            result=result,
+            records=records,
+            decision_model=run.decision_model,
+            difficulty=case.difficulty,
+        )
         out_path = args.output_dir / f"{run.task_id}.score.json"
         out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
         all_results.append(output)
@@ -125,7 +131,7 @@ def build_turn_records(
         if event_index is None:
             # 初期ターン
             should_require = list(case.initial_requires)
-            exp_do_obj: Do | None = None
+            exp_do_obj: Do | None = case.initial_do
             context = _build_turn_context_from_case(case=case, event_index=None)
         else:
             event = case.events[event_index]
@@ -273,6 +279,8 @@ def _format_result(
     task_id: str,
     result: EvalResult,
     records: list[TurnRecord],
+    decision_model: str,
+    difficulty: str,
 ) -> dict[str, Any]:
     """1ケース分の採点結果を辞書に整形する。"""
     return {
@@ -288,6 +296,8 @@ def _format_result(
         "meta": {
             "total_events": result.total_events,
             "early_discovery_n": result.early_discovery_n,
+            "decision_model": decision_model,
+            "difficulty": difficulty,
         },
         "turns": [
             {
@@ -323,16 +333,32 @@ def _aggregate_summary(
         "redundant_question_rate",
         "early_discovery_rate",
     ]
+
+    decision_models = list({r["meta"]["decision_model"] for r in results})
+    decision_model = decision_models[0] if len(decision_models) == 1 else decision_models
+
     avg: dict[str, float] = {}
     for metric in metrics:
         values = [r["scores"][metric] for r in results]
         avg[metric] = round(sum(values) / len(values), 4)
 
+    difficulties = sorted({r["meta"]["difficulty"] for r in results})
+    by_difficulty: dict[str, Any] = {}
+    for difficulty in difficulties:
+        subset = [r for r in results if r["meta"]["difficulty"] == difficulty]
+        diff_avg: dict[str, float] = {}
+        for metric in metrics:
+            values = [r["scores"][metric] for r in subset]
+            diff_avg[metric] = round(sum(values) / len(values), 4)
+        by_difficulty[difficulty] = {"case_count": len(subset), "average_scores": diff_avg}
+
     return {
         "domain": domain,
         "case_count": len(results),
         "early_discovery_n": early_discovery_n,
+        "decision_model": decision_model,
         "average_scores": avg,
+        "by_difficulty": by_difficulty,
     }
 
 

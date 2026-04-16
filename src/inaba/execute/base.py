@@ -15,14 +15,14 @@ DEFAULT_DECISION_MODEL = "gpt-4.1-mini"
 DEFAULT_ANSWER_MODEL = "gpt-4o-mini"
 
 SELECTION_INSTRUCTIONS = """
-あなたは与えられた状態だけを使って行動を選ぶエージェントです。
-必ずJSONのみを返し、Markdownや説明文は返さないでください。
+You are an agent that selects actions using only the given state.
+Return only valid JSON. Do not include Markdown or explanatory text.
 """.strip()
 
 ANSWER_INSTRUCTIONS = """
-あなたは隠れた情報も知っている環境側の応答役です。
-質問に対して、日本語で簡潔かつ具体的に回答してください。
-与えられた情報だけを使い、根拠のない補完はしないでください。
+You are the environment side that has access to hidden information.
+Answer questions concisely and specifically in English.
+Use only the provided information. Do not add unsupported inferences.
 """.strip()
 
 
@@ -70,6 +70,7 @@ class TurnContext(BaseModel):
     stage: Literal["initial", "event"]
     event_index: int | None = None
     event_message: str | None = None
+    past_event_messages: list[str] = Field(default_factory=list)
     initial_request: str
     initial_constraint: list[str] = Field(default_factory=list)
     initial_got_info: dict[str, Any] = Field(default_factory=dict)
@@ -236,11 +237,13 @@ def _build_turn_context(
 
     event = case.events[turn_index - 1]
     state_before = event.state_before
+    past_messages = [case.events[i].message for i in range(turn_index - 1)]
     return TurnContext(
         turn=turn_index + 1,
         stage="event",
         event_index=turn_index - 1,
         event_message=event.message,
+        past_event_messages=past_messages,
         initial_request=case.initial_request,
         initial_constraint=list(initial_state.constraint),
         initial_got_info=initial_state.got_info.model_dump(mode="json"),

@@ -116,23 +116,40 @@ def main() -> None:
     case_path = resolve_single_case_path(args)
     log_path = resolve_single_log_path(args)
     case = Case.from_path(case_path)
-    log = ExecutionLog.from_path(log_path)
-    result = evaluator.evaluate(case, log)
+    execution_log = ExecutionLog.from_path(log_path)
+    result = evaluator.evaluate(case, execution_log)
+
     payload = {
         "report_type": "single_case_evaluation_report",
+        "evaluator": {
+            "type": "rule_based",
+            "name": "RuleBasedEvaluator",
+            "version": "v1",
+            "model": None,
+        },
         "task_id": case.task_id,
         "scenario_path": str(case_path.as_posix()),
         "execution_log_path": str(log_path.as_posix()),
-        "outcome_score": result.outcome_score,
-        "process_score": result.process_score,
-        "recovery_score": result.recovery_score,
-        "total_score": result.total_score,
+        "quick_glance": build_quick_glance(case, execution_log, result),
+        "score_breakdown": {
+            "total_score": result.total_score,
+            "outcome_score": result.outcome_score,
+            "process_score": result.process_score,
+            "recovery_score": result.recovery_score,
+        },
         "failure_labels": result.failure_labels,
+        "human_report": build_human_report(case, execution_log, result),
+        "conversation_timeline": build_conversation_timeline(case, execution_log),
         "deductions": result.deductions,
-        "human_report": build_human_report(case=case, execution_log=log, payload=result),
-        "readable_summary": build_readable_summary(case=case, execution_log=log, payload=result),
-        "conversation_timeline": build_conversation_timeline(case=case, execution_log=log),
+        "raw_result": {
+            "outcome_score": result.outcome_score,
+            "process_score": result.process_score,
+            "recovery_score": result.recovery_score,
+            "total_score": result.total_score,
+            "failure_labels": result.failure_labels,
+        },
     }
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(payload, ensure_ascii=False, indent=2))
@@ -149,11 +166,7 @@ def run_batch(args: argparse.Namespace) -> None:
     log_index = discover_execution_logs(args.results_dir)
 
     if args.write_missing_logs:
-        write_missing_log_templates(
-            cases=cases,
-            log_index=log_index,
-            output_dir=args.missing_logs_dir,
-        )
+        write_missing_log_templates(cases, log_index, args.missing_logs_dir)
 
     rows: list[CaseEvaluationRow] = []
     missing_task_ids: list[str] = []
@@ -182,16 +195,9 @@ def run_batch(args: argparse.Namespace) -> None:
             )
         )
 
-    summary = build_summary(
-        rows=rows,
-        selected_cases=len(cases),
-        missing_task_ids=missing_task_ids,
-    )
+    summary = build_summary(rows, len(cases), missing_task_ids)
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(
-        json.dumps(summary, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    args.output.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     print(render_cli_summary(summary, args.output))
 
     if args.strict_missing and missing_task_ids:
@@ -234,7 +240,6 @@ def discover_cases(
     for case_path in sorted(scenarios_dir.rglob("*.json")):
         if not include_templates and case_path.stem.endswith("_template"):
             continue
-
         case = Case.from_path(case_path)
         domain_name = case_path.parent.name
         if domain_filters and domain_name not in domain_filters:
@@ -252,7 +257,6 @@ def discover_execution_logs(results_dir: Path) -> dict[str, Path]:
             execution_log = ExecutionLog.from_path(log_path)
         except Exception:
             continue
-
         if execution_log.task_id not in log_index:
             log_index[execution_log.task_id] = log_path
     return log_index
@@ -266,12 +270,10 @@ def write_missing_log_templates(
     for scenario_path, case in cases:
         if case.task_id in log_index:
             continue
-
         output_path = output_dir / scenario_path.parent.name / f"{case.task_id}.execution_log.json"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         if output_path.exists():
             continue
-
         output_path.write_text(
             json.dumps(build_stub_execution_log(case), ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -342,61 +344,32 @@ def render_cli_summary(summary: dict[str, object], output_path: Path) -> str:
     return "\n".join(lines)
 
 
-def build_readable_summary(
-    case: Case,
-    execution_log: ExecutionLog,
-    payload: Any,
-) -> dict[str, object]:
-    event_turns = {event.turn for event in case.events}
-    acknowledged_turns = {
-        turn
-        for action in execution_log.actions
-        for turn in action.acknowledged_event_turns
-    }
-    updated_artifacts = sorted(
-        {
-            artifact_id
-            for action in execution_log.actions
-            for artifact_id in action.artifact_updates
-        }
-    )
+def build_quick_glance(case: Case, execution_log: ExecutionLog, payload: Any) -> dict[str, object]:
+    event_status = build_event_status(case, execution_log)
+    finalize_turns = [
+        action.turn for action in execution_log.actions if action.action_type == "finalize"
+    ]
     return {
-        "task_overview": {
-            "task_id": case.task_id,
-            "domain": case.domain,
-            "difficulty": case.difficulty,
-            "required_artifacts": [
-                artifact.artifact_id for artifact in case.initial_state.required_artifacts
-            ],
-            "event_turns": sorted(event_turns),
+        "result": "fail" if payload.total_score < 60 else "pass",
+        "task_id": case.task_id,
+        "domain": case.domain,
+        "difficulty": case.difficulty,
+        "total_score": payload.total_score,
+        "score_breakdown": {
+            "outcome": payload.outcome_score,
+            "process": payload.process_score,
+            "recovery": payload.recovery_score,
         },
-        "scorecard": {
-            "total_score": payload.total_score,
-            "outcome_score": payload.outcome_score,
-            "process_score": payload.process_score,
-            "recovery_score": payload.recovery_score,
-            "failure_labels": payload.failure_labels,
-            "deduction_count": len(payload.deductions),
-        },
-        "execution_overview": {
-            "action_count": len(execution_log.actions),
-            "question_count": len(execution_log.questions_asked),
-            "completed_tasks": execution_log.completed_tasks,
-            "acknowledged_event_turns": sorted(acknowledged_turns),
-            "artifact_updates_seen": updated_artifacts,
-            "finalized": any(action.action_type == "finalize" for action in execution_log.actions),
-        },
-        "event_status": build_event_status(case=case, execution_log=execution_log),
-        "top_deductions": payload.deductions[:10],
+        "event_count": len(case.events),
+        "question_count": len(execution_log.questions_asked),
+        "finalize_turn": max(finalize_turns) if finalize_turns else None,
+        "last_event_turn": max(event.turn for event in case.events) if case.events else None,
+        "main_failures": build_main_failures(payload, event_status, case, execution_log),
     }
 
 
-def build_human_report(
-    case: Case,
-    execution_log: ExecutionLog,
-    payload: Any,
-) -> dict[str, object]:
-    event_status = build_event_status(case=case, execution_log=execution_log)
+def build_human_report(case: Case, execution_log: ExecutionLog, payload: Any) -> dict[str, object]:
+    event_status = build_event_status(case, execution_log)
     return {
         "viewer_order": [
             "headline",
@@ -407,68 +380,19 @@ def build_human_report(
             "why_it_lost_points",
             "conversation_timeline",
         ],
-        "headline": build_headline(case=case, execution_log=execution_log, payload=payload),
-        "verdict": build_verdict(case=case, execution_log=execution_log, payload=payload),
-        "score_explainer": build_score_explainer(payload=payload),
-        "benchmark_case": build_benchmark_case_section(case=case),
-        "what_happened": build_what_happened_section(
-            case=case,
-            execution_log=execution_log,
-            event_status=event_status,
-        ),
-        "why_it_lost_points": build_loss_analysis(
-            case=case,
-            execution_log=execution_log,
-            payload=payload,
-            event_status=event_status,
-        ),
+        "headline": build_headline(case, execution_log, payload),
+        "verdict": build_verdict(case, execution_log, payload),
+        "score_explainer": build_score_explainer(payload),
+        "benchmark_case": build_benchmark_case_section(case),
+        "what_happened": build_what_happened_section(case, execution_log, event_status),
+        "why_it_lost_points": build_loss_analysis(case, execution_log, payload, event_status),
     }
 
 
-def build_event_status(case: Case, execution_log: ExecutionLog) -> list[dict[str, object]]:
-    questions_by_turn = {question.turn: question for question in execution_log.questions_asked}
-    actions = execution_log.actions
-    statuses: list[dict[str, object]] = []
-    for event in case.events:
-        response_window_end = event.turn + event.expected_replan_within_turns
-        window_actions = [
-            action
-            for action in actions
-            if event.turn <= action.turn <= response_window_end
-        ]
-        statuses.append(
-            {
-                "event_turn": event.turn,
-                "event_type": event.type,
-                "expected_replan_within_turns": event.expected_replan_within_turns,
-                "expected_tasks": event.expected_tasks,
-                "expected_artifact_updates": event.expected_artifact_updates,
-                "acknowledged": any(
-                    event.turn in action.acknowledged_event_turns for action in actions
-                ),
-                "responded_in_window": any(
-                    action.action_type in {"update_plan", "confirm_state"}
-                    for action in window_actions
-                ),
-                "artifact_updates_in_window": sorted(
-                    {
-                        artifact_id
-                        for action in window_actions
-                        for artifact_id in action.artifact_updates
-                    }
-                ),
-                "clarification_in_window": any(
-                    event.turn <= turn <= response_window_end for turn in questions_by_turn
-                ),
-            }
-        )
-    return statuses
-
-
 def build_headline(case: Case, execution_log: ExecutionLog, payload: Any) -> dict[str, object]:
-    acknowledged_turns = [
+    acknowledged_turns = {
         turn for action in execution_log.actions for turn in action.acknowledged_event_turns
-    ]
+    }
     acknowledged_event_count = sum(1 for event in case.events if event.turn in acknowledged_turns)
     return {
         "task_id": case.task_id,
@@ -476,32 +400,33 @@ def build_headline(case: Case, execution_log: ExecutionLog, payload: Any) -> dic
         "difficulty": case.difficulty,
         "total_score": payload.total_score,
         "one_line_summary": (
-            f"{case.task_id} は total_score={payload.total_score}。"
-            f" {len(case.events)} 件のイベント中、"
-            f"{acknowledged_event_count}"
-            " 件しか明示 acknowledgement がなく、"
-            f"{len(execution_log.questions_asked)} 件しか clarification がありません。"
+            f"{case.task_id}: total_score={payload.total_score}, "
+            f"events={len(case.events)}, "
+            f"acknowledged_events={acknowledged_event_count}, "
+            f"clarifications={len(execution_log.questions_asked)}"
         ),
     }
 
 
 def build_verdict(case: Case, execution_log: ExecutionLog, payload: Any) -> dict[str, object]:
-    finalized_early = (
-        any(action.action_type == "finalize" for action in execution_log.actions)
-        and execution_log.actions[-1].turn < max(event.turn for event in case.events)
-    )
-    finalize_reason = (
-        "finalize がイベント完了前に走っている"
-        if finalized_early
-        else "finalize timing は致命的ではない"
-    )
+    finalized_early = False
+    finalize_turns = [
+        action.turn for action in execution_log.actions if action.action_type == "finalize"
+    ]
+    if finalize_turns and case.events:
+        finalized_early = max(finalize_turns) < max(event.turn for event in case.events)
+
     return {
         "result": "fail" if payload.total_score < 60 else "pass",
         "reason": [
-            "latest state を final_state が取り切れていない",
-            "event 後の replan/acknowledgement が不足している",
-            "ambiguity に対する ask_clarification が無い",
-            finalize_reason,
+            "final_state does not match the latest expected state",
+            "event follow-up and acknowledgement are insufficient",
+            "no ask_clarification was used for ambiguity",
+            (
+                "finalize happened before the last event"
+                if finalized_early
+                else "finalize timing is not the main issue"
+            ),
         ],
         "failure_labels": payload.failure_labels,
     }
@@ -516,9 +441,9 @@ def build_score_explainer(payload: Any) -> dict[str, object]:
             "recovery_score": payload.recovery_score,
         },
         "interpretation": {
-            "outcome": "最終成果物と final_state が最新条件を満たしたか",
-            "process": "質問、分解、依存順、イベント後の行動が妥当か",
-            "recovery": "イベント発生後にどれだけ追従・再計画できたか",
+            "outcome": "Did final_state and final_artifacts match the latest expected state?",
+            "process": "Were planning, dependencies, questions, and actions reasonable?",
+            "recovery": "Did the agent react quickly enough after each event?",
         },
     }
 
@@ -582,20 +507,22 @@ def build_loss_analysis(
     event_status: list[dict[str, object]],
 ) -> list[dict[str, object]]:
     findings: list[dict[str, object]] = []
+
     if payload.total_score < 60:
         findings.append(
             {
-                "title": "final_state が latest state を保持できていない",
+                "title": "final_state is stale versus the latest case state",
                 "evidence": payload.deductions[:8],
             }
         )
+
     missing_event_turns = [
         status["event_turn"] for status in event_status if not status["acknowledged"]
     ]
     if missing_event_turns:
         findings.append(
             {
-                "title": "イベント acknowledgement が欠落",
+                "title": "event acknowledgement is missing",
                 "evidence": {
                     "missing_event_turns": missing_event_turns,
                     "logged_acknowledged_event_turns": sorted(
@@ -608,50 +535,119 @@ def build_loss_analysis(
                 },
             }
         )
+
     failed_recovery_turns = [
         status["event_turn"] for status in event_status if not status["responded_in_window"]
     ]
     if failed_recovery_turns:
         findings.append(
             {
-                "title": "イベント後の timely replan が欠落",
+                "title": "timely replan is missing after some events",
                 "evidence": {"failed_event_turns": failed_recovery_turns},
             }
         )
+
     ambiguity_turns = [event.turn for event in case.events if event.type == "ambiguity"]
-    if not execution_log.questions_asked and ambiguity_turns:
+    if ambiguity_turns and not execution_log.questions_asked:
         findings.append(
             {
-                "title": "ambiguity に ask_clarification が無い",
+                "title": "ambiguity was not handled with ask_clarification",
                 "evidence": {
                     "ambiguity_turns": ambiguity_turns,
                     "questions_asked": [],
                 },
             }
         )
-    if any(action.action_type == "finalize" for action in execution_log.actions):
-        finalize_turn = max(
-            action.turn for action in execution_log.actions if action.action_type == "finalize"
+
+    finalize_turns = [
+        action.turn for action in execution_log.actions if action.action_type == "finalize"
+    ]
+    if finalize_turns and case.events and (
+        max(finalize_turns) < max(event.turn for event in case.events)
+    ):
+        findings.append(
+            {
+                "title": "finalize happened before the last event",
+                "evidence": {
+                    "finalize_turn": max(finalize_turns),
+                    "last_event_turn": max(event.turn for event in case.events),
+                },
+            }
         )
-        if finalize_turn < max(event.turn for event in case.events):
-            findings.append(
-                {
-                    "title": "finalize が最後のイベントより前に走っている",
-                    "evidence": {
-                        "finalize_turn": finalize_turn,
-                        "last_event_turn": max(event.turn for event in case.events),
-                    },
-                }
-            )
+
     return findings
+
+
+def build_main_failures(
+    payload: Any,
+    event_status: list[dict[str, object]],
+    case: Case,
+    execution_log: ExecutionLog,
+) -> list[str]:
+    failures: list[str] = []
+    if "state_staleness" in payload.failure_labels:
+        failures.append("final_state is stale versus the latest case state")
+    if "missing_replan" in payload.failure_labels or "partial_replan" in payload.failure_labels:
+        failures.append("event-driven replanning is missing or incomplete")
+    if "question_handling" in payload.failure_labels:
+        failures.append("ambiguity was not handled with ask_clarification")
+    finalize_turns = [
+        action.turn for action in execution_log.actions if action.action_type == "finalize"
+    ]
+    if finalize_turns and case.events and (
+        max(finalize_turns) < max(event.turn for event in case.events)
+    ):
+        failures.append("finalize happened before the last benchmark event")
+    return failures
+
+
+def build_event_status(case: Case, execution_log: ExecutionLog) -> list[dict[str, object]]:
+    questions_by_turn = {question.turn: question for question in execution_log.questions_asked}
+    actions = execution_log.actions
+    statuses: list[dict[str, object]] = []
+    for event in case.events:
+        response_window_end = event.turn + event.expected_replan_within_turns
+        window_actions = [
+            action
+            for action in actions
+            if event.turn <= action.turn <= response_window_end
+        ]
+        statuses.append(
+            {
+                "event_turn": event.turn,
+                "event_type": event.type,
+                "expected_replan_within_turns": event.expected_replan_within_turns,
+                "expected_tasks": event.expected_tasks,
+                "expected_artifact_updates": event.expected_artifact_updates,
+                "acknowledged": any(
+                    event.turn in action.acknowledged_event_turns for action in actions
+                ),
+                "responded_in_window": any(
+                    action.action_type in {"update_plan", "confirm_state"}
+                    for action in window_actions
+                ),
+                "artifact_updates_in_window": sorted(
+                    {
+                        artifact_id
+                        for action in window_actions
+                        for artifact_id in action.artifact_updates
+                    }
+                ),
+                "clarification_in_window": any(
+                    event.turn <= turn <= response_window_end for turn in questions_by_turn
+                ),
+            }
+        )
+    return statuses
 
 
 def build_conversation_timeline(case: Case, execution_log: ExecutionLog) -> list[dict[str, object]]:
     timeline: list[dict[str, object]] = []
-    action_map = {}
+    action_map: dict[int, list[Any]] = {}
     for action in execution_log.actions:
         action_map.setdefault(action.turn, []).append(action)
-    question_map = {}
+
+    question_map: dict[int, list[Any]] = {}
     for question in execution_log.questions_asked:
         question_map.setdefault(question.turn, []).append(question)
 
@@ -662,6 +658,7 @@ def build_conversation_timeline(case: Case, execution_log: ExecutionLog) -> list
             *(question.turn for question in execution_log.questions_asked),
         }
     )
+
     for turn in all_turns:
         turn_events = [event for event in case.events if event.turn == turn]
         turn_actions = action_map.get(turn, [])

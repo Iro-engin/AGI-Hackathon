@@ -1,36 +1,47 @@
 {
   "report_type": "single_case_evaluation_report",
+  "evaluator": {
+    "type": "rule_based",
+    "name": "RuleBasedEvaluator",
+    "version": "v1",
+    "model": null
+  },
   "task_id": "meeting_001",
   "scenario_path": "scenarios/meeting/meeting_001.json",
   "execution_log_path": "results/sample_execution_meeting_001.json",
-  "outcome_score": 20,
-  "process_score": 50,
-  "recovery_score": 25,
-  "total_score": 32,
+  "quick_glance": {
+    "result": "fail",
+    "task_id": "meeting_001",
+    "domain": "meeting_prep",
+    "difficulty": "hard",
+    "total_score": 32,
+    "score_breakdown": {
+      "outcome": 20,
+      "process": 50,
+      "recovery": 25
+    },
+    "event_count": 3,
+    "question_count": 0,
+    "finalize_turn": 5,
+    "last_event_turn": 6,
+    "main_failures": [
+      "final_state is stale versus the latest case state",
+      "event-driven replanning is missing or incomplete",
+      "ambiguity was not handled with ask_clarification",
+      "finalize happened before the last benchmark event"
+    ]
+  },
+  "score_breakdown": {
+    "total_score": 32,
+    "outcome_score": 20,
+    "process_score": 50,
+    "recovery_score": 25
+  },
   "failure_labels": [
     "missing_replan",
     "partial_replan",
     "question_handling",
     "state_staleness"
-  ],
-  "deductions": [
-    "final state mismatch for participants (-10)",
-    "final state missing key: constraints (-10)",
-    "final state mismatch for reference_data.meeting_type (-10)",
-    "final state missing key: reference_data.topic (-10)",
-    "final state missing key: reference_data.decision_goal (-10)",
-    "final state mismatch for reference_data.agenda_min_items (-10)",
-    "final state missing key: reference_data.known_options (-10)",
-    "final state missing key: reference_data.primary_comparison_axis (-10)",
-    "event turn 2 was not explicitly acknowledged (-10)",
-    "no artifact update observed after event turn 2 (-10)",
-    "expected event follow-up tasks missing after event turn 2 (-10)",
-    "event turn 4 was not explicitly acknowledged (-10)",
-    "no timely replan after event turn 6 (-15 recovery, -15 process)",
-    "event turn 6 was not explicitly acknowledged (-10)",
-    "no artifact update observed after event turn 6 (-10)",
-    "expected event follow-up tasks missing after event turn 6 (-10)",
-    "ambiguity event was not followed by timely ask_clarification (-15 process, -10 recovery)"
   ],
   "human_report": {
     "viewer_order": [
@@ -47,15 +58,15 @@
       "domain": "meeting_prep",
       "difficulty": "hard",
       "total_score": 32,
-      "one_line_summary": "meeting_001 は total_score=32。 3 件のイベント中、0 件しか明示 acknowledgement がなく、0 件しか clarification がありません。"
+      "one_line_summary": "meeting_001: total_score=32, events=3, acknowledged_events=0, clarifications=0"
     },
     "verdict": {
       "result": "fail",
       "reason": [
-        "latest state を final_state が取り切れていない",
-        "event 後の replan/acknowledgement が不足している",
-        "ambiguity に対する ask_clarification が無い",
-        "finalize がイベント完了前に走っている"
+        "final_state does not match the latest expected state",
+        "event follow-up and acknowledgement are insufficient",
+        "no ask_clarification was used for ambiguity",
+        "finalize happened before the last event"
       ],
       "failure_labels": [
         "missing_replan",
@@ -72,9 +83,9 @@
         "recovery_score": 25
       },
       "interpretation": {
-        "outcome": "最終成果物と final_state が最新条件を満たしたか",
-        "process": "質問、分解、依存順、イベント後の行動が妥当か",
-        "recovery": "イベント発生後にどれだけ追従・再計画できたか"
+        "outcome": "Did final_state and final_artifacts match the latest expected state?",
+        "process": "Were planning, dependencies, questions, and actions reasonable?",
+        "recovery": "Did the agent react quickly enough after each event?"
       }
     },
     "benchmark_case": {
@@ -307,7 +318,7 @@
     },
     "why_it_lost_points": [
       {
-        "title": "final_state が latest state を保持できていない",
+        "title": "final_state is stale versus the latest case state",
         "evidence": [
           "final state mismatch for participants (-10)",
           "final state missing key: constraints (-10)",
@@ -320,7 +331,7 @@
         ]
       },
       {
-        "title": "イベント acknowledgement が欠落",
+        "title": "event acknowledgement is missing",
         "evidence": {
           "missing_event_turns": [
             2,
@@ -333,7 +344,7 @@
         }
       },
       {
-        "title": "イベント後の timely replan が欠落",
+        "title": "timely replan is missing after some events",
         "evidence": {
           "failed_event_turns": [
             6
@@ -341,7 +352,7 @@
         }
       },
       {
-        "title": "ambiguity に ask_clarification が無い",
+        "title": "ambiguity was not handled with ask_clarification",
         "evidence": {
           "ambiguity_turns": [
             6
@@ -350,124 +361,12 @@
         }
       },
       {
-        "title": "finalize が最後のイベントより前に走っている",
+        "title": "finalize happened before the last event",
         "evidence": {
           "finalize_turn": 5,
           "last_event_turn": 6
         }
       }
-    ]
-  },
-  "readable_summary": {
-    "task_overview": {
-      "task_id": "meeting_001",
-      "domain": "meeting_prep",
-      "difficulty": "hard",
-      "required_artifacts": [
-        "agenda",
-        "briefing_doc"
-      ],
-      "event_turns": [
-        2,
-        4,
-        6
-      ]
-    },
-    "scorecard": {
-      "total_score": 32,
-      "outcome_score": 20,
-      "process_score": 50,
-      "recovery_score": 25,
-      "failure_labels": [
-        "missing_replan",
-        "partial_replan",
-        "question_handling",
-        "state_staleness"
-      ],
-      "deduction_count": 17
-    },
-    "execution_overview": {
-      "action_count": 4,
-      "question_count": 0,
-      "completed_tasks": [
-        "collect_availability",
-        "propose_schedule",
-        "define_agenda",
-        "write_briefing_doc"
-      ],
-      "acknowledged_event_turns": [
-        3
-      ],
-      "artifact_updates_seen": [
-        "agenda",
-        "briefing_doc"
-      ],
-      "finalized": true
-    },
-    "event_status": [
-      {
-        "event_turn": 2,
-        "event_type": "new_constraint",
-        "expected_replan_within_turns": 1,
-        "expected_tasks": [
-          "check_new_timebox_constraint"
-        ],
-        "expected_artifact_updates": [
-          "agenda",
-          "briefing_doc"
-        ],
-        "acknowledged": false,
-        "responded_in_window": true,
-        "artifact_updates_in_window": [],
-        "clarification_in_window": false
-      },
-      {
-        "event_turn": 4,
-        "event_type": "stakeholder_change",
-        "expected_replan_within_turns": 1,
-        "expected_tasks": [
-          "collect_availability"
-        ],
-        "expected_artifact_updates": [
-          "agenda",
-          "briefing_doc"
-        ],
-        "acknowledged": false,
-        "responded_in_window": true,
-        "artifact_updates_in_window": [
-          "agenda",
-          "briefing_doc"
-        ],
-        "clarification_in_window": false
-      },
-      {
-        "event_turn": 6,
-        "event_type": "ambiguity",
-        "expected_replan_within_turns": 1,
-        "expected_tasks": [
-          "clarify_decision_scope"
-        ],
-        "expected_artifact_updates": [
-          "agenda",
-          "briefing_doc"
-        ],
-        "acknowledged": false,
-        "responded_in_window": false,
-        "artifact_updates_in_window": [],
-        "clarification_in_window": false
-      }
-    ],
-    "top_deductions": [
-      "final state mismatch for participants (-10)",
-      "final state missing key: constraints (-10)",
-      "final state mismatch for reference_data.meeting_type (-10)",
-      "final state missing key: reference_data.topic (-10)",
-      "final state missing key: reference_data.decision_goal (-10)",
-      "final state mismatch for reference_data.agenda_min_items (-10)",
-      "final state missing key: reference_data.known_options (-10)",
-      "final state missing key: reference_data.primary_comparison_axis (-10)",
-      "event turn 2 was not explicitly acknowledged (-10)",
-      "no artifact update observed after event turn 2 (-10)"
     ]
   },
   "conversation_timeline": [
@@ -581,5 +480,36 @@
       "actions": [],
       "questions": []
     }
-  ]
+  ],
+  "deductions": [
+    "final state mismatch for participants (-10)",
+    "final state missing key: constraints (-10)",
+    "final state mismatch for reference_data.meeting_type (-10)",
+    "final state missing key: reference_data.topic (-10)",
+    "final state missing key: reference_data.decision_goal (-10)",
+    "final state mismatch for reference_data.agenda_min_items (-10)",
+    "final state missing key: reference_data.known_options (-10)",
+    "final state missing key: reference_data.primary_comparison_axis (-10)",
+    "event turn 2 was not explicitly acknowledged (-10)",
+    "no artifact update observed after event turn 2 (-10)",
+    "expected event follow-up tasks missing after event turn 2 (-10)",
+    "event turn 4 was not explicitly acknowledged (-10)",
+    "no timely replan after event turn 6 (-15 recovery, -15 process)",
+    "event turn 6 was not explicitly acknowledged (-10)",
+    "no artifact update observed after event turn 6 (-10)",
+    "expected event follow-up tasks missing after event turn 6 (-10)",
+    "ambiguity event was not followed by timely ask_clarification (-15 process, -10 recovery)"
+  ],
+  "raw_result": {
+    "outcome_score": 20,
+    "process_score": 50,
+    "recovery_score": 25,
+    "total_score": 32,
+    "failure_labels": [
+      "missing_replan",
+      "partial_replan",
+      "question_handling",
+      "state_staleness"
+    ]
+  }
 }

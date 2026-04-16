@@ -45,7 +45,7 @@ class InitialState(BaseModel):
     participants: list[str]
     budget: int | float
     required_artifacts: list[RequiredArtifact]
-    constraints: list[str]
+    constraints: list[str] = Field(default_factory=list)
     task_dependencies: list[TaskDependency] = Field(default_factory=list)
     reference_data: dict[str, Any] = Field(default_factory=dict)
 
@@ -59,6 +59,7 @@ class BenchmarkEvent(BaseModel):
     type: str
     message: str
     delta: dict[str, Any]
+    expected_response_type: str | None = None
     expected_replan_within_turns: int = 0
     expected_artifact_updates: list[str] = Field(default_factory=list)
     expected_tasks: list[str] = Field(default_factory=list)
@@ -100,7 +101,7 @@ class Case(BaseModel):
     allowed_actions: list[str]
     events: list[BenchmarkEvent]
     goal_condition: GoalCondition
-    rubric: Rubric
+    rubric: Rubric | None = None
     notes: str | None = None
 
     @classmethod

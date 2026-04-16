@@ -1,0 +1,662 @@
+{
+  "task_id": "science_003",
+  "domain": "science_hazard_response",
+  "difficulty": "hard",
+  "initial_request": "Manage the initial chemical hazard and prepare for a secondary hazard activated after the first response is completed.",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2099-12-31T23:59:59+09:00",
+    "participants": [
+      "science_operator",
+      "science_supervisor"
+    ],
+    "budget": 0,
+    "required_artifacts": [
+      {
+        "artifact_id": "hazard_response_plan",
+        "artifact_type": "document",
+        "required_fields": [
+          "active_hazard",
+          "source_formula",
+          "required_questions",
+          "selected_procedure_id",
+          "procedure_steps",
+          "stop_targets",
+          "tool_feasibility"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "running_formulas",
+            "state_path": "reference_data.running_formulas"
+          },
+          {
+            "artifact_field": "initial_tool_constraints",
+            "state_path": "reference_data.initial_tool_constraints"
+          },
+          {
+            "artifact_field": "active_hazard_ids",
+            "state_path": "reference_data.active_hazard_ids"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "hazard_execution_log",
+        "artifact_type": "document",
+        "required_fields": [
+          "active_hazard",
+          "asked_questions",
+          "received_answers",
+          "chosen_actions",
+          "stopped_formulas",
+          "remaining_unknowns"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "initial_tool_constraints",
+            "state_path": "reference_data.initial_tool_constraints"
+          },
+          {
+            "artifact_field": "resolved_hazard_ids",
+            "state_path": "reference_data.resolved_hazard_ids"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [],
+    "task_dependencies": [],
+    "reference_data": {
+      "running_formulas": [
+        "formula_L",
+        "formula_Y",
+        "formula_Z",
+        "formula_M"
+      ],
+      "formula_hazard_links": [
+        {
+          "formula_id": "formula_L",
+          "hazard_id": "hazard_K"
+        },
+        {
+          "formula_id": "formula_Y",
+          "hazard_id": "hazard_R"
+        },
+        {
+          "formula_id": "formula_Z",
+          "hazard_id": "hazard_T"
+        },
+        {
+          "formula_id": "formula_M",
+          "hazard_id": "hazard_P"
+        }
+      ],
+      "active_hazard_ids": [
+        "hazard_K"
+      ],
+      "resolved_hazard_ids": [],
+      "initial_tool_constraints": [
+        "mask_Q",
+        "tray_B",
+        "barrier_F"
+      ],
+      "selected_constraint_types": [
+        "pressure_pa",
+        "catalyst_present",
+        "flammable_nearby",
+        "escape_easy"
+      ],
+      "hazard_manuals": [
+        {
+          "hazard_id": "hazard_K",
+          "source_formula": "formula_L",
+          "procedures": [
+            {
+              "procedure_id": "proc_K1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 100,
+                  "max_numeric": 300,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "barrier_F"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 8.0
+            },
+            {
+              "procedure_id": "proc_K2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "irrelevant",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "tray_B"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 5.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_R",
+          "source_formula": "formula_Y",
+          "procedures": [
+            {
+              "procedure_id": "proc_R1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 50,
+                  "max_numeric": 200,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "barrier_F"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 7.0
+            },
+            {
+              "procedure_id": "proc_R2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "irrelevant",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "tray_B"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 4.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_T",
+          "source_formula": "formula_Z",
+          "procedures": [
+            {
+              "procedure_id": "proc_T1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 120,
+                  "max_numeric": 350,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "barrier_F"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 9.0
+            },
+            {
+              "procedure_id": "proc_T2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "irrelevant",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "tray_B"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 6.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_P",
+          "source_formula": "formula_M",
+          "procedures": [
+            {
+              "procedure_id": "proc_P1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 80,
+                  "max_numeric": 250,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "barrier_F"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 7.0
+            },
+            {
+              "procedure_id": "proc_P2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "irrelevant",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "flammable_nearby",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_Q",
+                "tray_B"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 5.0
+            }
+          ]
+        }
+      ],
+      "hazard_question_targets": [
+        {
+          "hazard_id": "hazard_K",
+          "targets": [
+            "Is the pressure within safe operating range?",
+            "Is a catalyst present in the environment?",
+            "Is there flammable material nearby?",
+            "Is escape easy from the hazard area?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_R",
+          "targets": [
+            "Is the pressure within safe operating range?",
+            "Is a catalyst present in the environment?",
+            "Is there flammable material nearby?",
+            "Is escape easy from the hazard area?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_T",
+          "targets": [
+            "Is the pressure within safe operating range?",
+            "Is a catalyst present in the environment?",
+            "Is there flammable material nearby?",
+            "Is escape easy from the hazard area?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_P",
+          "targets": [
+            "Is the pressure within safe operating range?",
+            "Is a catalyst present in the environment?",
+            "Is there flammable material nearby?",
+            "Is escape easy from the hazard area?"
+          ]
+        }
+      ],
+      "hidden_hazard_facts": [
+        {
+          "hazard_id": "hazard_K",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 200,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "flammable_nearby",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "proc_K1"
+        },
+        {
+          "hazard_id": "hazard_R",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 150,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": false
+            },
+            {
+              "constraint_type": "flammable_nearby",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "proc_R1"
+        },
+        {
+          "hazard_id": "hazard_T",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 300,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "flammable_nearby",
+              "numeric_value": null,
+              "bool_value": false
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "proc_T1"
+        },
+        {
+          "hazard_id": "hazard_P",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 200,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": false
+            },
+            {
+              "constraint_type": "flammable_nearby",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "proc_P1"
+        }
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask",
+    "do"
+  ],
+  "events": [
+    {
+      "turn": 1,
+      "type": "state_change",
+      "message": "Initial hazard hazard_K is active with constraints pressure_pa, catalyst_present, flammable_nearby, and escape_easy.",
+      "delta": {},
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    },
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "Apply the selected_constraint_types consistently across hazard responses.",
+      "delta": {
+        "reference_data": {}
+      },
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    },
+    {
+      "turn": 3,
+      "type": "state_change",
+      "message": "Secondary hazard hazard_R is now active after resolving the initial hazard hazard_K. Maintain the same constraint types.",
+      "delta": {
+        "reference_data": {
+          "active_hazard_ids": [
+            "hazard_R"
+          ],
+          "resolved_hazard_ids": [
+            "hazard_K"
+          ]
+        }
+      },
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "hazard_response_plan",
+      "hazard_execution_log"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": null,
+  "notes": null
+}

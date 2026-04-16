@@ -34,7 +34,6 @@ REQUIRED_TOP_LEVEL_FIELDS = [
     "allowed_actions",
     "events",
     "goal_condition",
-    "rubric",
 ]
 
 
@@ -57,11 +56,6 @@ def validate_case_structure(case: dict[str, Any]) -> list[str]:
     ]:
         if field_name not in initial_state:
             errors.append(f"missing initial_state field: {field_name}")
-
-    rubric = case.get("rubric", {})
-    for field_name in ["outcome", "process", "recovery"]:
-        if field_name not in rubric:
-            errors.append(f"missing rubric field: {field_name}")
 
     return errors
 
@@ -180,10 +174,9 @@ def build_openai_inspection_prompt(
         "あなたは benchmark case のレビュアーです。",
         "次の観点で簡潔に検査してください。",
         "1. case 定義の矛盾や不足",
-        "2. rubric と goal_condition の整合性",
-        "3. events が initial_state / required_artifacts に与える影響",
-        "4. evaluator で見落としそうな観点",
-        "5. execution log がある場合は、case に対して妥当か",
+        "2. events が initial_state / required_artifacts に与える影響",
+        "3. evaluator で見落としそうな観点",
+        "4. execution log がある場合は、case に対して妥当か",
         "",
         "出力形式:",
         "- summary: 2-4文",

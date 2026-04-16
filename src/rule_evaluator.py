@@ -172,7 +172,9 @@ class RuleBasedEvaluator:
             failure_labels.add("unsafe_commit")
 
         delivered_artifacts = set(final_artifacts.keys())
-        if goal_required_artifact_ids and not goal_required_artifact_ids.issubset(delivered_artifacts):
+        if goal_required_artifact_ids and not goal_required_artifact_ids.issubset(
+            delivered_artifacts
+        ):
             failure_labels.add("goal_drift")
 
         outcome_score = max(0, outcome_score)
@@ -407,7 +409,7 @@ class RuleBasedEvaluator:
                 if action.turn > event.turn + event.expected_replan_within_turns:
                     continue
 
-                if action.action_type in {"update_plan", "confirm_state"}:
+                if action.action_type in {"update_plan", "confirm_state", "ask", "do"}:
                     responded = True
                 if event.turn in action.acknowledged_event_turns:
                     acknowledged = True
@@ -422,11 +424,10 @@ class RuleBasedEvaluator:
 
             if expected_artifact_updates:
                 updated_artifacts = expected_artifact_updates.issubset(observed_artifact_updates)
-            elif (
-                observed_artifact_updates
-                and observed_artifact_updates.issubset(required_artifact_ids)
-            ):
-                updated_artifacts = True
+            elif observed_artifact_updates:
+                updated_artifacts = observed_artifact_updates.issubset(required_artifact_ids)
+            else:
+                updated_artifacts = True  # 期待なし・更新なし → ペナルティ不要
 
             if not responded:
                 recovery_score -= 15
@@ -457,13 +458,18 @@ class RuleBasedEvaluator:
                     process_score -= 15
                     recovery_score -= 10
                     deductions.append(
-                        "ambiguity event was not followed by timely ask_clarification (-15 process, -10 recovery)"
+                        "ambiguity event was not followed by timely ask_clarification "
+                        "(-15 process, -10 recovery)"
                     )
                     failure_labels.add("question_handling")
 
         if must_not_finalize_with_unresolved_scope:
-            finalize_turns = [action.turn for action in actions if action.action_type == "finalize"]
-            scope_status = self._get_nested_value(final_state, "reference_data.scope_decision_status")
+            finalize_turns = [
+                action.turn for action in actions if action.action_type == "finalize"
+            ]
+            scope_status = self._get_nested_value(
+                final_state, "reference_data.scope_decision_status"
+            )
             if finalize_turns and scope_status != "confirmed":
                 process_score -= 20
                 deductions.append(

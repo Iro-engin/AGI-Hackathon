@@ -8,7 +8,7 @@
 最小ベンチマーク実装です。
 
 題材としては、まず `meeting_prep` ドメインを使っており、
-次の拡張先として `finance_analyst` ドメインも含めています。
+次の拡張先として `finance_analyst` と `science_research` ドメインも含めています。
 
 想定している流れは次のようなものです。
 
@@ -59,6 +59,8 @@
   benchmark case の JSON
 - [`scenarios/finance/`](scenarios/finance/)
   finance analyst 用 case の JSON
+- [`src/science/generate_cases.py`](src/science/generate_cases.py)
+  OpenAI で science 用 case JSON を量産する CLI
 - [`results/sample_execution_meeting_001.json`](results/sample_execution_meeting_001.json)
   sample execution log
 - [`schemas/benchmark_case.schema.json`](schemas/benchmark_case.schema.json)
@@ -151,7 +153,6 @@ case は「問題設定」です。
 - `allowed_actions`
 - `events`
 - `goal_condition`
-- `rubric`
 
 特に重要なのは `initial_state` と `events` です。
 
@@ -260,6 +261,15 @@ make build-notebook
 make eval-sample
 ```
 
+### science case を生成する
+
+`OPENAI_API_KEY` を設定したうえで、次のように `src/science` の generator を使うと
+`scenarios/science/` に science 版 case JSON を出力できます。
+
+```bash
+UV_CACHE_DIR=/tmp/uv-cache uv run python -m src.science.generate_cases --count 3
+```
+
 ### ログレベルを指定して実行する
 
 ```bash
@@ -314,7 +324,6 @@ OPENAI_API_KEY=... uv run python -m src.openai_case_inspector \
 - `meeting_prep` 以外のドメイン追加
 - `finance_analyst` のような状態変化型の分析タスク拡充
 - 「質問すべきケース」を case 側でも明示して、質問評価を厳密化
-- rubric と evaluator の対応関係をさらに明確化
 - 複数 sample log を用意して、failure pattern ごとのデモを増やす
 - notebook を説明資料としてもっと見やすくする
 - 評価結果を表や可視化で見られるようにする

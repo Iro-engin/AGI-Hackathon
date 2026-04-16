@@ -1,0 +1,574 @@
+{
+  "task_id": "science_002",
+  "domain": "science_hazard_response",
+  "difficulty": "normal",
+  "initial_request": "Select a feasible hazard response procedure given limited tools and active hazards.",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2099-12-31T23:59:59+09:00",
+    "participants": [
+      "science_operator",
+      "science_supervisor"
+    ],
+    "budget": 0,
+    "required_artifacts": [
+      {
+        "artifact_id": "hazard_response_plan",
+        "artifact_type": "document",
+        "required_fields": [
+          "active_hazard",
+          "source_formula",
+          "required_questions",
+          "selected_procedure_id",
+          "procedure_steps",
+          "stop_targets",
+          "tool_feasibility"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "running_formulas",
+            "state_path": "reference_data.running_formulas"
+          },
+          {
+            "artifact_field": "initial_tool_constraints",
+            "state_path": "reference_data.initial_tool_constraints"
+          },
+          {
+            "artifact_field": "active_hazard_ids",
+            "state_path": "reference_data.active_hazard_ids"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "hazard_execution_log",
+        "artifact_type": "document",
+        "required_fields": [
+          "active_hazard",
+          "asked_questions",
+          "received_answers",
+          "chosen_actions",
+          "stopped_formulas",
+          "remaining_unknowns"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "initial_tool_constraints",
+            "state_path": "reference_data.initial_tool_constraints"
+          },
+          {
+            "artifact_field": "resolved_hazard_ids",
+            "state_path": "reference_data.resolved_hazard_ids"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [],
+    "task_dependencies": [],
+    "reference_data": {
+      "running_formulas": [
+        "formula_M",
+        "formula_N",
+        "formula_P"
+      ],
+      "formula_hazard_links": [
+        {
+          "formula_id": "formula_M",
+          "hazard_id": "hazard_M"
+        },
+        {
+          "formula_id": "formula_N",
+          "hazard_id": "hazard_N"
+        },
+        {
+          "formula_id": "formula_P",
+          "hazard_id": "hazard_Q"
+        },
+        {
+          "formula_id": "formula_O",
+          "hazard_id": "hazard_R"
+        }
+      ],
+      "active_hazard_ids": [
+        "hazard_M"
+      ],
+      "resolved_hazard_ids": [],
+      "initial_tool_constraints": [
+        "mask_H",
+        "wrench_R",
+        "clamp_V"
+      ],
+      "selected_constraint_types": [
+        "pressure_pa",
+        "catalyst_present",
+        "escape_easy"
+      ],
+      "hazard_manuals": [
+        {
+          "hazard_id": "hazard_M",
+          "source_formula": "formula_M",
+          "procedures": [
+            {
+              "procedure_id": "proc_M1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 900,
+                  "max_numeric": 1100,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_H",
+                "wrench_R"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 8.0
+            },
+            {
+              "procedure_id": "proc_M2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "irrelevant",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_H"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 5.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_N",
+          "source_formula": "formula_N",
+          "procedures": [
+            {
+              "procedure_id": "proc_N1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 950,
+                  "max_numeric": 1050,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                }
+              ],
+              "required_tools": [
+                "wrench_R",
+                "clamp_V"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 9.0
+            },
+            {
+              "procedure_id": "proc_N2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 900,
+                  "max_numeric": 1200,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "clamp_V"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 6.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_Q",
+          "source_formula": "formula_P",
+          "procedures": [
+            {
+              "procedure_id": "proc_Q1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 980,
+                  "max_numeric": 1020,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_H",
+                "clamp_V"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 7.0
+            },
+            {
+              "procedure_id": "proc_Q2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "irrelevant",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_H"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 4.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_R",
+          "source_formula": "formula_O",
+          "procedures": [
+            {
+              "procedure_id": "proc_R1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 1000,
+                  "max_numeric": 1100,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                }
+              ],
+              "required_tools": [
+                "wrench_R"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 10.0
+            },
+            {
+              "procedure_id": "proc_R2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 900,
+                  "max_numeric": 1150,
+                  "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                },
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "mask_H",
+                "clamp_V"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 5.0
+            }
+          ]
+        }
+      ],
+      "hazard_question_targets": [
+        {
+          "hazard_id": "hazard_M",
+          "targets": [
+            "Is the pressure between 900 and 1100 pascals?",
+            "Is a catalyst present?",
+            "Is escape easy?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_N",
+          "targets": [
+            "Is the pressure between 950 and 1050 pascals?",
+            "Is a catalyst present?",
+            "Is escape easy?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_Q",
+          "targets": [
+            "Is the pressure between 980 and 1020 pascals?",
+            "Is a catalyst present?",
+            "Is escape easy?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_R",
+          "targets": [
+            "Is the pressure between 900 and 1150 pascals?",
+            "Is a catalyst present?",
+            "Is escape easy?"
+          ]
+        }
+      ],
+      "hidden_hazard_facts": [
+        {
+          "hazard_id": "hazard_M",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 1000,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "proc_M1"
+        },
+        {
+          "hazard_id": "hazard_N",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 1000,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": false
+            }
+          ],
+          "expected_procedure_id": "proc_N1"
+        },
+        {
+          "hazard_id": "hazard_Q",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 1000,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "proc_Q1"
+        },
+        {
+          "hazard_id": "hazard_R",
+          "constraint_values": [
+            {
+              "constraint_type": "pressure_pa",
+              "numeric_value": 1050,
+              "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": false
+            }
+          ],
+          "expected_procedure_id": "proc_R1"
+        }
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask",
+    "do"
+  ],
+  "events": [
+    {
+      "turn": 1,
+      "type": "state_change",
+      "message": "Initial hazard hazard_M detected with limited tools available.",
+      "delta": {},
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    },
+    {
+      "turn": 2,
+      "type": "new_constraint",
+      "message": "Additional constraints applied due to environment pressure and catalyst presence.",
+      "delta": {},
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    },
+    {
+      "turn": 3,
+      "type": "state_change",
+      "message": "New hazard hazard_N has become active, requiring reassessment of hazard procedures.",
+      "delta": {
+        "reference_data": {
+          "active_hazard_ids": [
+            "hazard_N"
+          ],
+          "resolved_hazard_ids": [
+            "hazard_M"
+          ]
+        }
+      },
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "hazard_response_plan",
+      "hazard_execution_log"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": null,
+  "notes": null
+}

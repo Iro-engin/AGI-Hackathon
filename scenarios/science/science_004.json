@@ -1,0 +1,285 @@
+{
+  "task_id": "science_004",
+  "domain": "science_hazard_response",
+  "difficulty": "easy",
+  "initial_request": "In this scenario, multiple fictional formulas are running simultaneously. Initially, hazard_X is active. Respond appropriately while managing the ongoing formulas. Be aware that a new hazard will appear by turn 3.",
+  "initial_state": {
+    "timezone": "Asia/Tokyo",
+    "deadline": "2099-12-31T23:59:59+09:00",
+    "participants": [
+      "science_operator",
+      "science_supervisor"
+    ],
+    "budget": 0,
+    "required_artifacts": [
+      {
+        "artifact_id": "hazard_response_plan",
+        "artifact_type": "document",
+        "required_fields": [
+          "active_hazard",
+          "source_formula",
+          "required_questions",
+          "selected_procedure_id",
+          "procedure_steps",
+          "stop_targets",
+          "tool_feasibility"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "running_formulas",
+            "state_path": "reference_data.running_formulas"
+          },
+          {
+            "artifact_field": "initial_tool_constraints",
+            "state_path": "reference_data.initial_tool_constraints"
+          },
+          {
+            "artifact_field": "active_hazard_ids",
+            "state_path": "reference_data.active_hazard_ids"
+          }
+        ],
+        "latest_version_required": true
+      },
+      {
+        "artifact_id": "hazard_execution_log",
+        "artifact_type": "document",
+        "required_fields": [
+          "active_hazard",
+          "asked_questions",
+          "received_answers",
+          "chosen_actions",
+          "stopped_formulas",
+          "remaining_unknowns"
+        ],
+        "semantic_checks": [
+          {
+            "artifact_field": "initial_tool_constraints",
+            "state_path": "reference_data.initial_tool_constraints"
+          },
+          {
+            "artifact_field": "resolved_hazard_ids",
+            "state_path": "reference_data.resolved_hazard_ids"
+          }
+        ],
+        "latest_version_required": true
+      }
+    ],
+    "constraints": [],
+    "task_dependencies": [],
+    "reference_data": {
+      "running_formulas": [
+        "formula_A",
+        "formula_B",
+        "formula_C"
+      ],
+      "formula_hazard_links": [
+        {
+          "formula_id": "formula_A",
+          "hazard_id": "hazard_X"
+        },
+        {
+          "formula_id": "formula_B",
+          "hazard_id": "hazard_Y"
+        }
+      ],
+      "active_hazard_ids": [
+        "hazard_X"
+      ],
+      "resolved_hazard_ids": [],
+      "initial_tool_constraints": [
+        "goggles_G",
+        "spanner_S"
+      ],
+      "selected_constraint_types": [
+        "escape_easy"
+      ],
+      "hazard_manuals": [
+        {
+          "hazard_id": "hazard_X",
+          "source_formula": "formula_A",
+          "procedures": [
+            {
+              "procedure_id": "X1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "goggles_G"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 3.0
+            },
+            {
+              "procedure_id": "X2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                }
+              ],
+              "required_tools": [
+                "goggles_G",
+                "spanner_S"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 5.0
+            }
+          ]
+        },
+        {
+          "hazard_id": "hazard_Y",
+          "source_formula": "formula_B",
+          "procedures": [
+            {
+              "procedure_id": "Y1",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                }
+              ],
+              "required_tools": [
+                "goggles_G"
+              ],
+              "stop_source_formula": false,
+              "hazard_potential": 4.0
+            },
+            {
+              "procedure_id": "Y2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "escape_easy",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
+                }
+              ],
+              "required_tools": [
+                "goggles_G",
+                "spanner_S"
+              ],
+              "stop_source_formula": true,
+              "hazard_potential": 6.0
+            }
+          ]
+        }
+      ],
+      "hazard_question_targets": [
+        {
+          "hazard_id": "hazard_X",
+          "targets": [
+            "Is it easy to escape from hazard_X?"
+          ]
+        },
+        {
+          "hazard_id": "hazard_Y",
+          "targets": [
+            "Is it easy to escape from hazard_Y?"
+          ]
+        }
+      ],
+      "hidden_hazard_facts": [
+        {
+          "hazard_id": "hazard_X",
+          "constraint_values": [
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": true
+            }
+          ],
+          "expected_procedure_id": "X1"
+        },
+        {
+          "hazard_id": "hazard_Y",
+          "constraint_values": [
+            {
+              "constraint_type": "escape_easy",
+              "numeric_value": null,
+              "bool_value": false
+            }
+          ],
+          "expected_procedure_id": "Y2"
+        }
+      ]
+    }
+  },
+  "allowed_actions": [
+    "ask",
+    "do"
+  ],
+  "events": [
+    {
+      "turn": 1,
+      "type": "state_change",
+      "message": "Multiple formulas are active with hazard_X present. Bundle your questions to assess the situation effectively.",
+      "delta": {},
+      "expected_response_type": null,
+      "expected_replan_within_turns": 2,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    },
+    {
+      "turn": 2,
+      "type": "state_change",
+      "message": "Continue monitoring hazard_X while maintaining formula operations. No new hazards yet.",
+      "delta": {},
+      "expected_response_type": null,
+      "expected_replan_within_turns": 1,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    },
+    {
+      "turn": 3,
+      "type": "state_change",
+      "message": "A new hazard_Y has emerged, requiring immediate attention even if hazard_X response was incomplete.",
+      "delta": {
+        "reference_data": {
+          "active_hazard_ids": [
+            "hazard_Y"
+          ],
+          "resolved_hazard_ids": []
+        }
+      },
+      "expected_response_type": null,
+      "expected_replan_within_turns": 2,
+      "expected_artifact_updates": [
+        "hazard_response_plan",
+        "hazard_execution_log"
+      ],
+      "expected_tasks": []
+    }
+  ],
+  "goal_condition": {
+    "must_satisfy_latest_state": true,
+    "required_artifacts": [
+      "hazard_response_plan",
+      "hazard_execution_log"
+    ],
+    "no_constraint_violation": true,
+    "must_acknowledge_changes": true,
+    "must_use_ask_clarification_on_ambiguity": true,
+    "must_not_finalize_with_unresolved_scope": false
+  },
+  "rubric": null,
+  "notes": null
+}

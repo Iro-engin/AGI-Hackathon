@@ -25,6 +25,7 @@
       "enum": [
         "meeting_prep",
         "finance_analyst",
+        "science_research",
         "travel_planning",
         "research_report",
         "interview_scheduling",

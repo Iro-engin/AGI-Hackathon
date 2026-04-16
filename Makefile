@@ -25,14 +25,17 @@ INABA_FINANCE_OPENAI_OUTPUT_DIR ?= results/generated/inaba/finance_openai
 INABA_FINANCE_OPENAI_TASK_ID_PREFIX ?= finance_openai
 INABA_FINANCE_EVAL_INPUT_DIR ?= results/generated/inaba/finance_openai
 INABA_FINANCE_EVAL_OUTPUT_DIR ?= results/execute/inaba/finance_openai/$(INABA_EVAL_MODEL_DIR_SUFFIX)
-INABA_EVAL_DECISION_MODEL ?= gpt-4.1-mini
+INABA_EVAL_DECISION_PROVIDER ?= gemini
+INABA_EVAL_DECISION_MODEL ?= gemini-3-flash-preview
+INABA_EVAL_ANSWER_PROVIDER ?= openai
 INABA_EVAL_ANSWER_MODEL ?= gpt-4o-mini
+INABA_EVAL_GEMINI_THINKING_LEVEL ?= low
 INABA_EVAL_MAX_QUESTIONS ?= 4
 INABA_EVAL_LIMIT ?=
 
 INABA_MEETING_SCORE_CASES_DIR ?= results/generated/inaba/meeting_openai
 INABA_MEETING_SCORE_EXEC_DIR ?= $(INABA_MEETING_EVAL_OUTPUT_DIR)
-INABA_SCORE_MODEL_DIR_SUFFIX ?= $(INABA_SCORE_JUDGE_MODEL)
+INABA_SCORE_MODEL_DIR_SUFFIX ?= $(INABA_EVAL_DECISION_MODEL)
 INABA_MEETING_SCORE_OUTPUT_DIR ?= results/evaluate/inaba/meeting_openai/$(INABA_SCORE_MODEL_DIR_SUFFIX)
 INABA_FINANCE_SCORE_CASES_DIR ?= results/generated/inaba/finance_openai
 INABA_FINANCE_SCORE_EXEC_DIR ?= $(INABA_FINANCE_EVAL_OUTPUT_DIR)
@@ -159,8 +162,11 @@ execute-inaba-meeting:
 		--domain meeting \
 		--input-dir $(INABA_MEETING_EVAL_INPUT_DIR) \
 		--output-dir $(INABA_MEETING_EVAL_OUTPUT_DIR) \
+		--decision-provider $(INABA_EVAL_DECISION_PROVIDER) \
 		--decision-model $(INABA_EVAL_DECISION_MODEL) \
+		--answer-provider $(INABA_EVAL_ANSWER_PROVIDER) \
 		--answer-model $(INABA_EVAL_ANSWER_MODEL) \
+		--gemini-thinking-level $(INABA_EVAL_GEMINI_THINKING_LEVEL) \
 		--max-questions-per-turn $(INABA_EVAL_MAX_QUESTIONS) \
 		$(if $(INABA_EVAL_LIMIT),--limit $(INABA_EVAL_LIMIT),)
 
@@ -169,8 +175,11 @@ execute-inaba-finance:
 		--domain finance \
 		--input-dir $(INABA_FINANCE_EVAL_INPUT_DIR) \
 		--output-dir $(INABA_FINANCE_EVAL_OUTPUT_DIR) \
+		--decision-provider $(INABA_EVAL_DECISION_PROVIDER) \
 		--decision-model $(INABA_EVAL_DECISION_MODEL) \
+		--answer-provider $(INABA_EVAL_ANSWER_PROVIDER) \
 		--answer-model $(INABA_EVAL_ANSWER_MODEL) \
+		--gemini-thinking-level $(INABA_EVAL_GEMINI_THINKING_LEVEL) \
 		--max-questions-per-turn $(INABA_EVAL_MAX_QUESTIONS) \
 		$(if $(INABA_EVAL_LIMIT),--limit $(INABA_EVAL_LIMIT),)
 

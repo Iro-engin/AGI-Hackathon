@@ -8,6 +8,7 @@ dependencies = [
     "nbformat>=5.10,<6",
     "nbconvert>=7.16,<8",
     "openai>=1.75,<2",
+    "google-genai>=1.0,<2",
     "pydantic>=2.11,<3",
     "ruff>=0.11,<0.12",
     "dotenv>=0.9.9",

@@ -1,0 +1,126 @@
+{
+  "task_id": "meeting_openai_hard_005",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.4,
+    "rubric_score": 0.6,
+    "redundant_question_rate": 0.2857142857142857,
+    "early_discovery_rate": 0.4
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4o-mini",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Could you provide the missing location information for the times on April 20th and 21st where Alice, Bob, and Carol are available?",
+        "Could you please provide the meeting location for the time slot on April 20th from 10:30 AM to 11:15 AM where all participants are available?",
+        "What is the meeting location for the time slot on April 20th from 10:30 AM to 11:15 AM where all participants are available?",
+        "Could you please provide the meeting location for the time slot on April 20th from 10:30 AM to 11:15 AM where all participants are available?"
+      ],
+      "covered_requires": [
+        "Carol's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 2 location",
+        "Alice's attendance slot 1 location",
+        "Carol's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "What is the location for the meeting on April 20th at 10:30?"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Can you provide the location for the meeting on April 20th at 10:30 AM?"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Could you please provide the missing location information for Alice, Bob, and Carol for the slot on April 22nd at 09:00?",
+        "Could you please provide the missing location information for Carol for the April 22nd slot at 09:00?",
+        "Since the location for Carol on April 22nd at 09:00 is unknown, could you please provide the location for that slot?",
+        "Could you please provide the location for Carol for the slot on April 22nd at 09:00?"
+      ],
+      "covered_requires": [
+        "Carol's attendance slot 2 location",
+        "Carol's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "Could you please provide the missing location information for Carol for the April 22nd slot at 09:00?",
+        "Since the location for Carol on April 22nd at 09:00 is unknown, could you please provide the location for that slot?",
+        "Could you please provide the location for Carol for the slot on April 22nd at 09:00?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "David's attendance slot 1 location",
+        "David's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "What is the location for the meeting on April 20th from 10:30 AM to 11:15 AM where Alice, Bob, and Carol can attend?",
+        "What is the location for the meeting on April 22nd from 09:00 AM to 09:45 AM where all participants can attend?",
+        "What is the location for David's availability on April 22nd from 09:00 AM to 09:45 AM?",
+        "What is the location for David's availability on April 22nd from 09:00 AM to 09:45 AM?"
+      ],
+      "covered_requires": [
+        "David's attendance slot 1 location",
+        "David's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "What is the location for David's availability on April 22nd from 09:00 AM to 09:45 AM?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

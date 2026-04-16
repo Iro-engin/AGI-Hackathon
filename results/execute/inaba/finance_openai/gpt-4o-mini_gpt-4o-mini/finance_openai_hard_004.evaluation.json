@@ -1,0 +1,169 @@
+{
+  "task_id": "finance_openai_hard_004",
+  "domain": "finance",
+  "decision_model": "gpt-4o-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "Can you provide sector-specific related news for renewable energy?",
+          "answer": "Yes, the sector-specific related news for renewable energy is: \"A major breakthrough in battery storage technology has been announced, potentially reducing costs and improving efficiency.\""
+        },
+        {
+          "question": "Can you provide sector-specific related news for commercial real estate?",
+          "answer": "Yes, the sector-specific related news for commercial real estate is: \"Recent tightening of lending standards has led to increased caution among commercial property investors.\""
+        },
+        {
+          "question": "Can you provide sector-specific related news for pharmaceuticals?",
+          "answer": "Yes, the sector-specific related news for pharmaceuticals is: \"A new FDA approval for a groundbreaking cancer treatment is expected to drive strong sales growth.\""
+        },
+        {
+          "question": "Can you provide sector-specific related news for agriculture tech?",
+          "answer": "Yes, the sector-specific related news for agriculture tech is: \"Government subsidies for smart farming technologies have been expanded to promote sustainable agriculture.\""
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "renewable_energy": 0.3,
+          "commercial_real_estate": 0.15,
+          "pharmaceuticals": 0.2,
+          "consumer_electronics": 0.15,
+          "agriculture_tech": 0.2
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "New news: A key patent was granted for a novel drug targeting autoimmune diseases. Leading urban development projects announced innovative office space designs.",
+      "question_answers": [
+        {
+          "question": "What is the inference rate and efficient rate change for the pharmaceuticals sector?",
+          "answer": "The inference rate for the pharmaceuticals sector is 0.54, and the efficient rate change is 0.132."
+        },
+        {
+          "question": "What is the inference rate and efficient rate change for the commercial_real_estate sector?",
+          "answer": "The inference rate for the commercial_real_estate sector is 0.35, and the efficient rate change is 0.075."
+        },
+        {
+          "question": "What is the inference rate and efficient rate change for the agriculture_tech sector?",
+          "answer": "The inference rate for the agriculture_tech sector is 0.01, and the efficient rate change is 0.015."
+        },
+        {
+          "question": "What is the inference rate and efficient rate change for the consumer_electronics sector?",
+          "answer": "The inference rate for the consumer_electronics sector is 0.05, and the efficient rate change is 0.02."
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "renewable_energy": 0.35,
+          "commercial_real_estate": 0.1,
+          "pharmaceuticals": 0.25,
+          "consumer_electronics": 0.1,
+          "agriculture_tech": 0.2
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "New news: New biodegradable materials are being tested for circuit boards. Crop yields in arid regions are benefiting from advanced irrigation technology.",
+      "question_answers": [
+        {
+          "question": "Can I get sector-specific related news for renewable energy or agriculture tech to better assess the efficient_rate_now for those sectors?",
+          "answer": "The sector-specific related news for renewable energy includes a recent breakthrough in battery storage technology, which has positive inference rates. For agriculture tech, the related news includes government subsidies for smart farming technologies. This information could help assess the efficient rate now for these sectors."
+        },
+        {
+          "question": "Can I get sector-specific related news for pharmaceuticals to better assess the efficient_rate_now for that sector?",
+          "answer": "The sector-specific related news for pharmaceuticals includes a new FDA approval for a groundbreaking cancer treatment, which is expected to drive strong sales growth. This information could help assess the efficient rate now for this sector."
+        },
+        {
+          "question": "Can I get sector-specific related news for consumer electronics to better assess the efficient_rate_now for that sector?",
+          "answer": "The sector-specific related news for consumer electronics includes information about supply chain disruptions that have caused delays in product launches, impacting revenue forecasts. This information could help assess the efficient rate now for this sector."
+        },
+        {
+          "question": "Can I get sector-specific related news for commercial real estate to better assess the efficient_rate_now for that sector?",
+          "answer": "The sector-specific related news for commercial real estate includes information about recent tightening of lending standards, which has led to increased caution among commercial property investors. This information could help assess the efficient rate now for this sector."
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "renewable_energy": 0.3,
+          "commercial_real_estate": 0.15,
+          "pharmaceuticals": 0.25,
+          "consumer_electronics": 0.1,
+          "agriculture_tech": 0.2
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "New news: Investment flows into rooftop solar installations are accelerating rapidly. Pharmaceutical companies are gearing up for a surge in vaccine demand.",
+      "question_answers": [
+        {
+          "question": "Can I get the efficient_rate_now for renewable_energy to assess its allocation accurately?",
+          "answer": "The efficient_rate_now for renewable_energy is 0.4903."
+        },
+        {
+          "question": "Can I get the efficient_rate_now for pharmaceuticals to better determine its stock allocation?",
+          "answer": "The efficient_rate_now for pharmaceuticals is 0.4933."
+        },
+        {
+          "question": "Can I get the efficient_rate_now for commercial_real_estate to assess its allocation accurately?",
+          "answer": "The efficient_rate_now for commercial_real_estate is -0.0941."
+        },
+        {
+          "question": "Can I get the efficient_rate_now for consumer_electronics to assess its allocation accurately?",
+          "answer": "The efficient_rate_now for consumer_electronics is 0.3215."
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "renewable_energy": 0.35,
+          "commercial_real_estate": 0.1,
+          "pharmaceuticals": 0.3,
+          "consumer_electronics": 0.15,
+          "agriculture_tech": 0.1
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "New news: A major retailer launches a next-gen wearable device with health tracking features. Soil health monitoring sensors show promising early results in Midwest farms.",
+      "question_answers": [
+        {
+          "question": "Which sector should I request related news for to improve the efficiency of our stock allocations?",
+          "answer": "To improve the efficiency of your stock allocations, you should request related news for the **consumer electronics** sector. It currently has a significant negative efficient rate and a high resource mix rate reflecting past news."
+        },
+        {
+          "question": "What is the current efficient_rate for the consumer electronics sector based on past news?",
+          "answer": "The current efficient_rate for the consumer electronics sector based on past news is **-0.6**."
+        },
+        {
+          "question": "What is the efficient_rate_now for the consumer electronics sector based on the recent news?",
+          "answer": "The efficient_rate_now for the consumer electronics sector based on the recent news is **-0.6**."
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "renewable_energy": 0.4,
+          "commercial_real_estate": 0.1,
+          "pharmaceuticals": 0.3,
+          "consumer_electronics": 0.1,
+          "agriculture_tech": 0.1
+        }
+      }
+    }
+  ]
+}

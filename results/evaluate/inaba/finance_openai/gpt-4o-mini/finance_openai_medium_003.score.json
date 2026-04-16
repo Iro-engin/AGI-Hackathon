@@ -1,0 +1,117 @@
+{
+  "task_id": "finance_openai_medium_003",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.4,
+    "vague_ask_rate": 0.2,
+    "rubric_score": 0.9,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.6
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gpt-4o-mini",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for software_services sector"
+      ],
+      "questions_asked": [
+        "Can you provide related news for the renewable energy sector?",
+        "Can you provide related news for the software services sector?",
+        "Can you provide related news for the pharmaceuticals sector?",
+        "Can you provide related news for the automotive manufacturing sector?"
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector",
+        "Related news for software_services sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for retail_bank sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Can you provide related news specifically for the retail banking sector?",
+        "Can you provide related news specifically for the automotive manufacturing sector?",
+        "Can you provide related news specifically for the pharmaceuticals sector?"
+      ],
+      "covered_requires": [
+        "Related news for retail_bank sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for software_services sector"
+      ],
+      "questions_asked": [
+        "Can I get related news for the pharmaceuticals sector?",
+        "Can I get related news for the software services sector?"
+      ],
+      "covered_requires": [
+        "Related news for software_services sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for retail_bank sector"
+      ],
+      "questions_asked": [
+        "Can you provide related news for the renewable_energy sector?"
+      ],
+      "covered_requires": [
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": true
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "questions_asked": [
+        "Can I get sector-specific related news for the renewable energy sector?",
+        "Can I get sector-specific related news for the automotive manufacturing sector?",
+        "Can I get sector-specific related news for the pharmaceuticals sector?",
+        "Can I get sector-specific related news for the retail bank sector?"
+      ],
+      "covered_requires": [
+        "Related news for pharmaceuticals sector",
+        "Related news for automotive_manufacturing sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "task_id": "meeting_openai_medium_002",
+  "domain": "meeting",
+  "decision_model": "gpt-4o-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "Can Alice and Bob confirm the location for their slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice and Bob can confirm that they can attend the slot on 2026-04-20 from 10:30 to 11:15, but the location for their attendance is currently unknown. Please provide the location for this meeting."
+        },
+        {
+          "question": "What is the location for the meeting scheduled on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "The location for the meeting scheduled on 2026-04-20 from 10:30 to 11:15 is currently unknown. Please provide the location for this meeting."
+        },
+        {
+          "question": "Can you provide the location for the meeting scheduled on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "The location for the meeting scheduled on 2026-04-20 from 10:30 to 11:15 is currently unknown. Please provide the location for this meeting."
+        },
+        {
+          "question": "Can you provide the location for the meeting scheduled on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "The location for the meeting scheduled on 2026-04-20 from 10:30 to 11:15 is currently unknown. Please provide the location for this meeting."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Alice's meeting on April 20th has moved to meeting_room_b at 11:00 AM.",
+      "question_answers": [
+        {
+          "question": "Alice, can you provide the location for your meeting on April 20th at 10:30 AM?",
+          "answer": "Alice, can you provide the location for your meeting on April 20th at 10:30 AM? The meeting is scheduled in \"meeting_room_b\" at 11:00 AM, which overlaps with this time slot."
+        },
+        {
+          "question": "Bob, can you provide the location for your meeting on April 20th at 10:30 AM?",
+          "answer": "Bob, can you provide the location for your meeting on April 20th at 10:30 AM?"
+        },
+        {
+          "question": "Bob, can you confirm the location for your meeting on April 20th at 10:30 AM?",
+          "answer": "Bob, can you confirm the location for your meeting on April 20th at 10:30 AM?"
+        },
+        {
+          "question": "Carol, can you confirm the location for your meeting on April 20th at 10:30 AM?",
+          "answer": "Carol, can you confirm the location for your meeting on April 20th at 10:30 AM?"
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Bob has updated his availability; he prefers morning meetings on April 22nd.",
+      "question_answers": [],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "Carol has a pause in her schedule on April 21st afternoon.",
+      "question_answers": [
+        {
+          "question": "Could you confirm the location for the meeting on April 21st, from 14:30 to 15:15?",
+          "answer": "The location for the meeting on April 21st, from 14:30 to 15:15, is currently unknown for Alice and Carol. Alice's slot is in \"conference_room_3f,\" but Carol's location is unspecified. Please provide the missing location information for Carol."
+        },
+        {
+          "question": "Could you provide the missing location information for Carol's meeting on April 21st, from 14:30 to 15:15?",
+          "answer": "The missing location information for Carol's meeting on April 21st, from 14:30 to 15:15, is currently unknown. Please provide the location details for Carol."
+        },
+        {
+          "question": "Could you provide the location details for Carol's meeting on April 21st, from 14:30 to 15:15?",
+          "answer": "The location details for Carol's meeting on April 21st, from 14:30 to 15:15, are currently unknown. Please provide the location information for Carol."
+        },
+        {
+          "question": "Please confirm the location for Carol's meeting on April 21st, from 14:30 to 15:15.",
+          "answer": "The location for Carol's meeting on April 21st, from 14:30 to 15:15, is currently unknown. Please provide the location information for Carol."
+        }
+      ],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-21T14:30:00",
+        "when_to": "2026-04-21T15:15:00"
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "Derek will be working remotely via online on the morning of April 20th.",
+      "question_answers": [
+        {
+          "question": "Can Derek confirm if he can attend the meeting online from 10:00 AM to 10:45 AM on April 20th?",
+          "answer": "Derek is working remotely via online on the morning of April 20th, but his exact availability for the specific time slot of 10:00 AM to 10:45 AM is unknown. He has not confirmed attendance for that meeting time."
+        },
+        {
+          "question": "Can Derek confirm if he can attend the meeting online from 9:00 AM to 9:45 AM on April 22nd?",
+          "answer": "Derek's exact availability for the specific time slot of 9:00 AM to 9:45 AM on April 22nd is unknown. He has not confirmed attendance for that meeting time."
+        },
+        {
+          "question": "Can Derek confirm if he can attend the meeting online from 10:45 AM to 11:30 AM on April 20th?",
+          "answer": "Derek's exact availability for the specific time slot of 10:45 AM to 11:30 AM on April 20th is unknown. He has not confirmed attendance for that meeting time."
+        },
+        {
+          "question": "Can Derek confirm if he can attend the meeting online from 10:00 AM to 10:45 AM on April 20th?",
+          "answer": "Derek is working remotely via online on the morning of April 20th, but his exact availability for the specific time slot of 10:00 AM to 10:45 AM is unknown. He has not confirmed attendance for that meeting time."
+        }
+      ],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-21T14:30:00",
+        "when_to": "2026-04-21T15:15:00"
+      }
+    }
+  ]
+}

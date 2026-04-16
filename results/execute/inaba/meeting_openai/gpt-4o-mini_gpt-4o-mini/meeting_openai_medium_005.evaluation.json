@@ -1,0 +1,129 @@
+{
+  "task_id": "meeting_openai_medium_005",
+  "domain": "meeting",
+  "decision_model": "gpt-4o-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "Can Alice and Bob confirm the location for their availability on 2026-04-20T10:30:00 to 2026-04-20T11:15:00?",
+          "answer": "Alice and Bob need to confirm their locations for the slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00, as the current information is missing for their attendance."
+        },
+        {
+          "question": "Can Alice and Bob confirm their preferred meeting location for the slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00?",
+          "answer": "Alice and Bob need to confirm their preferred meeting locations for the slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00, as the current information is missing for their attendance."
+        },
+        {
+          "question": "Can Alice and Bob confirm their preferred meeting location for the time slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00?",
+          "answer": "Alice and Bob need to confirm their preferred meeting locations for the slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00, as the current information is missing for their attendance."
+        },
+        {
+          "question": "Can Alice and Bob confirm their preferred meeting location for the time slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00?",
+          "answer": "Alice and Bob need to confirm their preferred meeting locations for the slot on 2026-04-20T10:30:00 to 2026-04-20T11:15:00, as the current information is missing for their attendance."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Alice's meeting has been rescheduled to meeting_room_b on April 20th morning.",
+      "question_answers": [
+        {
+          "question": "What is the location for the meeting on April 20th at 10:30 AM?",
+          "answer": "The location for the meeting on April 20th at 10:30 AM is \"meeting_room_a.\""
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Bob will be unavailable in the afternoon of April 21st, please avoid scheduling then.",
+      "question_answers": [
+        {
+          "question": "Alice and Bob have missing location information for their available slots. Can you provide the location for the slot on April 20th, 10:30 AM to 11:15 AM?",
+          "answer": "The location for the slot on April 20th, 10:30 AM to 11:15 AM is \"meeting_room_a\" for Alice. Bob's location for this slot is unknown."
+        },
+        {
+          "question": "Can you provide Bob's location for the slot on April 20th, 10:30 AM to 11:15 AM?",
+          "answer": "Bob's location for the slot on April 20th, 10:30 AM to 11:15 AM is unknown."
+        },
+        {
+          "question": "Can you provide Bob's location for the slot on April 20th, 10:30 AM to 11:15 AM?",
+          "answer": "Bob's location for the slot on April 20th, 10:30 AM to 11:15 AM is unknown."
+        },
+        {
+          "question": "Can you provide Bob's location for the slot on April 20th, 10:30 AM to 11:15 AM?",
+          "answer": "Bob's location for the slot on April 20th, 10:30 AM to 11:15 AM is unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "Carol's calendar is now free on April 22nd morning for meetings.",
+      "question_answers": [
+        {
+          "question": "What is the location for the meeting on April 22nd at 09:00?",
+          "answer": "The location for the meeting on April 22nd at 09:00 is unknown, as Carol's location information is not specified. Please provide the location for Carol for that time."
+        },
+        {
+          "question": "What is the location for the meeting on April 22nd at 09:00?",
+          "answer": "The location for the meeting on April 22nd at 09:00 is unknown, as Carol's location information is not specified. Please provide the location for Carol for that time."
+        },
+        {
+          "question": "What is the location for the meeting on April 22nd at 09:00?",
+          "answer": "The location for the meeting on April 22nd at 09:00 is unknown, as Carol's location information is not specified. Please provide the location for Carol for that time."
+        },
+        {
+          "question": "What is the location for the meeting on April 22nd at 09:00?",
+          "answer": "The location for the meeting on April 22nd at 09:00 is unknown, as Carol's location information is not specified. Please provide the location for Carol for that time."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "David prefers online meetings and prefers not to have back-to-back sessions.",
+      "question_answers": [
+        {
+          "question": "David's location is currently unknown for the meeting on April 22nd. Can you confirm if he prefers an online meeting for that time slot?",
+          "answer": "Yes, David prefers online meetings."
+        }
+      ],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    }
+  ]
+}

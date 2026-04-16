@@ -8,14 +8,21 @@ from typing import Literal
 from ..models.base import Case
 from ..models.finance import FinanceCase
 from ..models.meeting import MeetingCase
-from .base import DEFAULT_ANSWER_MODEL, DEFAULT_DECISION_MODEL, run_case_with_openai
+from .base import (
+    DEFAULT_ANSWER_MODEL,
+    DEFAULT_ANSWER_PROVIDER,
+    DEFAULT_DECISION_MODEL,
+    DEFAULT_DECISION_PROVIDER,
+    DEFAULT_GEMINI_THINKING_LEVEL,
+    run_case,
+)
 
 Domain = Literal["meeting", "finance"]
 
 
 def parse_args() -> argparse.Namespace:
     """inaba evaluation runner 用の CLI 引数を解釈する。"""
-    parser = argparse.ArgumentParser(description="Run OpenAI-based inaba evaluation.")
+    parser = argparse.ArgumentParser(description="Run LLM-based inaba evaluation.")
     parser.add_argument(
         "--domain",
         choices=("meeting", "finance"),
@@ -35,14 +42,31 @@ def parse_args() -> argparse.Namespace:
         help="Directory where evaluation run JSON files are written.",
     )
     parser.add_argument(
+        "--decision-provider",
+        choices=("openai", "gemini"),
+        default=DEFAULT_DECISION_PROVIDER,
+        help="Provider used to choose Question or Do.",
+    )
+    parser.add_argument(
         "--decision-model",
         default=DEFAULT_DECISION_MODEL,
         help="Model used to choose Question or Do.",
     )
     parser.add_argument(
+        "--answer-provider",
+        choices=("openai", "gemini"),
+        default=DEFAULT_ANSWER_PROVIDER,
+        help="Provider used to answer questions from hidden_info.",
+    )
+    parser.add_argument(
         "--answer-model",
         default=DEFAULT_ANSWER_MODEL,
         help="Model used to answer questions from hidden_info.",
+    )
+    parser.add_argument(
+        "--gemini-thinking-level",
+        default=DEFAULT_GEMINI_THINKING_LEVEL,
+        help="Gemini thinking level used when provider is gemini.",
     )
     parser.add_argument(
         "--max-questions-per-turn",
@@ -68,11 +92,14 @@ def main() -> None:
     result_paths: list[Path] = []
     for case_path in input_paths:
         case = _load_case(case_path=case_path, domain=args.domain)
-        run = run_case_with_openai(
+        run = run_case(
             case=case,
+            decision_provider=args.decision_provider,
             decision_model=args.decision_model,
+            answer_provider=args.answer_provider,
             answer_model=args.answer_model,
             max_questions_per_turn=args.max_questions_per_turn,
+            gemini_thinking_level=args.gemini_thinking_level,
         )
         output_path = args.output_dir / f"{case.task_id}.evaluation.json"
         output_path.write_text(run.model_dump_json(indent=2), encoding="utf-8")
@@ -82,8 +109,11 @@ def main() -> None:
         "domain": args.domain,
         "input_dir": str(args.input_dir),
         "output_dir": str(args.output_dir),
+        "decision_provider": args.decision_provider,
         "decision_model": args.decision_model,
+        "answer_provider": args.answer_provider,
         "answer_model": args.answer_model,
+        "gemini_thinking_level": args.gemini_thinking_level,
         "case_count": len(result_paths),
         "result_paths": [str(path) for path in result_paths],
     }

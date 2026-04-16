@@ -1,14 +1,128 @@
 {
   "report_type": "single_case_evaluation_report",
-  "evaluator": {
-    "type": "rule_based",
-    "name": "RuleBasedEvaluator",
-    "version": "v1",
-    "model": null
-  },
   "task_id": "meeting_001",
   "scenario_path": "scenarios/meeting/meeting_001.json",
   "execution_log_path": "results/sample_execution_meeting_001.json",
+  "evaluation_stack": {
+    "rule_based": {
+      "type": "rule_based",
+      "name": "RuleBasedEvaluator",
+      "version": "v1",
+      "model": null
+    },
+    "llm_judgment": {
+      "available": true,
+      "provider": "gemini",
+      "model": "gemini-2.5-flash",
+      "source_path": "results/gemini_inspection_meeting_001.json",
+      "summary": "*   Prepare an executive review meeting for a new enterprise pricing plan, involving CEO, SalesLead, and ProductLead, to decide on one of three pricing options.",
+      "key_findings": [
+        "*   Required artifacts are an agenda and a briefing memo, enabling a decision by a specific deadline. Initial constraints include a 30-minute meeting duration and specific briefing memo content.",
+        "*   The case involves three dynamic events: a CEO-mandated meeting time reduction to 20 minutes with a new briefing requirement (Turn 2), the addition of FinanceLead as a participant and an earlier deadline (Turn 4), and an ambiguity regarding the primary decision axis (Turn 6).",
+        "*   The goal requires handling all changes, avoiding constraint violations, acknowledging events, and specifically using `ask_clarification` for ambiguity (though finalization before ambiguity resolution is allowed for now).",
+        "*   **Inconsistent Event Acknowledgment:** The `execution_log` at `turn 3` and `turn 4` claims to acknowledge `event_turns: [3]`. There is no event at turn 3 in the `case JSON`. The message for `confirm_state` at `turn 3` (\"参加者D追加と締切前倒しを確認\") actually describes the event that occurs at `turn 4`. This indicates a critical misunderstanding of event timing or a logging error.",
+        "*   **Rubric/Constraint Violation (Process):** At `turn 4`, immediately following the `stakeholder_change` event, the agent's `update_plan` notes \"旧日程案を破棄し、資料修正を優先する\" (discard old schedule, prioritize document correction). This directly contradicts `rubric.process`: \"turn 4 の stakeholder_change 後に finalize や単純な文書更新を優先せず、参加者前提とスケジュール確認を先に更新している\" (after turn 4 stakeholder change, do not prioritize finalize or simple document updates, but first update participant assumptions and re-check schedule).",
+        "*   **Task Dependency and Constraint Violation (Finalization):** The agent performs `finalize` at `turn 5`.",
+        "*   This violates `initial_state.constraints`: \"参加者全員の空き時間が確認できるまでは確定時刻を固定しない\" (Do not fix the schedule until all participants' availability is confirmed) because a new participant (FinanceLead) was added at `turn 4` and no explicit re-collection of availability is shown for all participants prior to finalizing the *plan*. While `completed_tasks` lists `collect_availability`, the `update_plan` notes explicitly prioritized artifact updates over schedule."
+      ],
+      "case_overview": {
+        "task_id": "meeting_001",
+        "domain": "meeting_prep",
+        "difficulty": "hard",
+        "required_artifacts": [
+          "agenda",
+          "briefing_doc"
+        ],
+        "event_count": 3,
+        "events": [
+          {
+            "turn": 2,
+            "type": "new_constraint",
+            "expected_tasks": [
+              "check_new_timebox_constraint"
+            ],
+            "expected_artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ]
+          },
+          {
+            "turn": 4,
+            "type": "stakeholder_change",
+            "expected_tasks": [
+              "collect_availability"
+            ],
+            "expected_artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ]
+          },
+          {
+            "turn": 6,
+            "type": "ambiguity",
+            "expected_tasks": [
+              "clarify_decision_scope"
+            ],
+            "expected_artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ]
+          }
+        ],
+        "execution_log_summary": {
+          "action_count": 4,
+          "question_count": 0,
+          "completed_tasks": [
+            "collect_availability",
+            "propose_schedule",
+            "define_agenda",
+            "write_briefing_doc"
+          ],
+          "finalized": true,
+          "timeline": [
+            {
+              "turn": 1,
+              "action_type": "propose_plan",
+              "acknowledged_event_turns": [],
+              "artifact_updates": [],
+              "notes": "参加可能時間確認、議題整理、資料作成の順で進める"
+            },
+            {
+              "turn": 3,
+              "action_type": "confirm_state",
+              "acknowledged_event_turns": [
+                3
+              ],
+              "artifact_updates": [],
+              "notes": "参加者D追加と締切前倒しを確認"
+            },
+            {
+              "turn": 4,
+              "action_type": "update_plan",
+              "acknowledged_event_turns": [
+                3
+              ],
+              "artifact_updates": [
+                "agenda",
+                "briefing_doc"
+              ],
+              "notes": "旧日程案を破棄し、資料修正を優先する"
+            },
+            {
+              "turn": 5,
+              "action_type": "finalize",
+              "acknowledged_event_turns": [],
+              "artifact_updates": [
+                "agenda",
+                "briefing_doc"
+              ],
+              "notes": "最新状態に基づいて成果物を確定"
+            }
+          ]
+        }
+      }
+    }
+  },
   "quick_glance": {
     "result": "fail",
     "task_id": "meeting_001",
@@ -31,6 +145,276 @@
       "finalize happened before the last benchmark event"
     ]
   },
+  "turn_log": [
+    {
+      "turn": 1,
+      "input_to_ai": {
+        "initial_request_visible": true,
+        "initial_request": "新しいエンタープライズ料金プランの役員レビュー会議を準備してください。CEO、SalesLead、ProductLead が参加し、3つの料金案のどれを次の経営判断に進めるかを決めたいです。会議アジェンダとブリーフィングメモを作成し、その日のうちに意思決定できる状態にしてください。",
+        "environment_events": []
+      },
+      "ai_side": {
+        "questioned": false,
+        "executed_or_planned": true,
+        "turn_resolution": "ai_turn_ends_after_execution",
+        "logged_model_name": null,
+        "questions": [],
+        "actions": [
+          {
+            "action_type": "propose_plan",
+            "acknowledged_event_turns": [],
+            "artifact_updates": [],
+            "notes": "参加可能時間確認、議題整理、資料作成の順で進める"
+          }
+        ]
+      },
+      "response_side": {
+        "benchmark_responder_protocol": {
+          "when_ai_asks_question": "Use hidden information and current state to answer. The exact answer text is not stored in the execution_log schema.",
+          "when_ai_executes_or_plans": "Treat the action as the agent's committed move, then inject benchmark changes, restrictions, or ambiguities through environment events."
+        },
+        "observed_reply_in_log": {
+          "reply_type": "no_explicit_reply_logged",
+          "reply_messages": []
+        },
+        "hidden_information_answer_available": false
+      }
+    },
+    {
+      "turn": 2,
+      "input_to_ai": {
+        "initial_request_visible": false,
+        "initial_request": null,
+        "environment_events": [
+          {
+            "type": "new_constraint",
+            "message": "CEO から役員レビュー枠が短縮され、会議は 20 分以内に収めること、さらに briefing_doc には各料金案の粗利インパクト比較を必ず入れることが求められました。",
+            "delta": {
+              "delta_applies_to": "initial_state",
+              "overridden_constraints": [
+                "会議時間は 30 分以内に収める"
+              ],
+              "added_constraints": [
+                "会議時間は 20 分以内に収める",
+                "briefing_doc には各料金案の粗利インパクト比較を含める"
+              ],
+              "reference_data": {
+                "agenda_min_items": 4,
+                "primary_comparison_axis": "gross margin impact"
+              }
+            },
+            "expected_tasks": [
+              "check_new_timebox_constraint"
+            ],
+            "expected_artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ]
+          }
+        ]
+      },
+      "ai_side": {
+        "questioned": false,
+        "executed_or_planned": false,
+        "turn_resolution": "no_ai_output_logged",
+        "logged_model_name": null,
+        "questions": [],
+        "actions": []
+      },
+      "response_side": {
+        "benchmark_responder_protocol": {
+          "when_ai_asks_question": "Use hidden information and current state to answer. The exact answer text is not stored in the execution_log schema.",
+          "when_ai_executes_or_plans": "Treat the action as the agent's committed move, then inject benchmark changes, restrictions, or ambiguities through environment events."
+        },
+        "observed_reply_in_log": {
+          "reply_type": "environment_event",
+          "reply_messages": [
+            "CEO から役員レビュー枠が短縮され、会議は 20 分以内に収めること、さらに briefing_doc には各料金案の粗利インパクト比較を必ず入れることが求められました。"
+          ]
+        },
+        "hidden_information_answer_available": false
+      }
+    },
+    {
+      "turn": 3,
+      "input_to_ai": {
+        "initial_request_visible": false,
+        "initial_request": null,
+        "environment_events": []
+      },
+      "ai_side": {
+        "questioned": false,
+        "executed_or_planned": true,
+        "turn_resolution": "ai_turn_ends_after_execution",
+        "logged_model_name": null,
+        "questions": [],
+        "actions": [
+          {
+            "action_type": "confirm_state",
+            "acknowledged_event_turns": [
+              3
+            ],
+            "artifact_updates": [],
+            "notes": "参加者D追加と締切前倒しを確認"
+          }
+        ]
+      },
+      "response_side": {
+        "benchmark_responder_protocol": {
+          "when_ai_asks_question": "Use hidden information and current state to answer. The exact answer text is not stored in the execution_log schema.",
+          "when_ai_executes_or_plans": "Treat the action as the agent's committed move, then inject benchmark changes, restrictions, or ambiguities through environment events."
+        },
+        "observed_reply_in_log": {
+          "reply_type": "no_explicit_reply_logged",
+          "reply_messages": []
+        },
+        "hidden_information_answer_available": false
+      }
+    },
+    {
+      "turn": 4,
+      "input_to_ai": {
+        "initial_request_visible": false,
+        "initial_request": null,
+        "environment_events": [
+          {
+            "type": "stakeholder_change",
+            "message": "FinanceLead も意思決定に参加することになり、経営陣の都合で締切が 2026-04-09 12:00 JST に前倒しされました。アジェンダとメモの参加者前提を更新し、スケジュール確認もやり直す必要があります。",
+            "delta": {
+              "delta_applies_to": "initial_state",
+              "participants_added": [
+                "FinanceLead"
+              ],
+              "deadline": "2026-04-09T12:00:00+09:00"
+            },
+            "expected_tasks": [
+              "collect_availability"
+            ],
+            "expected_artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ]
+          }
+        ]
+      },
+      "ai_side": {
+        "questioned": false,
+        "executed_or_planned": true,
+        "turn_resolution": "ai_turn_ends_after_execution",
+        "logged_model_name": null,
+        "questions": [],
+        "actions": [
+          {
+            "action_type": "update_plan",
+            "acknowledged_event_turns": [
+              3
+            ],
+            "artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ],
+            "notes": "旧日程案を破棄し、資料修正を優先する"
+          }
+        ]
+      },
+      "response_side": {
+        "benchmark_responder_protocol": {
+          "when_ai_asks_question": "Use hidden information and current state to answer. The exact answer text is not stored in the execution_log schema.",
+          "when_ai_executes_or_plans": "Treat the action as the agent's committed move, then inject benchmark changes, restrictions, or ambiguities through environment events."
+        },
+        "observed_reply_in_log": {
+          "reply_type": "environment_event",
+          "reply_messages": [
+            "FinanceLead も意思決定に参加することになり、経営陣の都合で締切が 2026-04-09 12:00 JST に前倒しされました。アジェンダとメモの参加者前提を更新し、スケジュール確認もやり直す必要があります。"
+          ]
+        },
+        "hidden_information_answer_available": false
+      }
+    },
+    {
+      "turn": 5,
+      "input_to_ai": {
+        "initial_request_visible": false,
+        "initial_request": null,
+        "environment_events": []
+      },
+      "ai_side": {
+        "questioned": false,
+        "executed_or_planned": true,
+        "turn_resolution": "ai_turn_ends_after_execution",
+        "logged_model_name": null,
+        "questions": [],
+        "actions": [
+          {
+            "action_type": "finalize",
+            "acknowledged_event_turns": [],
+            "artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ],
+            "notes": "最新状態に基づいて成果物を確定"
+          }
+        ]
+      },
+      "response_side": {
+        "benchmark_responder_protocol": {
+          "when_ai_asks_question": "Use hidden information and current state to answer. The exact answer text is not stored in the execution_log schema.",
+          "when_ai_executes_or_plans": "Treat the action as the agent's committed move, then inject benchmark changes, restrictions, or ambiguities through environment events."
+        },
+        "observed_reply_in_log": {
+          "reply_type": "no_explicit_reply_logged",
+          "reply_messages": []
+        },
+        "hidden_information_answer_available": false
+      }
+    },
+    {
+      "turn": 6,
+      "input_to_ai": {
+        "initial_request_visible": false,
+        "initial_request": null,
+        "environment_events": [
+          {
+            "type": "ambiguity",
+            "message": "ただし比較軸について、SalesLead は成長速度を主軸に見たい一方、FinanceLead は粗利改善を主軸に見るべきだと主張しています。どちらを主要な意思決定軸にするかは追加確認が必要です。",
+            "delta": {
+              "reference_data": {
+                "primary_comparison_axis": "ambiguous"
+              }
+            },
+            "expected_tasks": [
+              "clarify_decision_scope"
+            ],
+            "expected_artifact_updates": [
+              "agenda",
+              "briefing_doc"
+            ]
+          }
+        ]
+      },
+      "ai_side": {
+        "questioned": false,
+        "executed_or_planned": false,
+        "turn_resolution": "no_ai_output_logged",
+        "logged_model_name": null,
+        "questions": [],
+        "actions": []
+      },
+      "response_side": {
+        "benchmark_responder_protocol": {
+          "when_ai_asks_question": "Use hidden information and current state to answer. The exact answer text is not stored in the execution_log schema.",
+          "when_ai_executes_or_plans": "Treat the action as the agent's committed move, then inject benchmark changes, restrictions, or ambiguities through environment events."
+        },
+        "observed_reply_in_log": {
+          "reply_type": "environment_event",
+          "reply_messages": [
+            "ただし比較軸について、SalesLead は成長速度を主軸に見たい一方、FinanceLead は粗利改善を主軸に見るべきだと主張しています。どちらを主要な意思決定軸にするかは追加確認が必要です。"
+          ]
+        },
+        "hidden_information_answer_available": false
+      }
+    }
+  ],
   "score_breakdown": {
     "total_score": 32,
     "outcome_score": 20,
@@ -43,6 +427,15 @@
     "question_handling",
     "state_staleness"
   ],
+  "report_limitations": {
+    "ai_raw_text_logged": false,
+    "environment_raw_reply_logged": false,
+    "notes": [
+      "The execution log records structured actions and clarification entries, not raw model text.",
+      "When the AI asks a question, the benchmark schema does not store the exact environment answer text.",
+      "The response-side behavior below is reconstructed from benchmark design rules and event definitions."
+    ]
+  },
   "human_report": {
     "viewer_order": [
       "headline",

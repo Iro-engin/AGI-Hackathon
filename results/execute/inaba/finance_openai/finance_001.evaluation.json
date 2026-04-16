@@ -1,0 +1,141 @@
+{
+  "task_id": "finance_openai_001",
+  "domain": "finance",
+  "decision_model": "gpt-4.1-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "power_grid_equipment分野に関するニュースは、「大型案件の後ろ倒しで一時的に失速したことがある。」という内容です。"
+        },
+        {
+          "question": "semiconductor_equipment分野の関連ニュースを教えてください。",
+          "answer": "semiconductor_equipment分野に関するニュースは、「設備投資延期で短期的に逆風になった。」という内容です。"
+        },
+        {
+          "question": "data_center_reits分野の関連ニュースを教えてください。",
+          "answer": "data_center_reits分野に関するニュースは、「電力余力のある拠点を持つREITが選好されたことがある。」という内容です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.15,
+          "power_grid_equipment": 0.2,
+          "thermal_management": 0.15,
+          "semiconductor_equipment": 0.25,
+          "data_center_reits": 0.25
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "新しいニュース: power_grid_equipment: 電力逼迫が長引いた局面では送配電設備が相対優位になった。 / thermal_management: 高密度ラック需要が強い時期に冷却関連が追随上昇した。 / ai_server_supply_chain: 過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた。 ただし ai_server_supply_chain に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "semiconductor_equipment分野の関連ニュースを教えてください。",
+          "answer": "semiconductor_equipment分野の関連ニュースは、「設備投資延期で短期的に逆風になった。」という内容です。"
+        },
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "power_grid_equipment分野の関連ニュースは、「電力逼迫が長引いた局面では送配電設備が相対優位になった。」という内容です。"
+        },
+        {
+          "question": "thermal_management分野の関連ニュースを教えてください。",
+          "answer": "thermal_management分野の関連ニュースは、「高密度ラック需要が強い時期に冷却関連が追随上昇した。」という内容です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.1,
+          "power_grid_equipment": 0.3,
+          "thermal_management": 0.2,
+          "semiconductor_equipment": 0.2,
+          "data_center_reits": 0.2
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "新しいニュース: data_center_reits: 電力余力のある拠点を持つREITが選好されたことがある。 / thermal_management: 高密度ラック需要が強い時期に冷却関連が追随上昇した。 / power_grid_equipment: 大型案件の後ろ倒しで一時的に失速したことがある。 ただし power_grid_equipment に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "ai_server_supply_chain分野の関連ニュース",
+          "answer": "「ai_server_supply_chain」分野の関連ニュースは以下の通りです。「過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた」や「GPU調達再開局面ではサーバー供給網が先導した」という情報があります。"
+        },
+        {
+          "question": "thermal_management分野の関連ニュース",
+          "answer": "「thermal_management」分野の関連ニュースは以下の通りです。過去には「設置タイミングの遅れで短期失速したことがある。」また、「高密度ラック需要が強い時期に冷却関連が追随上昇した」という情報があります。"
+        },
+        {
+          "question": "semiconductor_equipment分野の関連ニュース",
+          "answer": "「semiconductor_equipment」分野の関連ニュースは以下の通りです。「設備投資延期で短期的に逆風になった」という情報があります。また、関連して「サーバー供給網が先導した」という内容もあります。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.1,
+          "power_grid_equipment": 0.15,
+          "thermal_management": 0.25,
+          "semiconductor_equipment": 0.2,
+          "data_center_reits": 0.3
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "新しいニュース: thermal_management: 設置タイミングの遅れで短期失速したことがある。 / power_grid_equipment: 大型案件の後ろ倒しで一時的に失速したことがある。 ただし thermal_management に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "power_grid_equipment分野の関連ニュースは、「大型案件の後ろ倒しで一時的に失速したことがある。」という内容です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.12,
+          "power_grid_equipment": 0.13,
+          "thermal_management": 0.22,
+          "semiconductor_equipment": 0.22,
+          "data_center_reits": 0.31
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "新しいニュース: thermal_management: 設置タイミングの遅れで短期失速したことがある。 / semiconductor_equipment: 設備投資延期で短期的に逆風になった。 / ai_server_supply_chain: GPU調達再開局面ではサーバー供給網が先導した。 ただし semiconductor_equipment に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "ai_server_supply_chain分野の関連ニュース",
+          "answer": "「ai_server_supply_chain」分野の関連ニュースは、「GPU調達再開局面ではサーバー供給網が先導した。」です。また、それに伴う情報の推定率は正であるため、この分野には期待が持てる状況です。"
+        },
+        {
+          "question": "power_grid_equipment分野の関連ニュース",
+          "answer": "「power_grid_equipment」分野の関連ニュースは、「大型案件の後ろ倒しで一時的に失速したことがある。」です。この分野の推定率は負であるため、ネガティブな要因が存在する状況です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.18,
+          "power_grid_equipment": 0.1,
+          "thermal_management": 0.2,
+          "semiconductor_equipment": 0.25,
+          "data_center_reits": 0.27
+        }
+      }
+    }
+  ]
+}

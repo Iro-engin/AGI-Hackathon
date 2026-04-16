@@ -1,0 +1,92 @@
+{
+  "task_id": "meeting_openai_005",
+  "domain": "meeting",
+  "decision_model": "gpt-4.1-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [],
+      "final_do": {
+        "where": "online",
+        "when_from": "2026-04-20T09:00:00",
+        "when_to": "2026-04-20T09:45:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "中村さんの予定に変更が入りました。 これまで見ていた最速候補がそのまま使えるとは限らず、 一部候補の場所情報も未確認です。 最新候補を確認して、会議設定を見直してください。",
+      "question_answers": [
+        {
+          "question": "中村さんの参加候補の1番目（2026-04-20T10:30:00からmeeting_room_a）と2番目（2026-04-21T11:00:00からmeeting_room_b）の場所情報は確定でしょうか？",
+          "answer": "中村さんの参加候補の1番目（2026-04-20T10:30:00からmeeting_room_a）と2番目（2026-04-21T11:00:00からmeeting_room_b）の場所情報は未確認のため、確定ではありません。"
+        },
+        {
+          "question": "中村さんの参加候補の1番目（2026-04-20T10:30:00からmeeting_room_a）と2番目（2026-04-21T11:00:00からmeeting_room_b）の場所情報について、具体的な場所の確定を教えてください。",
+          "answer": "中村さんの参加候補の1番目（2026-04-20T10:30:00からmeeting_room_a）と2番目（2026-04-21T11:00:00からmeeting_room_b）の場所情報は、現在未確認のため確定ではありません。具体的な場所の確定はできません。"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "田中さんの予定に変更が入りました。 これまで見ていた最速候補がそのまま使えるとは限らず、 一部候補の場所情報も未確認です。 最新候補を確認して、会議設定を見直してください。",
+      "question_answers": [
+        {
+          "question": "田中さんの参加候補1（2026-04-21T11:00:00-11:45:00）と参加候補2（2026-04-21T13:00:00-13:45:00）の場所を教えてください。",
+          "answer": "田中さんの参加候補1（2026-04-21T11:00:00-11:45:00）の場所は「meeting_room_b」です。参加候補2（2026-04-21T13:00:00-13:45:00）の場所は「meeting_room_c」です。"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_b",
+        "when_from": "2026-04-21T11:00:00",
+        "when_to": "2026-04-21T11:45:00"
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "渡辺さんの予定に変更が入りました。 これまで見ていた最速候補がそのまま使えるとは限らず、 一部候補の場所情報も未確認です。 最新候補を確認して、会議設定を見直してください。",
+      "question_answers": [
+        {
+          "question": "渡辺さんの参加候補1と参加候補2の場所を教えてください。",
+          "answer": "渡辺さんの参加候補1の場所は「オンライン」で、参加候補2の場所は「meeting_room_a」です。ただし、具体的な時間情報は不明です。"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_c",
+        "when_from": "2026-04-21T13:00:00",
+        "when_to": "2026-04-21T13:45:00"
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "小林さんの予定に変更が入りました。 これまで見ていた最速候補がそのまま使えるとは限らず、 一部候補の場所情報も未確認です。 最新候補を確認して、会議設定を見直してください。",
+      "question_answers": [
+        {
+          "question": "小林さんの参加候補1と候補2の場所を教えてください。",
+          "answer": "小林さんの参加候補1は「オンライン」で、候補2は「meeting_room_a」です。ただし、具体的な日時情報は未確認です。"
+        }
+      ],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-22T14:30:00",
+        "when_to": "2026-04-22T15:15:00"
+      }
+    }
+  ]
+}

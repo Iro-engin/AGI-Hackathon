@@ -1,0 +1,1316 @@
+{
+  "task_id": "meeting_openai_005",
+  "difficulty": "medium",
+  "domain": "meeting",
+  "initial_request": "田中、佐藤、鈴木、伊藤で 45 分の会議を設定したいです。 参加候補はある程度見えていますが、 田中、佐藤 の一部候補は場所情報がまだ欠けています。 できるだけ早い候補を選び、必要なら不足情報を確認してください。",
+  "initial_state": {
+    "constraint": [
+      "参加者全員が同じ候補で参加できること",
+      "45 分連続で確保できる候補のみ有効とする",
+      "できるだけ早い時間帯の候補を優先する"
+    ],
+    "hidden_info": {
+      "need_duration": 45,
+      "state_people": [
+        {
+          "name": "田中",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": null,
+              "when_to": null
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": null,
+              "when_to": null
+            }
+          ],
+          "constraints": [
+            "午前は比較的調整しやすい"
+          ],
+          "person_index": 0,
+          "hidden_attendance_indexes": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "佐藤",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": null,
+              "when_to": null
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": null,
+              "when_to": null
+            }
+          ],
+          "constraints": [
+            "午後に予定調整が可能"
+          ],
+          "person_index": 1,
+          "hidden_attendance_indexes": [
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    "info": {
+      "need_duration": 45,
+      "state_people": [
+        {
+          "name": "田中",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-21T14:30:00",
+              "when_to": "2026-04-21T15:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            }
+          ],
+          "constraints": [
+            "午前は比較的調整しやすい"
+          ],
+          "person_index": 0,
+          "hidden_attendance_indexes": []
+        },
+        {
+          "name": "佐藤",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-21T14:30:00",
+              "when_to": "2026-04-21T15:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-23T13:00:00",
+              "when_to": "2026-04-23T13:45:00"
+            }
+          ],
+          "constraints": [
+            "午後に予定調整が可能"
+          ],
+          "person_index": 1,
+          "hidden_attendance_indexes": []
+        },
+        {
+          "name": "鈴木",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-23T13:00:00",
+              "when_to": "2026-04-23T13:45:00"
+            }
+          ],
+          "constraints": [
+            "通常は平日午前と午後に時間あり"
+          ],
+          "person_index": 2,
+          "hidden_attendance_indexes": []
+        },
+        {
+          "name": "伊藤",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-23T13:00:00",
+              "when_to": "2026-04-23T13:45:00"
+            }
+          ],
+          "constraints": [
+            "オンライン参加希望"
+          ],
+          "person_index": 3,
+          "hidden_attendance_indexes": []
+        }
+      ]
+    },
+    "got_info": {
+      "need_duration": 45,
+      "state_people": [
+        {
+          "name": "田中",
+          "can_attend": [
+            {
+              "where": null,
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": null,
+              "when_from": "2026-04-21T14:30:00",
+              "when_to": "2026-04-21T15:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            }
+          ],
+          "constraints": [
+            "午前は比較的調整しやすい"
+          ],
+          "person_index": 0,
+          "hidden_attendance_indexes": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "佐藤",
+          "can_attend": [
+            {
+              "where": null,
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": null,
+              "when_from": "2026-04-21T14:30:00",
+              "when_to": "2026-04-21T15:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-23T13:00:00",
+              "when_to": "2026-04-23T13:45:00"
+            }
+          ],
+          "constraints": [
+            "午後に予定調整が可能"
+          ],
+          "person_index": 1,
+          "hidden_attendance_indexes": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "鈴木",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-23T13:00:00",
+              "when_to": "2026-04-23T13:45:00"
+            }
+          ],
+          "constraints": [
+            "通常は平日午前と午後に時間あり"
+          ],
+          "person_index": 2,
+          "hidden_attendance_indexes": []
+        },
+        {
+          "name": "伊藤",
+          "can_attend": [
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-20T10:30:00",
+              "when_to": "2026-04-20T11:15:00"
+            },
+            {
+              "where": "meeting_room_a",
+              "when_from": "2026-04-22T09:00:00",
+              "when_to": "2026-04-22T09:45:00"
+            },
+            {
+              "where": "conference_room_3f",
+              "when_from": "2026-04-23T13:00:00",
+              "when_to": "2026-04-23T13:45:00"
+            }
+          ],
+          "constraints": [
+            "オンライン参加希望"
+          ],
+          "person_index": 3,
+          "hidden_attendance_indexes": []
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "message": "田中さんの予定が変更し、4月20日の午前は空きがなくなりました。",
+      "state_before": {
+        "constraint": [
+          "参加者全員が同じ候補で参加できること",
+          "45 分連続で確保できる候補のみ有効とする",
+          "できるだけ早い時間帯の候補を優先する"
+        ],
+        "hidden_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": null,
+                  "when_to": null
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": null,
+                  "when_to": null
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        },
+        "got_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": null,
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": null,
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        }
+      },
+      "exp_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      },
+      "should_require": [
+        "田中の参加候補1の場所",
+        "田中の参加候補2の場所"
+      ]
+    },
+    {
+      "message": "佐藤さんは4月21日の午後、スケジュールに一時的な停止がかかりました。",
+      "state_before": {
+        "constraint": [
+          "参加者全員が同じ候補で参加できること",
+          "45 分連続で確保できる候補のみ有効とする",
+          "できるだけ早い時間帯の候補を優先する"
+        ],
+        "hidden_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": null,
+                  "when_to": null
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": null,
+                  "when_to": null
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        },
+        "got_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": null,
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": null,
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        }
+      },
+      "exp_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-21T14:30:00",
+        "when_to": "2026-04-21T15:15:00"
+      },
+      "should_require": [
+        "佐藤の参加候補1の場所",
+        "佐藤の参加候補2の場所"
+      ]
+    },
+    {
+      "message": "鈴木さんは木曜日は空いていることが分かりましたので、その日を候補に入れてください。",
+      "state_before": {
+        "constraint": [
+          "参加者全員が同じ候補で参加できること",
+          "45 分連続で確保できる候補のみ有効とする",
+          "できるだけ早い時間帯の候補を優先する"
+        ],
+        "hidden_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": null,
+                  "when_to": null
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": null,
+                  "when_to": null
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり",
+                "木曜日は4月23日で、午前から午後のスロットが利用可能です。"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり",
+                "木曜日は4月23日で、午前から午後のスロットが利用可能です。"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        },
+        "got_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": null,
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": null,
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり",
+                "木曜日は4月23日で、午前から午後のスロットが利用可能です。"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        }
+      },
+      "exp_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      },
+      "should_require": [
+        "鈴木の参加候補1の場所",
+        "鈴木の参加候補2の場所"
+      ]
+    },
+    {
+      "message": "伊藤さんは会議にはオンライン参加を希望しています。場所に注意してください。",
+      "state_before": {
+        "constraint": [
+          "参加者全員が同じ候補で参加できること",
+          "45 分連続で確保できる候補のみ有効とする",
+          "できるだけ早い時間帯の候補を優先する"
+        ],
+        "hidden_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": null,
+                  "when_to": null
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": null,
+                  "when_to": null
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望",
+                "伊藤さんは会議にはオンライン参加を希望しています。場所に注意してください。"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        "info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり",
+                "木曜日は4月23日で、午前から午後のスロットが利用可能です。"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望",
+                "伊藤さんは会議にはオンライン参加を希望しています。場所に注意してください。"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": []
+            }
+          ]
+        },
+        "got_info": {
+          "need_duration": 45,
+          "state_people": [
+            {
+              "name": "田中",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-20T10:30:00",
+                  "when_to": "2026-04-20T11:15:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午前は比較的調整しやすい"
+              ],
+              "person_index": 0,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "佐藤",
+              "can_attend": [
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-21T14:30:00",
+                  "when_to": "2026-04-21T15:15:00"
+                },
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "午後に予定調整が可能"
+              ],
+              "person_index": 1,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "鈴木",
+              "can_attend": [
+                {
+                  "where": "meeting_room_a",
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": "conference_room_3f",
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "通常は平日午前と午後に時間あり",
+                "木曜日は4月23日で、午前から午後のスロットが利用可能です。"
+              ],
+              "person_index": 2,
+              "hidden_attendance_indexes": []
+            },
+            {
+              "name": "伊藤",
+              "can_attend": [
+                {
+                  "where": null,
+                  "when_from": "2026-04-22T09:00:00",
+                  "when_to": "2026-04-22T09:45:00"
+                },
+                {
+                  "where": null,
+                  "when_from": "2026-04-23T13:00:00",
+                  "when_to": "2026-04-23T13:45:00"
+                }
+              ],
+              "constraints": [
+                "オンライン参加希望",
+                "伊藤さんは会議にはオンライン参加を希望しています。場所に注意してください。"
+              ],
+              "person_index": 3,
+              "hidden_attendance_indexes": [
+                0,
+                1
+              ]
+            }
+          ]
+        }
+      },
+      "exp_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-23T13:00:00",
+        "when_to": "2026-04-23T13:45:00"
+      },
+      "should_require": [
+        "伊藤の参加候補1の場所",
+        "伊藤の参加候補2の場所"
+      ]
+    }
+  ],
+  "initial_requires": [
+    "田中の参加候補1の場所",
+    "田中の参加候補2の場所",
+    "佐藤の参加候補1の場所",
+    "佐藤の参加候補2の場所"
+  ]
+}

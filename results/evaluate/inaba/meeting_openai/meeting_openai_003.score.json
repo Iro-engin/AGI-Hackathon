@@ -1,0 +1,94 @@
+{
+  "task_id": "meeting_openai_003",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 1.0,
+    "rubric_score": 0.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.0
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "佐藤の参加候補1の場所",
+        "佐藤の参加候補2の場所",
+        "田中の参加候補1の場所",
+        "田中の参加候補2の場所"
+      ],
+      "questions_asked": [],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "佐藤の参加候補1の場所",
+        "佐藤の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "高橋さんの参加候補1（2026-04-20T10:30:00～meeting_room_a）と参加候補2（2026-04-21T11:00:00～meeting_room_b）の場所について不足情報を教えてください。これらの場所は確定していますか？",
+        "高橋さんの予定最速候補で場所が未確定のmeeting_room_aとmeeting_room_bのどちらについて、より詳細な場所の確定情報を早急に教えていただけますか？",
+        "高橋、吉田、中村、小林の全員が参加可能で、かつ吉田・中村・小林の会議室(conference_room)を避ける制約を満たす最も早い時間帯かつ場所の候補を教えていただけますか？"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "田中の参加候補1の場所",
+        "田中の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "吉田さんの2026-04-21T11:00:00から11:45:00の場所はどこですか？また、2026-04-21T13:00:00から13:45:00の場所も教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "山本の参加候補1の場所",
+        "山本の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "中村さんの2026-04-21T13:00:00からの候補の場所について教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "鈴木の参加候補1の場所"
+      ],
+      "questions_asked": [
+        "小林さんの参加候補1（2026-04-20T10:30:00～11:15:00）の場所は正確に何ですか？",
+        "小林さんの参加候補2（2026-04-21T11:00:00～11:45:00）の場所は正確に何ですか？"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

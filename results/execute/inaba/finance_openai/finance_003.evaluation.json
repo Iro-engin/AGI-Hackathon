@@ -1,0 +1,153 @@
+{
+  "task_id": "finance_openai_003",
+  "domain": "finance",
+  "decision_model": "gpt-4.1-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "reit分野の関連ニュースを教えてください。",
+          "answer": "reit分野の関連ニュースは、「金利低下局面ではREITが先に反応したことがある」という内容です。"
+        },
+        {
+          "question": "insurers分野の関連ニュースを教えてください。",
+          "answer": "insurers分野の関連ニュースは、「評価損懸念が前面化すると相対優位が崩れた」という内容です。"
+        },
+        {
+          "question": "brokers分野の関連ニュースを教えてください。",
+          "answer": "brokers分野の関連ニュースは、「売買代金増加で brokers が追随上昇したことがある」という内容です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "reit": 0.25,
+          "banks": 0.18,
+          "insurers": 0.15,
+          "utilities": 0.17,
+          "brokers": 0.25
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "新しいニュース: utilities: 守りの資金が向かう局面では utilities が安定した。 / reit: 資金調達不安が強い時はREITが大きく売られた。 ただし reit に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "banks分野の関連ニュースを教えてください。",
+          "answer": "現在の情報では、banks分野の関連ニュースは確認できません。具体的な情報がないため、答えられません。"
+        },
+        {
+          "question": "insurers分野の関連ニュースを教えてください。",
+          "answer": "現在の情報では、insurers分野の関連ニュースは確認できません。具体的な情報がないため、答えられません。"
+        },
+        {
+          "question": "brokers分野の関連ニュースを教えてください。",
+          "answer": "現在の情報では、brokers分野の関連ニュースは確認できません。具体的な情報がないため、答えられません。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "reit": 0.2,
+          "banks": 0.18,
+          "insurers": 0.15,
+          "utilities": 0.22,
+          "brokers": 0.25
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "新しいニュース: insurers: 金利上昇が続く場面では保険の見直し益期待が効いた。 / reit: 資金調達不安が強い時はREITが大きく売られた。 ただし banks に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "banks分野の関連ニュースを教えてください。",
+          "answer": "現在、banks分野の関連ニュースは「信用不安が広がると銀行は急速に逆回転した。」です。他の分野の関連ニュースは確認できません。"
+        },
+        {
+          "question": "reit分野の関連ニュースを教えてください。",
+          "answer": "reit分野の関連ニュースは「資金調達不安が強い時はREITが大きく売られた。」です。他の分野の関連ニュースは確認できません。"
+        },
+        {
+          "question": "utilities分野の関連ニュースを教えてください。",
+          "answer": "utilities分野の関連ニュースは「守りの資金が向かう局面では utilities が安定した。」です。他の分野の関連ニュースは確認できません。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "reit": 0.15,
+          "banks": 0.15,
+          "insurers": 0.2,
+          "utilities": 0.2,
+          "brokers": 0.3
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "新しいニュース: banks: イールドカーブ改善時は銀行が先導した。 / utilities: 金利負担懸念で utilities が売られた局面もあった。 ただし insurers に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "reit分野の関連ニュースを教えてください。",
+          "answer": "reit分野の関連ニュースは、「金利低下局面ではREITが先に反応したことがある。」という内容です。"
+        },
+        {
+          "question": "insurers分野の関連ニュースを教えてください。",
+          "answer": "insurers分野の関連ニュースは、「金利上昇が続く場面では保険の見直し益期待が効いた。」という内容です。"
+        },
+        {
+          "question": "brokers分野の関連ニュースを教えてください。",
+          "answer": "brokers分野の関連ニュースは、「売買代金増加で brokers が追随上昇したことがある。」という内容です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "reit": 0.18,
+          "banks": 0.25,
+          "insurers": 0.15,
+          "utilities": 0.17,
+          "brokers": 0.25
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "新しいニュース: banks: イールドカーブ改善時は銀行が先導した。 / insurers: 金利上昇が続く場面では保険の見直し益期待が効いた。 / utilities: 金利負担懸念で utilities が売られた局面もあった。 ただし utilities に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "reit分野の関連ニュースを教えてください。",
+          "answer": "reit分野の関連ニュースは、「金利低下局面ではREITが先に反応したことがある」という内容です。"
+        },
+        {
+          "question": "insurers分野の関連ニュースを教えてください。",
+          "answer": "insurers分野の関連ニュースは、「金利上昇が続く場面では保険の見直し益期待が効いた」という内容です。"
+        },
+        {
+          "question": "brokers分野の関連ニュースを教えてください。",
+          "answer": "brokers分野の関連ニュースは、「相場停滞で brokers の業績期待がしぼんだことがある」という内容です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "reit": 0.18,
+          "banks": 0.3,
+          "insurers": 0.1,
+          "utilities": 0.17,
+          "brokers": 0.25
+        }
+      }
+    }
+  ]
+}

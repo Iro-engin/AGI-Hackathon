@@ -1,0 +1,165 @@
+{
+  "task_id": "finance_openai_004",
+  "domain": "finance",
+  "decision_model": "gpt-4.1-mini",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "power_grid_equipmentに関する関連ニュースは、次の内容です。「大型案件の後ろ倒しで一時的に失速したことがある。」"
+        },
+        {
+          "question": "thermal_management分野の関連ニュースを教えてください。",
+          "answer": "thermal_managementに関する関連ニュースは、次の内容です。「高密度ラック需要が強い時期に冷却関連が追随上昇した。」"
+        },
+        {
+          "question": "data_center_reits分野の関連ニュースを教えてください。",
+          "answer": "data_center_reitsに関する関連ニュースは、次の内容です。「開発計画の遅れで見直しが入ったことがある。」"
+        },
+        {
+          "question": "ai_server_supply_chain分野の関連ニュースを教えてください。",
+          "answer": "ai_server_supply_chainに関する関連ニュースは、次の内容です。「過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた。」"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.1,
+          "power_grid_equipment": 0.2,
+          "thermal_management": 0.25,
+          "semiconductor_equipment": 0.1,
+          "data_center_reits": 0.35
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "新しいニュース: data_center_reits: 開発計画の遅れで見直しが入ったことがある。 / power_grid_equipment: 電力逼迫が長引いた局面では送配電設備が相対優位になった。 ただし ai_server_supply_chain に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "ai_server_supply_chain分野の関連ニュースを教えてください。",
+          "answer": "関連ニュースは以下の通りです：\n- 過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた。"
+        },
+        {
+          "question": "semiconductor_equipment分野の関連ニュースを教えてください。",
+          "answer": "semiconductor_equipment分野の関連ニュースは以下の通りです：\n- 設備投資延期で短期的に逆風になった。"
+        },
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "power_grid_equipment分野の関連ニュースは以下の通りです：\n- 電力逼迫が長引いた局面では送配電設備が相対優位になった。"
+        },
+        {
+          "question": "thermal_management分野の関連ニュースを教えてください。",
+          "answer": "thermal_management分野の関連ニュースは以下の通りです：  \n- 設置タイミングの遅れで短期失速したことがある。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.15,
+          "power_grid_equipment": 0.25,
+          "thermal_management": 0.25,
+          "semiconductor_equipment": 0.1,
+          "data_center_reits": 0.25
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "新しいニュース: thermal_management: 設置タイミングの遅れで短期失速したことがある。 / semiconductor_equipment: 先端投資が再開すると製造装置が遅れて追随した。 ただし power_grid_equipment に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "ai_server_supply_chain分野の関連ニュースを教えてください。",
+          "answer": "ai_server_supply_chain分野の関連ニュースは、「過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた。」です。"
+        },
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "power_grid_equipment分野の関連ニュースは、「大型案件の後ろ倒しで一時的に失速したことがある。」です。"
+        },
+        {
+          "question": "data_center_reits分野の関連ニュースを教えてください。",
+          "answer": "data_center_reits分野の関連ニュースは、「開発計画の遅れで見直しが入ったことがある。」です。"
+        },
+        {
+          "question": "semiconductor_equipment分野の最新ニュースを教えてください。",
+          "answer": "semiconductor_equipment分野の最新ニュースは、「先端投資が再開すると製造装置が遅れて追随した。」です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.14,
+          "power_grid_equipment": 0.22,
+          "thermal_management": 0.15,
+          "semiconductor_equipment": 0.14,
+          "data_center_reits": 0.35
+        }
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "新しいニュース: data_center_reits: 開発計画の遅れで見直しが入ったことがある。 / thermal_management: 高密度ラック需要が強い時期に冷却関連が追随上昇した。 ただし thermal_management に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "ai_server_supply_chain分野の関連ニュースを教えてください。",
+          "answer": "現在のターンでは、ai_server_supply_chain分野の関連ニュースは「GPU調達再開局面ではサーバー供給網が先導した。」です。"
+        },
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "現在のターンでは、power_grid_equipment分野の関連ニュースは「大型案件の後ろ倒しで一時的に失速したことがある。」です。"
+        },
+        {
+          "question": "semiconductor_equipment分野の関連ニュースを教えてください。",
+          "answer": "現在のターンでは、semiconductor_equipment分野の関連ニュースは「先端投資が再開すると製造装置が遅れて追随した。」です。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.14,
+          "power_grid_equipment": 0.22,
+          "thermal_management": 0.15,
+          "semiconductor_equipment": 0.14,
+          "data_center_reits": 0.35
+        }
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "新しいニュース: semiconductor_equipment: 設備投資延期で短期的に逆風になった。 / thermal_management: 高密度ラック需要が強い時期に冷却関連が追随上昇した。 / ai_server_supply_chain: 過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた。 ただし semiconductor_equipment に関連する材料だけ見えており、 他分野の関連ニュースは確認しないと分かりません。",
+      "question_answers": [
+        {
+          "question": "thermal_management分野の関連ニュースを教えてください。",
+          "answer": "今回見えている情報によると、thermal_management分野の関連ニュースは「高密度ラック需要が強い時期に冷却関連が追随上昇した」という内容です。"
+        },
+        {
+          "question": "ai_server_supply_chain分野の関連ニュースを教えてください。",
+          "answer": "今回見えている情報によると、ai_server_supply_chain分野の関連ニュースは「過去にはハイパースケーラーの投資減速でサーバー関連が先に崩れた」という内容です。"
+        },
+        {
+          "question": "power_grid_equipment分野の関連ニュースを教えてください。",
+          "answer": "現時点では、power_grid_equipment分野の関連ニュースは見えていないため、情報を提供できません。"
+        }
+      ],
+      "final_do": {
+        "stock_rates": {
+          "ai_server_supply_chain": 0.08,
+          "power_grid_equipment": 0.3,
+          "thermal_management": 0.2,
+          "semiconductor_equipment": 0.1,
+          "data_center_reits": 0.32
+        }
+      }
+    }
+  ]
+}

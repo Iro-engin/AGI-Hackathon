@@ -1,0 +1,114 @@
+{
+  "task_id": "meeting_openai_002",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.6,
+    "rubric_score": 0.5,
+    "redundant_question_rate": 0.25,
+    "early_discovery_rate": 0.4
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "山本の参加候補1の場所",
+        "山本の参加候補2の場所",
+        "高橋の参加候補1の場所",
+        "高橋の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "小林さんの2026-04-20T10:30:00からの候補の場所はmeeting_room_aで確定でしょうか？また、高橋さんの同じ時間帯の候補の場所はどこですか？",
+        "高橋さんの2026-04-20T10:30:00からの候補の場所は何でしょうか？",
+        "高橋さんの2026-04-20T09:00:00からの候補の場所は何でしょうか？",
+        "高橋さんの2026-04-20T09:00:00からの参加場所はオンラインでしょうか？また2026-04-20T10:30:00からの参加場所はmeeting_room_aでしょうか？"
+      ],
+      "covered_requires": [
+        "高橋の参加候補1の場所",
+        "高橋の参加候補2の場所"
+      ],
+      "redundant_questions": [
+        "高橋さんの2026-04-20T10:30:00からの候補の場所は何でしょうか？",
+        "高橋さんの2026-04-20T09:00:00からの候補の場所は何でしょうか？",
+        "高橋さんの2026-04-20T09:00:00からの参加場所はオンラインでしょうか？また2026-04-20T10:30:00からの参加場所はmeeting_room_aでしょうか？"
+      ],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "山本の参加候補1の場所",
+        "山本の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "小林さんの4月20日10:30から11:15の候補の場所はmeeting_room_aで確定でしょうか？ また、4月21日11:00から11:45の候補の場所はmeeting_room_bで確定でしょうか？",
+        "小林さんの4月20日10:30から11:15の候補の場所はmeeting_room_aで確定でしょうか？ また、4月21日11:00から11:45の候補の場所はmeeting_room_bで確定でしょうか？",
+        "小林さんの4月20日10:30から11:15の候補の場所は正式にどこでしょうか？また、小林さんの4月21日11:00から11:45の候補の場所は正式にどこでしょうか？",
+        "小林さんの4月20日10:30から11:15の候補の正式な場所を教えてください。また、4月21日11:00から11:45の候補の正式な場所も教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "高橋の参加候補1の場所",
+        "高橋の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "高橋さんの参加候補1と候補2の場所を教えてください。",
+        "加藤さんと伊藤さんは2026-04-20T10:30:00からのmeeting_room_aでの参加は可能でしょうか？また、小林さんのmeeting_room_bの2026-04-21T11:00:00以降の参加候補の場所詳細を教えてください。"
+      ],
+      "covered_requires": [
+        "高橋の参加候補1の場所",
+        "高橋の参加候補2の場所"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "渡辺の参加候補1の場所",
+        "渡辺の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "加藤さんの参加候補1（2026-04-20T10:30:00～11:15:00）の場所はどこでしょうか？また、参加候補2（2026-04-21T13:00:00～13:45:00）の場所も教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "伊藤の参加候補1の場所",
+        "伊藤の参加候補2の場所"
+      ],
+      "questions_asked": [
+        "伊藤さんの参加候補のうち、2026-04-20T10:30:00から11:15:00までの候補の場所情報を教えてください。また、2026-04-21T11:00:00から11:45:00までの候補の場所情報も教えてください。"
+      ],
+      "covered_requires": [
+        "伊藤の参加候補1の場所",
+        "伊藤の参加候補2の場所"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "task_id": "finance_openai_003",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 1.0,
+    "rubric_score": 0.1,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.0
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "consumer_goods分野の関連ニュース",
+        "renewable_energy分野の関連ニュース",
+        "banking_services分野の関連ニュース",
+        "pharmaceuticals分野の関連ニュース"
+      ],
+      "questions_asked": [
+        "reit分野の関連ニュースを教えてください。",
+        "insurers分野の関連ニュースを教えてください。",
+        "brokers分野の関連ニュースを教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "consumer_goods分野の関連ニュース",
+        "renewable_energy分野の関連ニュース",
+        "banking_services分野の関連ニュース",
+        "pharmaceuticals分野の関連ニュース"
+      ],
+      "questions_asked": [
+        "banks分野の関連ニュースを教えてください。",
+        "insurers分野の関連ニュースを教えてください。",
+        "brokers分野の関連ニュースを教えてください。"
+      ],
+      "covered_requires": [
+        "banking_services分野の関連ニュース"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "consumer_goods分野の関連ニュース",
+        "renewable_energy分野の関連ニュース",
+        "banking_services分野の関連ニュース",
+        "pharmaceuticals分野の関連ニュース"
+      ],
+      "questions_asked": [
+        "banks分野の関連ニュースを教えてください。",
+        "reit分野の関連ニュースを教えてください。",
+        "utilities分野の関連ニュースを教えてください。"
+      ],
+      "covered_requires": [
+        "banking_services分野の関連ニュース"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "consumer_goods分野の関連ニュース",
+        "renewable_energy分野の関連ニュース",
+        "banking_services分野の関連ニュース",
+        "pharmaceuticals分野の関連ニュース"
+      ],
+      "questions_asked": [
+        "reit分野の関連ニュースを教えてください。",
+        "insurers分野の関連ニュースを教えてください。",
+        "brokers分野の関連ニュースを教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "consumer_goods分野の関連ニュース",
+        "renewable_energy分野の関連ニュース",
+        "banking_services分野の関連ニュース",
+        "pharmaceuticals分野の関連ニュース"
+      ],
+      "questions_asked": [
+        "reit分野の関連ニュースを教えてください。",
+        "insurers分野の関連ニュースを教えてください。",
+        "brokers分野の関連ニュースを教えてください。"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "domain": "meeting",
+  "case_count": 5,
+  "early_discovery_n": 2,
+  "average_scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.88,
+    "rubric_score": 0.16,
+    "redundant_question_rate": 0.05,
+    "early_discovery_rate": 0.08
+  }
+}

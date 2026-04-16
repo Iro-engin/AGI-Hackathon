@@ -2,7 +2,7 @@
   "task_id": "science_004",
   "domain": "science_hazard_response",
   "difficulty": "easy",
-  "initial_request": "In this scenario, multiple fictional formulas are running simultaneously. Initially, hazard_X is active. Respond appropriately while managing the ongoing formulas. Be aware that a new hazard will appear by turn 3.",
+  "initial_request": "Manage the sequential hazards in a lab where formulas formula_A and formula_B are running, starting with hazard_X active and later hazard_Y appearing.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2099-12-31T23:59:59+09:00",
@@ -88,10 +88,11 @@
       "resolved_hazard_ids": [],
       "initial_tool_constraints": [
         "goggles_G",
-        "spanner_S"
+        "spanner_S",
+        "shield_P"
       ],
       "selected_constraint_types": [
-        "escape_easy"
+        "pressure_pa"
       ],
       "hazard_manuals": [
         {
@@ -99,39 +100,41 @@
           "source_formula": "formula_A",
           "procedures": [
             {
-              "procedure_id": "X1",
+              "procedure_id": "X_proc_1",
               "applicable_conditions": [
                 {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                }
-              ],
-              "required_tools": [
-                "goggles_G"
-              ],
-              "stop_source_formula": false,
-              "hazard_potential": 3.0
-            },
-            {
-              "procedure_id": "X2",
-              "applicable_conditions": [
-                {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": false
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 0,
+                  "max_numeric": 200000,
+                  "expected_bool": null
                 }
               ],
               "required_tools": [
                 "goggles_G",
                 "spanner_S"
               ],
+              "stop_source_formula": false,
+              "hazard_potential": 3.0
+            },
+            {
+              "procedure_id": "X_proc_2",
+              "applicable_conditions": [
+                {
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 200001,
+                  "max_numeric": 500000,
+                  "expected_bool": null
+                }
+              ],
+              "required_tools": [
+                "goggles_G",
+                "spanner_S",
+                "shield_P"
+              ],
               "stop_source_formula": true,
-              "hazard_potential": 5.0
+              "hazard_potential": 8.0
             }
           ]
         },
@@ -140,39 +143,41 @@
           "source_formula": "formula_B",
           "procedures": [
             {
-              "procedure_id": "Y1",
+              "procedure_id": "Y_proc_1",
               "applicable_conditions": [
                 {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 0,
+                  "max_numeric": 150000,
+                  "expected_bool": null
                 }
               ],
               "required_tools": [
-                "goggles_G"
+                "goggles_G",
+                "shield_P"
               ],
               "stop_source_formula": false,
               "hazard_potential": 4.0
             },
             {
-              "procedure_id": "Y2",
+              "procedure_id": "Y_proc_2",
               "applicable_conditions": [
                 {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": false
+                  "constraint_type": "pressure_pa",
+                  "mode": "range",
+                  "min_numeric": 150001,
+                  "max_numeric": 500000,
+                  "expected_bool": null
                 }
               ],
               "required_tools": [
                 "goggles_G",
-                "spanner_S"
+                "spanner_S",
+                "shield_P"
               ],
               "stop_source_formula": true,
-              "hazard_potential": 6.0
+              "hazard_potential": 9.0
             }
           ]
         }
@@ -181,13 +186,13 @@
         {
           "hazard_id": "hazard_X",
           "targets": [
-            "Is it easy to escape from hazard_X?"
+            "Is the pressure within safe operating limits for hazard_X?"
           ]
         },
         {
           "hazard_id": "hazard_Y",
           "targets": [
-            "Is it easy to escape from hazard_Y?"
+            "Is the pressure within safe operating limits for hazard_Y?"
           ]
         }
       ],
@@ -196,23 +201,23 @@
           "hazard_id": "hazard_X",
           "constraint_values": [
             {
-              "constraint_type": "escape_easy",
-              "numeric_value": null,
-              "bool_value": true
+              "constraint_type": "pressure_pa",
+              "numeric_value": 180000,
+              "bool_value": null
             }
           ],
-          "expected_procedure_id": "X1"
+          "expected_procedure_id": "X_proc_1"
         },
         {
           "hazard_id": "hazard_Y",
           "constraint_values": [
             {
-              "constraint_type": "escape_easy",
-              "numeric_value": null,
-              "bool_value": false
+              "constraint_type": "pressure_pa",
+              "numeric_value": 300000,
+              "bool_value": null
             }
           ],
-          "expected_procedure_id": "Y2"
+          "expected_procedure_id": "Y_proc_2"
         }
       ]
     }
@@ -225,7 +230,7 @@
     {
       "turn": 1,
       "type": "state_change",
-      "message": "Multiple formulas are active with hazard_X present. Bundle your questions to assess the situation effectively.",
+      "message": "Initial setup: formula_A and formula_B running with hazard_X active. Ensure bundled questioning to assess all interrelated risks under pressure constraints.",
       "delta": {},
       "expected_response_type": null,
       "expected_replan_within_turns": 2,
@@ -238,7 +243,7 @@
     {
       "turn": 2,
       "type": "state_change",
-      "message": "Continue monitoring hazard_X while maintaining formula operations. No new hazards yet.",
+      "message": "Continuing operations with hazard_X still active; monitor all active formulas and constraints carefully.",
       "delta": {},
       "expected_response_type": null,
       "expected_replan_within_turns": 1,
@@ -251,17 +256,19 @@
     {
       "turn": 3,
       "type": "state_change",
-      "message": "A new hazard_Y has emerged, requiring immediate attention even if hazard_X response was incomplete.",
+      "message": "New hazard_Y has appeared regardless of previous responses, adding complexity to the current hazard scenario.",
       "delta": {
         "reference_data": {
           "active_hazard_ids": [
             "hazard_Y"
           ],
-          "resolved_hazard_ids": []
+          "resolved_hazard_ids": [
+            "hazard_X"
+          ]
         }
       },
       "expected_response_type": null,
-      "expected_replan_within_turns": 2,
+      "expected_replan_within_turns": 1,
       "expected_artifact_updates": [
         "hazard_response_plan",
         "hazard_execution_log"

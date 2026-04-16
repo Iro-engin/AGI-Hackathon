@@ -1,6 +1,6 @@
 UV := uv
 UV_CACHE_DIR ?= /tmp/uv-cache
-SCIENCE_COUNT ?= 5
+SCIENCE_COUNT ?= 15
 SCIENCE_CASE ?= scenarios/science/science_001.json
 SCIENCE_CASE_DIR ?= scenarios/science
 SCIENCE_EXECUTION_LOG ?= results/science/science_result_001.json

@@ -4,34 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-from openai import OpenAI
-from pydantic import BaseModel, ConfigDict, Field
-
 from src.models import Case, ExecutionLog, dump_json
 from src.rule_evaluator import RuleBasedEvaluator
-
-load_dotenv()
-
-
-class StepMatchJudgment(BaseModel):
-    """手順一致判定の Structured Outputs 形式。
-
-    Attributes:
-        step_match_bits: 期待手順ごとの一致フラグ。1 が一致、0 が不一致。
-        order_ok: 手順順序が大まかに合っているかどうか。
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    step_match_bits: list[int] = Field(default_factory=list)
-    order_ok: bool
 
 
 @dataclass
@@ -166,11 +145,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--execution-log-dir", dest="execution_log_dir", type=Path)
     parser.add_argument("--output", dest="output_path", type=Path)
     parser.add_argument("--output-dir", dest="output_dir", type=Path)
-    parser.add_argument(
-        "--model",
-        default=os.getenv("OPENAI_EVAL_MODEL") or os.getenv("OPENAI_MODEL"),
-        help="手順一致判定に使う OpenAI モデル名。未指定なら簡易判定を使う",
-    )
     args = parser.parse_args()
 
     if args.case_path and args.execution_log_path is None:
@@ -191,9 +165,6 @@ def parse_args() -> argparse.Namespace:
 def evaluate_science_execution(
     case: Case,
     execution_log: ExecutionLog,
-    *,
-    client: OpenAI | None = None,
-    model: str | None = None,
 ) -> ScienceEvaluationResult:
     """science ケース向けの追加観点で execution log を採点する。"""
 
@@ -207,8 +178,6 @@ def evaluate_science_execution(
             execution_log=execution_log,
             episode=episode,
             state_by_turn=state_by_turn,
-            client=client,
-            model=model,
             deductions=deductions,
         )
         for episode in hazard_episodes
@@ -337,8 +306,6 @@ def evaluate_hazard_episode(
     execution_log: ExecutionLog,
     episode: dict[str, Any],
     state_by_turn: dict[int, dict[str, Any]],
-    client: OpenAI | None,
-    model: str | None,
     deductions: list[str],
 ) -> HazardEpisodeEvaluation:
     """1 つの hazard 対応エピソードを採点する。"""
@@ -612,103 +579,6 @@ def select_expected_response(
     raise ValueError(f"expected procedure not found for {manual.get('hazard_id')}")
 
 
-def parse_step_list(raw_value: str | None) -> list[str]:
-    """artifact 内の手順表現を手順配列へ正規化する。"""
-
-    if raw_value is None:
-        return []
-    text = raw_value.strip()
-    if not text:
-        return []
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, list):
-            return [str(item).strip() for item in parsed if str(item).strip()]
-    except json.JSONDecodeError:
-        pass
-    parts = re.split(r"\n+|;+", text)
-    cleaned = [re.sub(r"^\s*[-0-9.)]+\s*", "", part).strip() for part in parts]
-    return [part for part in cleaned if part]
-
-
-def parse_named_list(raw_value: str | None) -> list[str]:
-    """formula などの名称配列を文字列から抽出する。"""
-
-    if raw_value is None:
-        return []
-    text = raw_value.strip()
-    if not text:
-        return []
-    try:
-        parsed = json.loads(text)
-        if isinstance(parsed, list):
-            return [str(item) for item in parsed]
-    except json.JSONDecodeError:
-        pass
-    return re.findall(r"[A-Za-z]+_[A-Za-z0-9]+", text)
-
-
-def judge_steps(
-    *,
-    expected_steps: list[str],
-    observed_steps: list[str],
-    client: OpenAI | None,
-    model: str | None,
-) -> tuple[list[int], bool]:
-    """期待手順と観測手順の一致を判定する。"""
-
-    if not expected_steps:
-        return [], True
-    if client is not None and model:
-        try:
-            response = client.responses.parse(
-                model=model,
-                instructions=(
-                    "Compare expected hazard-response steps and observed steps. "
-                    "Return 1 when the observed plan covers the same action with roughly "
-                    "the same intent, otherwise 0. Also judge whether the overall order is okay."
-                ),
-                input=(
-                    "Expected steps:\n"
-                    f"{dump_json(expected_steps)}\n\n"
-                    "Observed steps:\n"
-                    f"{dump_json(observed_steps)}"
-                ),
-                text_format=StepMatchJudgment,
-            )
-            judgment = response.output_parsed
-            if judgment is not None and len(judgment.step_match_bits) == len(expected_steps):
-                return judgment.step_match_bits, judgment.order_ok
-        except Exception:  # noqa: BLE001
-            pass
-    return fallback_step_judgment(expected_steps, observed_steps)
-
-
-def fallback_step_judgment(
-    expected_steps: list[str],
-    observed_steps: list[str],
-) -> tuple[list[int], bool]:
-    """API なしでも使える簡易手順一致判定。"""
-
-    observed_tokens = [tokenize(step) for step in observed_steps]
-    bits: list[int] = []
-    matched_indices: list[int] = []
-    for expected_step in expected_steps:
-        expected_tokens = tokenize(expected_step)
-        best_index = -1
-        best_overlap = 0
-        for index, tokens in enumerate(observed_tokens):
-            overlap = len(expected_tokens & tokens)
-            if overlap > best_overlap:
-                best_overlap = overlap
-                best_index = index
-        bits.append(1 if best_overlap >= max(1, min(2, len(expected_tokens))) else 0)
-        if bits[-1] and best_index >= 0:
-            matched_indices.append(best_index)
-    order_ok = matched_indices == sorted(matched_indices)
-    return bits, order_ok
-
-
 def calculate_plan_match_score(
     *,
     selected_procedure_id: str | None,
@@ -927,22 +797,18 @@ def evaluate_case_file(
     *,
     case_path: Path,
     execution_log_path: Path,
-    client: OpenAI | None = None,
-    model: str | None = None,
 ) -> ScienceEvaluationResult:
     """1 件の case と execution log を評価する。"""
 
     case = Case.from_path(case_path)
     execution_log = ExecutionLog.from_path(execution_log_path)
-    return evaluate_science_execution(case, execution_log, client=client, model=model)
+    return evaluate_science_execution(case, execution_log)
 
 
 def evaluate_execution_directory(
     *,
     case_dir: Path,
     execution_log_dir: Path,
-    client: OpenAI | None = None,
-    model: str | None = None,
 ) -> list[dict[str, Any]]:
     """ディレクトリ配下の case 群をまとめて評価する。"""
 
@@ -960,12 +826,21 @@ def evaluate_execution_directory(
             )
             continue
 
-        result = evaluate_case_file(
-            case_path=case_path,
-            execution_log_path=execution_log_path,
-            client=client,
-            model=model,
-        )
+        try:
+            result = evaluate_case_file(
+                case_path=case_path,
+                execution_log_path=execution_log_path,
+            )
+        except Exception as exc:  # noqa: BLE001
+            summaries.append(
+                {
+                    "task_id": case_path.stem,
+                    "case_path": str(case_path),
+                    "execution_log_path": str(execution_log_path),
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
+            continue
         summaries.append(
             {
                 "task_id": case_path.stem,
@@ -1008,16 +883,11 @@ def main() -> None:
     """CLI エントリポイント。"""
 
     args = parse_args()
-    client: OpenAI | None = None
-    if args.model and os.getenv("OPENAI_API_KEY"):
-        client = OpenAI()
 
     if args.case_path is not None:
         result = evaluate_case_file(
             case_path=args.case_path,
             execution_log_path=args.execution_log_path,
-            client=client,
-            model=args.model,
         )
         payload = {
             "task_id": args.case_path.stem,
@@ -1033,8 +903,6 @@ def main() -> None:
     summaries = evaluate_execution_directory(
         case_dir=args.case_dir,
         execution_log_dir=args.execution_log_dir,
-        client=client,
-        model=args.model,
     )
     if args.output_dir is not None:
         args.output_dir.mkdir(parents=True, exist_ok=True)

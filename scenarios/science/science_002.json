@@ -2,7 +2,7 @@
   "task_id": "science_002",
   "domain": "science_hazard_response",
   "difficulty": "normal",
-  "initial_request": "Select a feasible hazard response procedure given limited tools and active hazards.",
+  "initial_request": "Choose feasible hazard procedures under tool limits where the worker's inventory is limited, so the agent must ask the right questions and then choose a procedure that is executable with the listed tools.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2099-12-31T23:59:59+09:00",
@@ -70,7 +70,8 @@
       "running_formulas": [
         "formula_M",
         "formula_N",
-        "formula_P"
+        "formula_P",
+        "formula_Q"
       ],
       "formula_hazard_links": [
         {
@@ -86,7 +87,7 @@
           "hazard_id": "hazard_Q"
         },
         {
-          "formula_id": "formula_O",
+          "formula_id": "formula_Q",
           "hazard_id": "hazard_R"
         }
       ],
@@ -101,8 +102,8 @@
       ],
       "selected_constraint_types": [
         "pressure_pa",
-        "catalyst_present",
-        "escape_easy"
+        "escape_easy",
+        "water_usable"
       ],
       "hazard_manuals": [
         {
@@ -110,24 +111,24 @@
           "source_formula": "formula_M",
           "procedures": [
             {
-              "procedure_id": "proc_M1",
+              "procedure_id": "M1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 900,
-                  "max_numeric": 1100,
+                  "min_numeric": 90000,
+                  "max_numeric": 110000,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": true
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -142,7 +143,7 @@
               "hazard_potential": 8.0
             },
             {
-              "procedure_id": "proc_M2",
+              "procedure_id": "M2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -152,14 +153,14 @@
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -167,7 +168,8 @@
                 }
               ],
               "required_tools": [
-                "mask_H"
+                "mask_H",
+                "clamp_V"
               ],
               "stop_source_formula": false,
               "hazard_potential": 5.0
@@ -179,24 +181,24 @@
           "source_formula": "formula_N",
           "procedures": [
             {
-              "procedure_id": "proc_N1",
+              "procedure_id": "N1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 950,
-                  "max_numeric": 1050,
+                  "min_numeric": 95000,
+                  "max_numeric": 105000,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": true
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -211,24 +213,24 @@
               "hazard_potential": 9.0
             },
             {
-              "procedure_id": "proc_N2",
+              "procedure_id": "N2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 900,
-                  "max_numeric": 1200,
+                  "min_numeric": 90000,
+                  "max_numeric": 120000,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -236,7 +238,7 @@
                 }
               ],
               "required_tools": [
-                "clamp_V"
+                "mask_H"
               ],
               "stop_source_formula": false,
               "hazard_potential": 6.0
@@ -248,24 +250,24 @@
           "source_formula": "formula_P",
           "procedures": [
             {
-              "procedure_id": "proc_Q1",
+              "procedure_id": "Q1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 980,
-                  "max_numeric": 1020,
+                  "min_numeric": 88000,
+                  "max_numeric": 100000,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": true
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -280,7 +282,7 @@
               "hazard_potential": 7.0
             },
             {
-              "procedure_id": "proc_Q2",
+              "procedure_id": "Q2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -290,14 +292,14 @@
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -305,7 +307,7 @@
                 }
               ],
               "required_tools": [
-                "mask_H"
+                "wrench_R"
               ],
               "stop_source_formula": false,
               "hazard_potential": 4.0
@@ -314,27 +316,27 @@
         },
         {
           "hazard_id": "hazard_R",
-          "source_formula": "formula_O",
+          "source_formula": "formula_Q",
           "procedures": [
             {
-              "procedure_id": "proc_R1",
+              "procedure_id": "R1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 1000,
-                  "max_numeric": 1100,
+                  "min_numeric": 92000,
+                  "max_numeric": 108000,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": true
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -342,30 +344,31 @@
                 }
               ],
               "required_tools": [
+                "mask_H",
                 "wrench_R"
               ],
               "stop_source_formula": true,
               "hazard_potential": 10.0
             },
             {
-              "procedure_id": "proc_R2",
+              "procedure_id": "R2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 900,
-                  "max_numeric": 1150,
+                  "min_numeric": 90000,
+                  "max_numeric": 115000,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "catalyst_present",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -373,7 +376,6 @@
                 }
               ],
               "required_tools": [
-                "mask_H",
                 "clamp_V"
               ],
               "stop_source_formula": false,
@@ -386,33 +388,33 @@
         {
           "hazard_id": "hazard_M",
           "targets": [
-            "Is the pressure between 900 and 1100 pascals?",
-            "Is a catalyst present?",
-            "Is escape easy?"
+            "Is the pressure within safe limits?",
+            "Is it easy to escape from the area?",
+            "Is water usable for mitigation?"
           ]
         },
         {
           "hazard_id": "hazard_N",
           "targets": [
-            "Is the pressure between 950 and 1050 pascals?",
-            "Is a catalyst present?",
-            "Is escape easy?"
+            "Is the pressure within safe limits?",
+            "Is it easy to escape from the area?",
+            "Is water usable for mitigation?"
           ]
         },
         {
           "hazard_id": "hazard_Q",
           "targets": [
-            "Is the pressure between 980 and 1020 pascals?",
-            "Is a catalyst present?",
-            "Is escape easy?"
+            "Is the pressure within safe limits?",
+            "Is it easy to escape from the area?",
+            "Is water usable for mitigation?"
           ]
         },
         {
           "hazard_id": "hazard_R",
           "targets": [
-            "Is the pressure between 900 and 1150 pascals?",
-            "Is a catalyst present?",
-            "Is escape easy?"
+            "Is the pressure within safe limits?",
+            "Is it easy to escape from the area?",
+            "Is water usable for mitigation?"
           ]
         }
       ],
@@ -422,84 +424,84 @@
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 1000,
+              "numeric_value": 100000,
               "bool_value": null
-            },
-            {
-              "constraint_type": "catalyst_present",
-              "numeric_value": null,
-              "bool_value": true
             },
             {
               "constraint_type": "escape_easy",
               "numeric_value": null,
               "bool_value": true
+            },
+            {
+              "constraint_type": "water_usable",
+              "numeric_value": null,
+              "bool_value": true
             }
           ],
-          "expected_procedure_id": "proc_M1"
+          "expected_procedure_id": "M1"
         },
         {
           "hazard_id": "hazard_N",
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 1000,
+              "numeric_value": 100000,
               "bool_value": null
-            },
-            {
-              "constraint_type": "catalyst_present",
-              "numeric_value": null,
-              "bool_value": true
             },
             {
               "constraint_type": "escape_easy",
               "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "water_usable",
+              "numeric_value": null,
               "bool_value": false
             }
           ],
-          "expected_procedure_id": "proc_N1"
+          "expected_procedure_id": "N1"
         },
         {
           "hazard_id": "hazard_Q",
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 1000,
+              "numeric_value": 95000,
               "bool_value": null
-            },
-            {
-              "constraint_type": "catalyst_present",
-              "numeric_value": null,
-              "bool_value": true
             },
             {
               "constraint_type": "escape_easy",
               "numeric_value": null,
               "bool_value": true
+            },
+            {
+              "constraint_type": "water_usable",
+              "numeric_value": null,
+              "bool_value": true
             }
           ],
-          "expected_procedure_id": "proc_Q1"
+          "expected_procedure_id": "Q1"
         },
         {
           "hazard_id": "hazard_R",
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 1050,
+              "numeric_value": 100000,
               "bool_value": null
-            },
-            {
-              "constraint_type": "catalyst_present",
-              "numeric_value": null,
-              "bool_value": true
             },
             {
               "constraint_type": "escape_easy",
               "numeric_value": null,
+              "bool_value": true
+            },
+            {
+              "constraint_type": "water_usable",
+              "numeric_value": null,
               "bool_value": false
             }
           ],
-          "expected_procedure_id": "proc_R1"
+          "expected_procedure_id": "R1"
         }
       ]
     }
@@ -512,8 +514,20 @@
     {
       "turn": 1,
       "type": "state_change",
-      "message": "Initial hazard hazard_M detected with limited tools available.",
-      "delta": {},
+      "message": "Initial hazard hazard_M detected; worker equipped with mask_H, wrench_R, and clamp_V.",
+      "delta": {
+        "reference_data": {
+          "active_hazard_ids": [
+            "hazard_M"
+          ],
+          "resolved_hazard_ids": [],
+          "initial_tool_constraints": [
+            "mask_H",
+            "wrench_R",
+            "clamp_V"
+          ]
+        }
+      },
       "expected_response_type": null,
       "expected_replan_within_turns": 1,
       "expected_artifact_updates": [
@@ -525,7 +539,7 @@
     {
       "turn": 2,
       "type": "new_constraint",
-      "message": "Additional constraints applied due to environment pressure and catalyst presence.",
+      "message": "New operational constraint: pressure_pa must be maintained within safe limits.",
       "delta": {},
       "expected_response_type": null,
       "expected_replan_within_turns": 1,
@@ -538,7 +552,7 @@
     {
       "turn": 3,
       "type": "state_change",
-      "message": "New hazard hazard_N has become active, requiring reassessment of hazard procedures.",
+      "message": "Hazard hazard_N has become active, replacing hazard_M regardless of agent response.",
       "delta": {
         "reference_data": {
           "active_hazard_ids": [
@@ -546,6 +560,11 @@
           ],
           "resolved_hazard_ids": [
             "hazard_M"
+          ],
+          "initial_tool_constraints": [
+            "mask_H",
+            "wrench_R",
+            "clamp_V"
           ]
         }
       },

@@ -1,8 +1,8 @@
 {
-  "task_id": "science_001",
+  "task_id": "science_007",
   "domain": "science_hazard_response",
   "difficulty": "easy",
-  "initial_request": "Manage multiple simultaneous chemical hazards while several fictional formulas are running to maintain lab safety.",
+  "initial_request": "Manage running formulas formula_A, formula_B, and formula_C with initial hazard hazard_X active. Use goggles_G, spanner_S, and shield_P as tools. One hazard active initially, another appears by turn 3. Maintain safety under selected constraint pressure_pa.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2099-12-31T23:59:59+09:00",
@@ -104,7 +104,7 @@
           "source_formula": "formula_A",
           "procedures": [
             {
-              "procedure_id": "X1",
+              "procedure_id": "X_proc1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -118,11 +118,11 @@
                 "goggles_G",
                 "spanner_S"
               ],
-              "stop_source_formula": false,
-              "hazard_potential": 3.0
+              "stop_source_formula": true,
+              "hazard_potential": 8.0
             },
             {
-              "procedure_id": "X2",
+              "procedure_id": "X_proc2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -136,7 +136,7 @@
                 "goggles_G",
                 "shield_P"
               ],
-              "stop_source_formula": true,
+              "stop_source_formula": false,
               "hazard_potential": 5.0
             }
           ]
@@ -146,7 +146,7 @@
           "source_formula": "formula_B",
           "procedures": [
             {
-              "procedure_id": "Y1",
+              "procedure_id": "Y_proc1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -157,14 +157,14 @@
                 }
               ],
               "required_tools": [
-                "goggles_G",
-                "spanner_S"
+                "spanner_S",
+                "shield_P"
               ],
-              "stop_source_formula": false,
-              "hazard_potential": 2.0
+              "stop_source_formula": true,
+              "hazard_potential": 9.0
             },
             {
-              "procedure_id": "Y2",
+              "procedure_id": "Y_proc2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -175,10 +175,10 @@
                 }
               ],
               "required_tools": [
-                "shield_P"
+                "goggles_G"
               ],
-              "stop_source_formula": true,
-              "hazard_potential": 4.0
+              "stop_source_formula": false,
+              "hazard_potential": 6.0
             }
           ]
         },
@@ -187,7 +187,7 @@
           "source_formula": "formula_C",
           "procedures": [
             {
-              "procedure_id": "Z1",
+              "procedure_id": "Z_proc1",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -198,13 +198,14 @@
                 }
               ],
               "required_tools": [
-                "goggles_G"
+                "goggles_G",
+                "shield_P"
               ],
-              "stop_source_formula": false,
-              "hazard_potential": 1.0
+              "stop_source_formula": true,
+              "hazard_potential": 7.0
             },
             {
-              "procedure_id": "Z2",
+              "procedure_id": "Z_proc2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -215,10 +216,9 @@
                 }
               ],
               "required_tools": [
-                "spanner_S",
-                "shield_P"
+                "spanner_S"
               ],
-              "stop_source_formula": true,
+              "stop_source_formula": false,
               "hazard_potential": 4.0
             }
           ]
@@ -228,19 +228,19 @@
         {
           "hazard_id": "hazard_X",
           "targets": [
-            "Is the pressure within safe limits for hazard_X?"
+            "What is the safe pressure range to manage hazard_X?"
           ]
         },
         {
           "hazard_id": "hazard_Y",
           "targets": [
-            "Is the pressure within safe limits for hazard_Y?"
+            "What is the safe pressure range to manage hazard_Y?"
           ]
         },
         {
           "hazard_id": "hazard_Z",
           "targets": [
-            "Is the pressure within safe limits for hazard_Z?"
+            "What is the safe pressure range to manage hazard_Z?"
           ]
         }
       ],
@@ -254,18 +254,18 @@
               "bool_value": null
             }
           ],
-          "expected_procedure_id": "X1"
+          "expected_procedure_id": "X_proc1"
         },
         {
           "hazard_id": "hazard_Y",
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 600,
+              "numeric_value": 350,
               "bool_value": null
             }
           ],
-          "expected_procedure_id": "Y2"
+          "expected_procedure_id": "Y_proc1"
         },
         {
           "hazard_id": "hazard_Z",
@@ -276,7 +276,7 @@
               "bool_value": null
             }
           ],
-          "expected_procedure_id": "Z1"
+          "expected_procedure_id": "Z_proc1"
         }
       ]
     }
@@ -289,10 +289,10 @@
     {
       "turn": 1,
       "type": "state_change",
-      "message": "Initial hazard_X is active while formulas A, B, and C are running. Assess the situation considering all running formulas.",
+      "message": "Initial bundled assessment: hazard_X active with formula_A running. Tools goggles_G, spanner_S, shield_P available. Monitor pressure constraints closely.",
       "delta": {},
       "expected_response_type": null,
-      "expected_replan_within_turns": 2,
+      "expected_replan_within_turns": 1,
       "expected_artifact_updates": [
         "hazard_response_plan",
         "hazard_execution_log"
@@ -302,7 +302,7 @@
     {
       "turn": 2,
       "type": "state_change",
-      "message": "Continue monitoring hazard_X effects and the interaction with running formulas. Prepare for additional hazards.",
+      "message": "Ongoing operations with formula_B and formula_C running. Hazard_X remains active; assess any partial mitigation effects.",
       "delta": {},
       "expected_response_type": null,
       "expected_replan_within_turns": 1,
@@ -315,19 +315,16 @@
     {
       "turn": 3,
       "type": "state_change",
-      "message": "New hazard_Y appears regardless of prior responses, requiring updated hazard management.",
+      "message": "New hazard hazard_Y appears regardless of prior response quality, activating alongside hazard_X. Adjust strategies accordingly.",
       "delta": {
         "reference_data": {
           "active_hazard_ids": [
             "hazard_Y"
-          ],
-          "resolved_hazard_ids": [
-            "hazard_X"
           ]
         }
       },
       "expected_response_type": null,
-      "expected_replan_within_turns": 1,
+      "expected_replan_within_turns": 2,
       "expected_artifact_updates": [
         "hazard_response_plan",
         "hazard_execution_log"

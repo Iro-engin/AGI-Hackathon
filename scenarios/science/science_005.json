@@ -2,7 +2,7 @@
   "task_id": "science_005",
   "domain": "science_hazard_response",
   "difficulty": "normal",
-  "initial_request": "Select a feasible hazard procedure given limited tool availability and evolving hazards.",
+  "initial_request": "Select a feasible hazard response procedure given limited available tools and environmental constraints.",
   "initial_state": {
     "timezone": "Asia/Tokyo",
     "deadline": "2099-12-31T23:59:59+09:00",
@@ -97,9 +97,9 @@
       ],
       "selected_constraint_types": [
         "pressure_pa",
+        "catalyst_present",
         "flammable_nearby",
-        "escape_easy",
-        "water_usable"
+        "escape_easy"
       ],
       "hazard_manuals": [
         {
@@ -113,25 +113,25 @@
                   "constraint_type": "pressure_pa",
                   "mode": "range",
                   "min_numeric": 100,
-                  "max_numeric": 300,
+                  "max_numeric": 500,
                   "expected_bool": null
+                },
+                {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": false
                 },
                 {
                   "constraint_type": "flammable_nearby",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
-                  "expected_bool": true
+                  "expected_bool": false
                 },
                 {
                   "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                },
-                {
-                  "constraint_type": "water_usable",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -150,56 +150,24 @@
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
-                  "mode": "range",
-                  "min_numeric": 50,
-                  "max_numeric": 150,
-                  "expected_bool": null
-                },
-                {
-                  "constraint_type": "flammable_nearby",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": false
-                },
-                {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                },
-                {
-                  "constraint_type": "water_usable",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": false
-                }
-              ],
-              "required_tools": [
-                "mask_H",
-                "clamp_V"
-              ],
-              "stop_source_formula": false,
-              "hazard_potential": 5.0
-            },
-            {
-              "procedure_id": "proc_M3",
-              "applicable_conditions": [
-                {
-                  "constraint_type": "pressure_pa",
                   "mode": "irrelevant",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": null
                 },
                 {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
                   "constraint_type": "flammable_nearby",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
-                  "expected_bool": false
+                  "expected_bool": true
                 },
                 {
                   "constraint_type": "escape_easy",
@@ -207,20 +175,13 @@
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
-                },
-                {
-                  "constraint_type": "water_usable",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
                 }
               ],
               "required_tools": [
-                "wrench_R"
+                "mask_H"
               ],
-              "stop_source_formula": true,
-              "hazard_potential": 7.0
+              "stop_source_formula": false,
+              "hazard_potential": 5.0
             }
           ]
         },
@@ -235,25 +196,25 @@
                   "constraint_type": "pressure_pa",
                   "mode": "range",
                   "min_numeric": 200,
-                  "max_numeric": 400,
+                  "max_numeric": 600,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "flammable_nearby",
+                  "constraint_type": "catalyst_present",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": true
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "flammable_nearby",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
                 },
                 {
-                  "constraint_type": "water_usable",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -261,7 +222,6 @@
                 }
               ],
               "required_tools": [
-                "mask_H",
                 "wrench_R",
                 "clamp_V"
               ],
@@ -274,26 +234,26 @@
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 150,
-                  "max_numeric": 250,
+                  "min_numeric": 50,
+                  "max_numeric": 199,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "flammable_nearby",
+                  "constraint_type": "catalyst_present",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
                 },
                 {
-                  "constraint_type": "escape_easy",
+                  "constraint_type": "flammable_nearby",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": true
                 },
                 {
-                  "constraint_type": "water_usable",
+                  "constraint_type": "escape_easy",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
@@ -301,48 +261,11 @@
                 }
               ],
               "required_tools": [
+                "mask_H",
                 "clamp_V"
               ],
               "stop_source_formula": false,
               "hazard_potential": 6.0
-            },
-            {
-              "procedure_id": "proc_N3",
-              "applicable_conditions": [
-                {
-                  "constraint_type": "pressure_pa",
-                  "mode": "irrelevant",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": null
-                },
-                {
-                  "constraint_type": "flammable_nearby",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                },
-                {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                },
-                {
-                  "constraint_type": "water_usable",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                }
-              ],
-              "required_tools": [
-                "mask_H"
-              ],
-              "stop_source_formula": true,
-              "hazard_potential": 7.0
             }
           ]
         },
@@ -356,48 +279,16 @@
                 {
                   "constraint_type": "pressure_pa",
                   "mode": "range",
-                  "min_numeric": 100,
-                  "max_numeric": 350,
+                  "min_numeric": 300,
+                  "max_numeric": 700,
                   "expected_bool": null
                 },
                 {
-                  "constraint_type": "flammable_nearby",
+                  "constraint_type": "catalyst_present",
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
-                },
-                {
-                  "constraint_type": "escape_easy",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                },
-                {
-                  "constraint_type": "water_usable",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
-                }
-              ],
-              "required_tools": [
-                "mask_H",
-                "clamp_V"
-              ],
-              "stop_source_formula": false,
-              "hazard_potential": 6.0
-            },
-            {
-              "procedure_id": "proc_Q2",
-              "applicable_conditions": [
-                {
-                  "constraint_type": "pressure_pa",
-                  "mode": "range",
-                  "min_numeric": 250,
-                  "max_numeric": 400,
-                  "expected_bool": null
                 },
                 {
                   "constraint_type": "flammable_nearby",
@@ -411,24 +302,17 @@
                   "mode": "bool",
                   "min_numeric": null,
                   "max_numeric": null,
-                  "expected_bool": false
-                },
-                {
-                  "constraint_type": "water_usable",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": false
+                  "expected_bool": true
                 }
               ],
               "required_tools": [
                 "wrench_R"
               ],
               "stop_source_formula": true,
-              "hazard_potential": 8.0
+              "hazard_potential": 7.0
             },
             {
-              "procedure_id": "proc_Q3",
+              "procedure_id": "proc_Q2",
               "applicable_conditions": [
                 {
                   "constraint_type": "pressure_pa",
@@ -438,6 +322,13 @@
                   "expected_bool": null
                 },
                 {
+                  "constraint_type": "catalyst_present",
+                  "mode": "bool",
+                  "min_numeric": null,
+                  "max_numeric": null,
+                  "expected_bool": true
+                },
+                {
                   "constraint_type": "flammable_nearby",
                   "mode": "bool",
                   "min_numeric": null,
@@ -450,20 +341,14 @@
                   "min_numeric": null,
                   "max_numeric": null,
                   "expected_bool": false
-                },
-                {
-                  "constraint_type": "water_usable",
-                  "mode": "bool",
-                  "min_numeric": null,
-                  "max_numeric": null,
-                  "expected_bool": true
                 }
               ],
               "required_tools": [
-                "mask_H"
+                "mask_H",
+                "clamp_V"
               ],
-              "stop_source_formula": true,
-              "hazard_potential": 7.0
+              "stop_source_formula": false,
+              "hazard_potential": 4.0
             }
           ]
         }
@@ -472,28 +357,28 @@
         {
           "hazard_id": "hazard_M",
           "targets": [
-            "Is the pressure between safe limits?",
-            "Is there flammable material nearby?",
-            "Is escape easy from the hazard area?",
-            "Is water usable for hazard control?"
+            "Is the pressure between 100 and 500 pascals?",
+            "Is a catalyst present in the environment?",
+            "Is there a flammable substance nearby?",
+            "Is escape easy from the hazard area?"
           ]
         },
         {
           "hazard_id": "hazard_N",
           "targets": [
-            "Is the pressure between safe limits?",
-            "Is there flammable material nearby?",
-            "Is escape easy from the hazard area?",
-            "Is water usable for hazard control?"
+            "Is the pressure between 200 and 600 pascals?",
+            "Is a catalyst present in the environment?",
+            "Is there a flammable substance nearby?",
+            "Is escape easy from the hazard area?"
           ]
         },
         {
           "hazard_id": "hazard_Q",
           "targets": [
-            "Is the pressure between safe limits?",
-            "Is there flammable material nearby?",
-            "Is escape easy from the hazard area?",
-            "Is water usable for hazard control?"
+            "Is the pressure between 300 and 700 pascals?",
+            "Is a catalyst present in the environment?",
+            "Is there a flammable substance nearby?",
+            "Is escape easy from the hazard area?"
           ]
         }
       ],
@@ -503,21 +388,21 @@
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 120,
+              "numeric_value": 350,
               "bool_value": null
+            },
+            {
+              "constraint_type": "catalyst_present",
+              "numeric_value": null,
+              "bool_value": false
             },
             {
               "constraint_type": "flammable_nearby",
               "numeric_value": null,
-              "bool_value": true
+              "bool_value": false
             },
             {
               "constraint_type": "escape_easy",
-              "numeric_value": null,
-              "bool_value": true
-            },
-            {
-              "constraint_type": "water_usable",
               "numeric_value": null,
               "bool_value": true
             }
@@ -529,21 +414,21 @@
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 300,
+              "numeric_value": 400,
               "bool_value": null
             },
             {
-              "constraint_type": "flammable_nearby",
+              "constraint_type": "catalyst_present",
               "numeric_value": null,
               "bool_value": true
             },
             {
-              "constraint_type": "escape_easy",
+              "constraint_type": "flammable_nearby",
               "numeric_value": null,
               "bool_value": false
             },
             {
-              "constraint_type": "water_usable",
+              "constraint_type": "escape_easy",
               "numeric_value": null,
               "bool_value": true
             }
@@ -555,21 +440,21 @@
           "constraint_values": [
             {
               "constraint_type": "pressure_pa",
-              "numeric_value": 200,
+              "numeric_value": 500,
               "bool_value": null
             },
             {
-              "constraint_type": "flammable_nearby",
+              "constraint_type": "catalyst_present",
               "numeric_value": null,
               "bool_value": false
             },
             {
-              "constraint_type": "escape_easy",
+              "constraint_type": "flammable_nearby",
               "numeric_value": null,
               "bool_value": true
             },
             {
-              "constraint_type": "water_usable",
+              "constraint_type": "escape_easy",
               "numeric_value": null,
               "bool_value": true
             }
@@ -587,10 +472,22 @@
     {
       "turn": 1,
       "type": "state_change",
-      "message": "Initial hazard hazard_M detected; tools mask_H, wrench_R, clamp_V available.",
-      "delta": {},
+      "message": "Initial hazard hazard_M detected. Assess tool availability and constraints.",
+      "delta": {
+        "reference_data": {
+          "active_hazard_ids": [
+            "hazard_M"
+          ],
+          "resolved_hazard_ids": [],
+          "initial_tool_constraints": [
+            "mask_H",
+            "wrench_R",
+            "clamp_V"
+          ]
+        }
+      },
       "expected_response_type": null,
-      "expected_replan_within_turns": 2,
+      "expected_replan_within_turns": 1,
       "expected_artifact_updates": [
         "hazard_response_plan",
         "hazard_execution_log"
@@ -600,10 +497,8 @@
     {
       "turn": 2,
       "type": "new_constraint",
-      "message": "Additional constraint added: water_usable must be considered.",
-      "delta": {
-        "reference_data": {}
-      },
+      "message": "New constraint 'catalyst_present' activated due to environmental change.",
+      "delta": {},
       "expected_response_type": null,
       "expected_replan_within_turns": 1,
       "expected_artifact_updates": [
@@ -615,7 +510,7 @@
     {
       "turn": 3,
       "type": "state_change",
-      "message": "Hazard transition: hazard_M resolved; new hazard hazard_N now active.",
+      "message": "Hazard hazard_N activated replacing hazard_M, requiring reassessment of procedures.",
       "delta": {
         "reference_data": {
           "active_hazard_ids": [
@@ -623,6 +518,11 @@
           ],
           "resolved_hazard_ids": [
             "hazard_M"
+          ],
+          "initial_tool_constraints": [
+            "mask_H",
+            "wrench_R",
+            "clamp_V"
           ]
         }
       },

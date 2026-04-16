@@ -172,7 +172,9 @@ class RuleBasedEvaluator:
             failure_labels.add("unsafe_commit")
 
         delivered_artifacts = set(final_artifacts.keys())
-        if goal_required_artifact_ids and not goal_required_artifact_ids.issubset(delivered_artifacts):
+        if goal_required_artifact_ids and not goal_required_artifact_ids.issubset(
+            delivered_artifacts
+        ):
             failure_labels.add("goal_drift")
 
         outcome_score = max(0, outcome_score)
@@ -457,13 +459,18 @@ class RuleBasedEvaluator:
                     process_score -= 15
                     recovery_score -= 10
                     deductions.append(
-                        "ambiguity event was not followed by timely ask_clarification (-15 process, -10 recovery)"
+                        "ambiguity event was not followed by timely "
+                        "ask_clarification (-15 process, -10 recovery)"
                     )
                     failure_labels.add("question_handling")
 
         if must_not_finalize_with_unresolved_scope:
-            finalize_turns = [action.turn for action in actions if action.action_type == "finalize"]
-            scope_status = self._get_nested_value(final_state, "reference_data.scope_decision_status")
+            finalize_turns = [
+                action.turn for action in actions if action.action_type == "finalize"
+            ]
+            scope_status = self._get_nested_value(
+                final_state, "reference_data.scope_decision_status"
+            )
             if finalize_turns and scope_status != "confirmed":
                 process_score -= 20
                 deductions.append(

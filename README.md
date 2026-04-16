@@ -260,6 +260,33 @@ make build-notebook
 make eval-sample
 ```
 
+単体評価の結果は `results/eval_sample.json` に JSON 保存されます。
+
+### scenarios をまとめて評価する
+
+`scenarios/**/*.json` と `results/**/*.json` を読み、`task_id` ベースで対応する execution log を自動で評価します。
+
+```bash
+make eval-batch
+```
+
+集計結果は `results/benchmark_summary.json` に JSON 出力されます。
+
+```bash
+uv run python -m src.evaluate_sample --batch --domain meeting
+uv run python -m src.evaluate_sample --batch --task-id meeting_001 --strict-missing
+```
+
+### execution log の雛形を作る
+
+まだ execution log がない case に対して、イベント応答や成果物を書き込むための雛形を生成できます。
+
+```bash
+make scaffold-logs
+```
+
+生成先は `results/generated/<domain>/<task_id>.execution_log.json` です。
+
 ### ログレベルを指定して実行する
 
 ```bash
@@ -285,18 +312,31 @@ result = RuleBasedEvaluator().evaluate(case, log)
 print(result)
 ```
 
-## OpenAI API で検査する
+## LLM API で検査する
 
-`OPENAI_API_KEY` を設定したうえで、case 単体または execution log 付きで検査できます。
+`OPENAI_API_KEY` または `GEMINI_API_KEY` を設定したうえで、case 単体または execution log 付きで検査できます。検査結果は JSON 保存できます。
 
 ```bash
 OPENAI_API_KEY=... make inspect-case
+GEMINI_API_KEY=... make inspect-case-gemini
+OPENAI_API_KEY=... make inspect-all
+GEMINI_API_KEY=... make inspect-all-gemini
 OPENAI_API_KEY=... uv run python -m src.openai_case_inspector \
   --case scenarios/meeting/meeting_001.json \
-  --execution-log results/sample_execution_meeting_001.json
+  --execution-log results/sample_execution_meeting_001.json \
+  --output results/openai_inspection_meeting_001.json
+GEMINI_API_KEY=... uv run python -m src.openai_case_inspector \
+  --provider gemini \
+  --case scenarios/meeting/meeting_001.json \
+  --execution-log results/sample_execution_meeting_001.json \
+  --output results/gemini_inspection_meeting_001.json
+GEMINI_API_KEY=... uv run python -m src.openai_case_inspector \
+  --provider gemini \
+  --batch \
+  --output-dir results/gemini_inspections
 ```
 
-必要に応じて `OPENAI_MODEL` か `--model` で使用モデルを上書きできます。
+必要に応じて `OPENAI_MODEL` / `GEMINI_MODEL` または `--model` で使用モデルを上書きできます。
 
 ## 現状の設計方針
 

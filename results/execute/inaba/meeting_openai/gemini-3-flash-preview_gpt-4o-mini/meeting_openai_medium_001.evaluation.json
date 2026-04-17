@@ -1,0 +1,116 @@
+{
+  "task_id": "meeting_openai_medium_001",
+  "domain": "meeting",
+  "decision_model": "gemini-3-flash-preview",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "The earliest potential slot is on 2026-04-20 from 10:30 to 11:15, but Alice and Bob are missing location information for this time. Alice and Bob, could you please confirm if you can attend the meeting in meeting_room_a during this slot?",
+          "answer": "Alice and Bob, could you please confirm if you can attend the meeting in meeting_room_a on 2026-04-20 from 10:30 to 11:15?"
+        },
+        {
+          "question": "Alice and Bob, could you please confirm if you can attend the meeting in meeting_room_a on 2026-04-20 from 10:30 to 11:15? If not, please provide your location information for that slot.",
+          "answer": "Alice and Bob, could you please confirm if you can attend the meeting in meeting_room_a on 2026-04-20 from 10:30 to 11:15? If not, please provide your location information for that slot."
+        },
+        {
+          "question": "Alice and Bob, could you please provide your location information for the slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice and Bob, could you please provide your location information for the slot on 2026-04-20 from 10:30 to 11:15?"
+        },
+        {
+          "question": "Alice and Bob, for the potential meeting slot on 2026-04-20 from 10:30 to 11:15, could you please confirm your location? Carol and David are already scheduled in meeting_room_a at that time.",
+          "answer": "Alice and Bob, for the potential meeting slot on 2026-04-20 from 10:30 to 11:15, could you please confirm your location? Carol and David are already scheduled in meeting_room_a at that time."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Alice's meeting on April 20th has been moved to meeting_room_b from 11:00 to 12:00.",
+      "question_answers": [
+        {
+          "question": "Alice, what is the location for your availability on April 21st from 14:30 to 15:15?",
+          "answer": "Alice, what is the location for your availability on April 20th from 10:30 to 11:15?"
+        },
+        {
+          "question": "Alice, what is the location for your availability on April 20th from 10:30 to 11:15?",
+          "answer": "The location for Alice's availability on April 20th from 10:30 to 11:15 is unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Bob will be available in meeting_room_a on April 22nd from 9:00 to 9:45.",
+      "question_answers": [],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 4,
+      "stage": "event",
+      "event_index": 2,
+      "event_message": "Carol has marked April 21st afternoon as unavailable due to personal commitments.",
+      "question_answers": [
+        {
+          "question": "Could you please confirm the locations for Carol's availability on April 22nd from 9:00 to 9:45 and April 23rd from 13:00 to 13:45?",
+          "answer": "The locations for Carol's availability on April 22nd from 9:00 to 9:45 and April 23rd from 13:00 to 13:45 are unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 5,
+      "stage": "event",
+      "event_index": 3,
+      "event_message": "David noted that he has a recurring online meeting at 9:00 on April 20th.",
+      "question_answers": [
+        {
+          "question": "David, could you please provide the location information for your available slots on April 22nd at 9:00 and April 23rd at 13:00?",
+          "answer": "David, could you please provide the location information for your available slots on April 22nd at 9:00 and April 23rd at 13:00?"
+        },
+        {
+          "question": "David, could you please confirm if you are available at meeting_room_a on April 22nd from 09:00 to 09:45 or at conference_room_3f on April 23rd from 13:00 to 13:45?",
+          "answer": "David, could you please confirm if you are available at meeting_room_a on April 22nd from 09:00 to 09:45 or at conference_room_3f on April 23rd from 13:00 to 13:45?"
+        },
+        {
+          "question": "David, could you please provide the location information for your available slots on April 22nd at 9:00 and April 23rd at 13:00?",
+          "answer": "David, could you please provide the location information for your available slots on April 22nd at 09:00 and April 23rd at 13:00?"
+        },
+        {
+          "question": "David, could you please provide the location for your availability on April 22nd at 09:00 and April 23rd at 13:00?",
+          "answer": "David, could you please provide the location for your availability on April 22nd at 09:00 and April 23rd at 13:00?"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    }
+  ]
+}

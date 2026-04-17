@@ -1,0 +1,71 @@
+{
+  "task_id": "meeting_openai_easy_004",
+  "domain": "meeting",
+  "decision_model": "gemini-3-flash-preview",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30:00 to 11:15:00?",
+          "answer": "Alice, could you please provide the location for your availability on 2026-04-21 from 14:30:00 to 15:15:00?"
+        },
+        {
+          "question": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30:00 to 11:15:00?",
+          "answer": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30:00 to 11:15:00?"
+        },
+        {
+          "question": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15?"
+        },
+        {
+          "question": "Alice, where will you be during your available time slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15?"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Bob's meeting on April 22 has been moved to meeting_room_b from 10:00 to 11:00.",
+      "question_answers": [
+        {
+          "question": "Could you please provide the missing location information for Bob's available slots on April 20th at 10:30 and April 21st at 14:30?",
+          "answer": "The missing location information for Bob's available slots on April 20th at 10:30 and April 21st at 14:30 is unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Carol is available for meetings on April 21 in the afternoon.",
+      "question_answers": [
+        {
+          "question": "What are the meeting locations for Carol on April 21st and April 22nd?",
+          "answer": "The meeting locations for Carol on April 21st are unknown, as the specific location is not provided. On April 22nd, the location is also unknown since the specific location is not listed."
+        }
+      ],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-21T14:30:00",
+        "when_to": "2026-04-21T15:15:00"
+      }
+    }
+  ]
+}

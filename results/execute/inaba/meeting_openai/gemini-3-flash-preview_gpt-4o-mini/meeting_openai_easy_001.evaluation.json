@@ -1,0 +1,75 @@
+{
+  "task_id": "meeting_openai_easy_001",
+  "domain": "meeting",
+  "decision_model": "gemini-3-flash-preview",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "Alice, what is the location for your availability on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, what is the location for your availability on 2026-04-21 from 14:30 to 15:15?"
+        },
+        {
+          "question": "Alice, what is the location for your availability on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, what is the location for your availability on 2026-04-22 from 09:00 to 09:45?"
+        },
+        {
+          "question": "Alice, what is the location for your availability on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, what is the location for your availability on 2026-04-21 from 14:30 to 15:15?"
+        },
+        {
+          "question": "Alice, what is the location for your availability on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, what is the location for your availability on 2026-04-21 from 14:30 to 15:15?"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Bob’s meeting has been rescheduled to meeting_room_b at 11 AM on April 20.",
+      "question_answers": [
+        {
+          "question": "Bob, where will you be during the 10:30-11:15 slot on April 20 and the 14:30-15:15 slot on April 21?",
+          "answer": "Bob's meeting has been rescheduled to meeting_room_b at 11 AM on April 20. Therefore, he is unavailable during the 10:30-11:15 slot on April 20. The location for the 14:30-15:15 slot on April 21 is unknown."
+        },
+        {
+          "question": "Bob, where will you be during the 14:30-15:15 slot on April 21?",
+          "answer": "The location for the 14:30-15:15 slot on April 21 is unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Please note that Thursday afternoon slots are mostly free for meetings.",
+      "question_answers": [
+        {
+          "question": "Could you please provide the location for Alice's availability on 2026-04-21 from 14:30:00 to 15:15:00 and on 2026-04-22 from 09:00:00 to 09:45:00?",
+          "answer": "Alice's availability for the meeting on 2026-04-21 from 14:30:00 to 15:15:00 is currently unknown as it lacks location information. The availability for 2026-04-22 from 09:00:00 to 09:45:00 is also unknown regarding its location. Please provide the missing location information for these time slots."
+        }
+      ],
+      "final_do": {
+        "where": "conference_room_3f",
+        "when_from": "2026-04-23T13:00:00",
+        "when_to": "2026-04-23T13:45:00"
+      }
+    }
+  ]
+}

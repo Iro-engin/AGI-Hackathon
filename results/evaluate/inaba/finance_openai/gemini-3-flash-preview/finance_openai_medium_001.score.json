@@ -1,0 +1,119 @@
+{
+  "task_id": "finance_openai_medium_001",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.2,
+    "rubric_score": 0.9,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.8
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceutical_research sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news for the renewable_energy sector?",
+        "Can you provide the related news for the pharmaceutical_research sector?",
+        "Can you provide the related news for the rail_transportation sector?",
+        "Can you provide the related news for the consumer_electronics sector?"
+      ],
+      "covered_requires": [
+        "Related news for pharmaceutical_research sector",
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "Could you provide related news for the rail_transportation sector?",
+        "Could you provide related news for the consumer_electronics sector?",
+        "Could you provide related news for the renewable_energy sector?",
+        "Could you provide related news for the pharmaceutical_research sector?"
+      ],
+      "covered_requires": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for food_processing sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news for the food_processing sector?",
+        "Can you provide the related news for the renewable_energy sector?"
+      ],
+      "covered_requires": [
+        "Related news for food_processing sector",
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "Could you provide the related news and resource_mix_rate for the rail_transportation sector?",
+        "Could you provide the related news and resource_mix_rate for the consumer_electronics sector?",
+        "Could you provide the related news and resource_mix_rate for the renewable_energy sector?",
+        "Could you provide the related news and resource_mix_rate for the pharmaceutical_research sector?"
+      ],
+      "covered_requires": [
+        "Related news for rail_transportation sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for pharmaceutical_research sector",
+        "Related news for food_processing sector"
+      ],
+      "questions_asked": [
+        "Could you provide more information about the inference_rate, efficient_rate_change, and resource_mix_rate for pharmaceutical_research in the context of the current news about clinical trials?",
+        "Could you provide the inference_rate, efficient_rate_change, and resource_mix_rate for food_processing related to the current news about sustainable packaging?"
+      ],
+      "covered_requires": [
+        "Related news for food_processing sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

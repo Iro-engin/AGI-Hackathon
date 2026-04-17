@@ -1,0 +1,140 @@
+{
+  "task_id": "meeting_openai_hard_003",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.625,
+    "early_discovery_rate": 1.0
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "The earliest available slot for all participants is on 2026-04-20 from 10:30 to 11:15. David and Eva are at meeting_room_a, but the locations for Alice, Bob, and Carol are missing for this time. Could Alice, Bob, and Carol please confirm their locations for this slot?",
+        "Alice, Bob, and Carol, could you please provide the location where you will be for the meeting slot on 2026-04-20 from 10:30 to 11:15?",
+        "The earliest potential slot for Alice, Bob, Carol, David, and Eva is on 2026-04-20 from 10:30 to 11:15. David and Eva are at meeting_room_a. Alice, Bob, and Carol, could you please confirm if you will also be at meeting_room_a or if you have a different location for this slot?",
+        "Alice, Bob, and Carol, please provide the location information for the slot on 2026-04-20 from 10:30 to 11:15 so we can confirm if it matches David and Eva's location at meeting_room_a."
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 2 location",
+        "Carol's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "Alice, Bob, and Carol, could you please provide the location where you will be for the meeting slot on 2026-04-20 from 10:30 to 11:15?",
+        "The earliest potential slot for Alice, Bob, Carol, David, and Eva is on 2026-04-20 from 10:30 to 11:15. David and Eva are at meeting_room_a. Alice, Bob, and Carol, could you please confirm if you will also be at meeting_room_a or if you have a different location for this slot?",
+        "Alice, Bob, and Carol, please provide the location information for the slot on 2026-04-20 from 10:30 to 11:15 so we can confirm if it matches David and Eva's location at meeting_room_a."
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Alice, what is your location for the slot from 10:30 AM to 11:15 AM on April 20, 2026? Please also clarify how the 11:00 AM meeting in meeting_room_b affects your availability.",
+        "Alice, could you please provide your location for the slot on April 20, 2026, from 10:30 AM to 11:15 AM? Also, does your 11:00 AM meeting in meeting_room_b conflict with this slot?",
+        "Alice, considering the schedule change (your 11:00 AM meeting in meeting_room_b on April 20), are you still available from 10:30 AM to 11:15 AM on April 20? If so, where will you be located during the first part of that slot?",
+        "Alice, considering your meeting on April 20 was moved to 11:00 AM in meeting_room_b, can you confirm if you are still available from 10:30 AM to 11:15 AM? Also, what is your location for the slot starting at 2:30 PM on April 21?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 2 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "Alice, could you please provide your location for the slot on April 20, 2026, from 10:30 AM to 11:15 AM? Also, does your 11:00 AM meeting in meeting_room_b conflict with this slot?",
+        "Alice, considering the schedule change (your 11:00 AM meeting in meeting_room_b on April 20), are you still available from 10:30 AM to 11:15 AM on April 20? If so, where will you be located during the first part of that slot?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Can Bob confirm his location for the meeting slot on 2026-04-22 from 09:00:00 to 09:45:00?",
+        "Could Bob clarify his availability and location for the meeting slot on April 20th at 10:30 AM?",
+        "Could Bob clarify his availability and location for the meeting slot on April 20th at 10:30 AM, and are there any other slots where he is available with a known location?"
+      ],
+      "covered_requires": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Could Bob clarify his availability and location for the meeting slot on April 20th at 10:30 AM?",
+        "Could Bob clarify his availability and location for the meeting slot on April 20th at 10:30 AM, and are there any other slots where he is available with a known location?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?",
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?",
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?",
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?"
+      ],
+      "covered_requires": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?",
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?",
+        "Carol, where are you available to meet on 2026-04-23 from 13:00 to 13:45?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "David's attendance slot 1 location"
+      ],
+      "questions_asked": [
+        "David, for the slot on 2026-04-23 from 13:00 to 13:45, would you prefer to meet online or in conference_room_3f?"
+      ],
+      "covered_requires": [
+        "David's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

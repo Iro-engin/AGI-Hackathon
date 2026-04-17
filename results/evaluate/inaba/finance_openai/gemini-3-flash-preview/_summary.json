@@ -1,0 +1,49 @@
+{
+  "domain": "finance",
+  "case_count": 15,
+  "early_discovery_n": 2,
+  "decision_model": "gemini-3-flash-preview",
+  "average_scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.0756,
+    "rubric_score": 0.9511,
+    "redundant_question_rate": 0.0232,
+    "early_discovery_rate": 0.8756
+  },
+  "by_difficulty": {
+    "easy": {
+      "case_count": 5,
+      "average_scores": {
+        "final_pass_rate": 1.0,
+        "exact_match": 0.0,
+        "vague_ask_rate": 0.0667,
+        "rubric_score": 0.9667,
+        "redundant_question_rate": 0.0182,
+        "early_discovery_rate": 0.8667
+      }
+    },
+    "hard": {
+      "case_count": 5,
+      "average_scores": {
+        "final_pass_rate": 1.0,
+        "exact_match": 0.0,
+        "vague_ask_rate": 0.12,
+        "rubric_score": 0.9067,
+        "redundant_question_rate": 0.0403,
+        "early_discovery_rate": 0.88
+      }
+    },
+    "medium": {
+      "case_count": 5,
+      "average_scores": {
+        "final_pass_rate": 1.0,
+        "exact_match": 0.0,
+        "vague_ask_rate": 0.04,
+        "rubric_score": 0.98,
+        "redundant_question_rate": 0.0111,
+        "early_discovery_rate": 0.88
+      }
+    }
+  }
+}

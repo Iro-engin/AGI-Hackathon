@@ -1,0 +1,136 @@
+{
+  "task_id": "meeting_openai_hard_002",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.4666666666666667,
+    "early_discovery_rate": 0.8
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Can Alice, Bob, and Carol confirm the location for their available slot on 2026-04-20 from 10:30 to 11:15?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 2 location",
+        "Carol's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Does anyone have a 45-minute slot where all five participants (Alice, Bob, Carol, David, and Eva) can meet, given that Alice's April 22nd morning slot is now canceled and several people's schedules have changed?",
+        "Alice, can you attend a meeting on April 23rd from 13:00 to 13:45 in conference_room_3f?",
+        "Alice, what is your availability on April 23rd at 13:00, and what are the missing location details for your slots on April 20th at 10:30 and April 21st at 14:30?",
+        "Alice, what is your location for the slot on 2026-04-20 from 10:30:00 to 11:15:00, and do you have any availability on 2026-04-23 at 13:00?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 2 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "Alice, can you attend a meeting on April 23rd from 13:00 to 13:45 in conference_room_3f?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Bob, could you please provide the location for your availability on April 21st from 14:30 to 15:15 and April 22nd from 09:00 to 09:45?",
+        "Bob, what is the location for your available time slots on April 21st from 14:30 to 15:15 and April 22nd from 09:00 to 09:45?",
+        "Bob, what is the specific location for your availability on April 21st at 14:30 and April 22nd at 09:00? The current records for these slots are missing location details.",
+        "Bob, could you please provide the location for your availability on April 21st at 14:30 and April 22nd at 09:00? We need this information to finalize the meeting schedule."
+      ],
+      "covered_requires": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Bob, what is the specific location for your availability on April 21st at 14:30 and April 22nd at 09:00? The current records for these slots are missing location details.",
+        "Bob, could you please provide the location for your availability on April 21st at 14:30 and April 22nd at 09:00? We need this information to finalize the meeting schedule."
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Carol, can you provide the location information for your available slots on April 20th from 10:30 to 11:15 and April 21st from 14:30 to 15:15?",
+        "Carol, what are the locations for your available slots on April 20th (10:30-11:15) and April 22nd (09:00-09:45)?",
+        "Carol, where are you located for your available slot on April 20th from 10:30 to 11:15?",
+        "Carol, where are you located for your available slot on April 20th from 10:30 to 11:15?"
+      ],
+      "covered_requires": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Carol, what are the locations for your available slots on April 20th (10:30-11:15) and April 22nd (09:00-09:45)?",
+        "Carol, where are you located for your available slot on April 20th from 10:30 to 11:15?",
+        "Carol, where are you located for your available slot on April 20th from 10:30 to 11:15?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "David's attendance slot 1 location"
+      ],
+      "questions_asked": [
+        "David, could you please provide the location for your availability on April 20th from 10:30 to 11:15?",
+        "David, where is your availability on April 23rd from 13:00 to 13:45? Additionally, could you confirm if you are available at 10:30 on April 20th and if so, at what location?"
+      ],
+      "covered_requires": [
+        "David's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "David, where is your availability on April 23rd from 13:00 to 13:45? Additionally, could you confirm if you are available at 10:30 on April 20th and if so, at what location?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

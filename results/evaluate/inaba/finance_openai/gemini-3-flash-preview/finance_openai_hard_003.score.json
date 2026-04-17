@@ -1,0 +1,120 @@
+{
+  "task_id": "finance_openai_hard_003",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.4,
+    "rubric_score": 0.7333333333333333,
+    "redundant_question_rate": 0.14285714285714285,
+    "early_discovery_rate": 0.6
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for healthcare_services sector"
+      ],
+      "questions_asked": [
+        "Can you provide the inference_rate and resource_mix_rate for the renewable_energy sector based on the current news?",
+        "Can you provide the inference_rate and resource_mix_rate for the healthcare_services sector based on the current news?",
+        "Could you provide the efficient_rate_change and the hidden_resource value for both the renewable_energy and healthcare_services sectors?"
+      ],
+      "covered_requires": [
+        "Related news for healthcare_services sector",
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [
+        "Could you provide the efficient_rate_change and the hidden_resource value for both the renewable_energy and healthcare_services sectors?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for healthcare_services sector",
+        "Related news for financial_technology sector",
+        "Related news for retail_fashion sector"
+      ],
+      "questions_asked": [
+        "Could you provide more related news for the financial_technology sector?",
+        "Could you provide more related news for the retail_fashion sector?"
+      ],
+      "covered_requires": [
+        "Related news for retail_fashion sector",
+        "Related news for financial_technology sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for healthcare_services sector",
+        "Related news for aerospace_manufacturing sector"
+      ],
+      "questions_asked": [
+        "What are the inference_rate, efficient_rate_change, and resource_mix_rate for the aerospace_manufacturing sector?",
+        "What are the inference_rate, efficient_rate_change, and resource_mix_rate for the healthcare_services sector?"
+      ],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for financial_technology sector",
+        "Related news for retail_fashion sector"
+      ],
+      "questions_asked": [
+        "Could you provide more detailed news regarding the retail_fashion sector, specifically concerning its recent sales growth in emerging markets and how it might influence its efficient_rate_now?",
+        "Can you provide more information about the 'Advances in blockchain are streamlining payments for digital banking platforms' news, specifically its resource_mix_rate and how it affects the financial_technology sector's efficient_rate_now?",
+        "Can you provide the resource_mix_rate for the current news involving retail_fashion and financial_technology, and how it relates to the hidden_resource of past news?"
+      ],
+      "covered_requires": [
+        "Related news for financial_technology sector",
+        "Related news for retail_fashion sector"
+      ],
+      "redundant_questions": [
+        "Can you provide the resource_mix_rate for the current news involving retail_fashion and financial_technology, and how it relates to the hidden_resource of past news?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for healthcare_services sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news and resource mix rate for the renewable_energy sector to help estimate its efficient_rate_now?",
+        "Can you provide the related news and resource mix rate for the healthcare_services sector to help estimate its efficient_rate_now?",
+        "Can you provide the related news and resource mix rate for the financial_technology sector to help estimate its efficient_rate_now?",
+        "Can you provide the related news and resource mix rate for the retail_fashion sector to help estimate its efficient_rate_now?"
+      ],
+      "covered_requires": [
+        "Related news for healthcare_services sector",
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

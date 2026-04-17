@@ -1,0 +1,124 @@
+{
+  "task_id": "finance_openai_hard_002",
+  "scores": {
+    "final_pass_rate": 1.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.0,
+    "rubric_score": 1.0,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 1.0
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news and past inference rates for the renewable_energy sector to help calculate its efficient_rate_now?",
+        "Can you provide the related news and past inference rates for the pharmaceuticals sector to help calculate its efficient_rate_now?",
+        "Can you provide the related news and past inference rates for the financial_services sector to help calculate its efficient_rate_now?",
+        "Can you provide the related news and past inference rates for the aerospace_defense sector to help calculate its efficient_rate_now?"
+      ],
+      "covered_requires": [
+        "Related news for pharmaceuticals sector",
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Related news for aerospace_defense sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news for the aerospace_defense sector?",
+        "Can you provide the related news for the consumer_electronics sector?",
+        "Can you provide the related news for the renewable_energy sector?",
+        "Can you provide the related news for the pharmaceuticals sector?"
+      ],
+      "covered_requires": [
+        "Related news for consumer_electronics sector",
+        "Related news for aerospace_defense sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Related news for pharmaceuticals sector",
+        "Related news for financial_services sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news for the pharmaceuticals sector to better assess its efficient_rate_now?",
+        "Can you provide the related news for the financial_services sector to better assess its efficient_rate_now?",
+        "Can you provide the related news for the renewable_energy sector to better assess its efficient_rate_now?",
+        "Can you provide the related news for the aerospace_defense sector to better assess its efficient_rate_now?"
+      ],
+      "covered_requires": [
+        "Related news for financial_services sector",
+        "Related news for pharmaceuticals sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Related news for renewable_energy sector",
+        "Related news for aerospace_defense sector"
+      ],
+      "questions_asked": [
+        "Can you provide the related news and resource mix rate for the renewable_energy sector to better assess the impact of wind farm construction delays?",
+        "Could you provide the related news and resource mix rate for the aerospace_defense sector to clarify the potential impact of the government budget announcement?",
+        "Could you provide the related news and resource mix rate for the pharmaceuticals sector to understand how the current environment affects its stock movement?",
+        "Could you provide the related news and resource mix rate for the financial_services sector to determine how it might be affected in this turn?"
+      ],
+      "covered_requires": [
+        "Related news for aerospace_defense sector",
+        "Related news for renewable_energy sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "Related news for financial_services sector",
+        "Related news for consumer_electronics sector"
+      ],
+      "questions_asked": [
+        "Could you provide the related news and resource_mix_rate for the consumer_electronics sector?",
+        "Could you provide the related news and resource_mix_rate for the financial_services sector?",
+        "Could you provide the related news and resource_mix_rate for the renewable_energy sector?",
+        "Could you provide the related news and resource_mix_rate for the pharmaceuticals sector?"
+      ],
+      "covered_requires": [
+        "Related news for consumer_electronics sector",
+        "Related news for financial_services sector"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": true,
+      "do_exact_match": false
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "task_id": "meeting_openai_medium_004",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.6,
+    "rubric_score": 0.6,
+    "redundant_question_rate": 0.0,
+    "early_discovery_rate": 0.4
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "medium"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "What are the meeting locations for Alice and Bob for the 2026-04-20T10:30:00 to 11:15:00 slot?"
+      ],
+      "covered_requires": [
+        "Bob's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 2 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "What is the location for Alice's first availability on April 20th from 10:30 to 11:15?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "What is the location for Bob's available slot on April 22nd from 09:00 to 09:45?"
+      ],
+      "covered_requires": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [],
+      "covered_requires": [],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "David's attendance slot 1 location",
+        "David's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "David, could you please provide the location information for your available slots on April 21st (14:30-15:15) and April 23rd (13:00-13:45)?"
+      ],
+      "covered_requires": [
+        "David's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

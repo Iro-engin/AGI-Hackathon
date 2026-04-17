@@ -1,0 +1,83 @@
+{
+  "task_id": "meeting_openai_easy_003",
+  "domain": "meeting",
+  "decision_model": "gemini-3-flash-preview",
+  "answer_model": "gpt-4o-mini",
+  "turns": [
+    {
+      "turn": 1,
+      "stage": "initial",
+      "event_index": null,
+      "event_message": null,
+      "question_answers": [
+        {
+          "question": "Alice, could you please provide the location for your available time slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, could you please provide the location for your available time slot on 2026-04-21 from 14:30 to 15:15?"
+        },
+        {
+          "question": "Alice, could you please provide the location for your available time slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, could you please provide the location for your available time slot on 2026-04-20 from 10:30 to 11:15?"
+        },
+        {
+          "question": "Alice, what is the location for your available slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, what is the location for your available slot on 2026-04-21 from 14:30 to 15:15?"
+        },
+        {
+          "question": "Alice, could you please provide the location for your available time slot on 2026-04-20 from 10:30 to 11:15?",
+          "answer": "Alice, could you please provide the location for your available time slot on 2026-04-20 from 10:30 to 11:15?"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 2,
+      "stage": "event",
+      "event_index": 0,
+      "event_message": "Alice's schedule has changed. Morning slots may need to be reconsidered.",
+      "question_answers": [
+        {
+          "question": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15, and confirm if you are still available during that time given your recent schedule changes?",
+          "answer": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15, and confirm if you are still available during that time given your recent schedule changes?"
+        },
+        {
+          "question": "Alice, could you please confirm your availability and provide the location for the slot on 2026-04-20 from 10:30 to 11:15, especially in light of your recent schedule changes?",
+          "answer": "Alice, could you please confirm your availability and provide the location for the slot on 2026-04-20 from 10:30 to 11:15, especially in light of your recent schedule changes?"
+        },
+        {
+          "question": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15 and confirm if this slot is still valid following your recent schedule changes?",
+          "answer": "Alice, could you please provide the location for your availability on 2026-04-20 from 10:30 to 11:15 and confirm if this slot is still valid following your recent schedule changes?"
+        },
+        {
+          "question": "Alice, what is the location for your availability on 2026-04-20 from 10:30 to 11:15, and is this slot still available following your recent schedule changes?",
+          "answer": "Alice, could you please confirm the location for your availability on 2026-04-20 from 10:30 to 11:15 and let us know if this slot is still valid following your recent schedule changes?"
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-20T10:30:00",
+        "when_to": "2026-04-20T11:15:00"
+      }
+    },
+    {
+      "turn": 3,
+      "stage": "event",
+      "event_index": 1,
+      "event_message": "Bob will be unavailable on the afternoon of April 21st.",
+      "question_answers": [
+        {
+          "question": "What is the location for Bob's availability on 2026-04-22T09:00:00 to 2026-04-22T09:45:00?",
+          "answer": "The location for Bob's availability on 2026-04-22T09:00:00 to 2026-04-22T09:45:00 is unknown."
+        }
+      ],
+      "final_do": {
+        "where": "meeting_room_a",
+        "when_from": "2026-04-22T09:00:00",
+        "when_to": "2026-04-22T09:45:00"
+      }
+    }
+  ]
+}

@@ -1,0 +1,133 @@
+{
+  "task_id": "meeting_openai_hard_001",
+  "scores": {
+    "final_pass_rate": 0.0,
+    "exact_match": 0.0,
+    "vague_ask_rate": 0.2,
+    "rubric_score": 0.9,
+    "redundant_question_rate": 0.5833333333333334,
+    "early_discovery_rate": 0.8
+  },
+  "meta": {
+    "total_events": 5,
+    "early_discovery_n": 2,
+    "decision_model": "gemini-3-flash-preview",
+    "difficulty": "hard"
+  },
+  "turns": [
+    {
+      "event_index": -1,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Alice, Bob, and Carol, could you please provide the location information for the 10:30 AM to 11:15 AM slot on April 20th?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 2 location",
+        "Carol's attendance slot 2 location",
+        "Carol's attendance slot 1 location",
+        "Bob's attendance slot 2 location",
+        "Bob's attendance slot 1 location",
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 0,
+      "should_require": [
+        "Alice's attendance slot 1 location",
+        "Alice's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "What is the location for Alice's available slot on April 21st from 14:30 to 15:15?"
+      ],
+      "covered_requires": [
+        "Alice's attendance slot 1 location"
+      ],
+      "redundant_questions": [],
+      "did_without_full_coverage": true,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 1,
+      "should_require": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Bob, what is your location for the slots on April 20th at 10:30 and April 21st at 14:30?",
+        "Bob, what is your location for the time slots starting on April 20th at 10:30 and April 21st at 14:30?",
+        "Bob, what is the location for your availability on April 20th at 10:30 AM and April 21st at 2:30 PM?",
+        "Bob, what is the location for your availability on April 20th at 10:30 AM and April 21st at 2:30 PM? Please provide the specific location names."
+      ],
+      "covered_requires": [
+        "Bob's attendance slot 1 location",
+        "Bob's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Bob, what is your location for the time slots starting on April 20th at 10:30 and April 21st at 14:30?",
+        "Bob, what is the location for your availability on April 20th at 10:30 AM and April 21st at 2:30 PM?",
+        "Bob, what is the location for your availability on April 20th at 10:30 AM and April 21st at 2:30 PM? Please provide the specific location names."
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 2,
+      "should_require": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Carol, where are you able to meet on April 22nd from 09:00 to 09:45?",
+        "Carol, what is the location for your availability on April 22nd from 09:00 to 09:45?",
+        "Carol, where is the location for your available slot on April 22nd from 09:00 to 09:45?",
+        "Carol, for the available slot on April 22nd from 09:00 to 09:45, what is the location? Please specify a room, for example, meeting_room_a or conference_room_3f."
+      ],
+      "covered_requires": [
+        "Carol's attendance slot 1 location",
+        "Carol's attendance slot 2 location"
+      ],
+      "redundant_questions": [
+        "Carol, what is the location for your availability on April 22nd from 09:00 to 09:45?",
+        "Carol, where is the location for your available slot on April 22nd from 09:00 to 09:45?",
+        "Carol, for the available slot on April 22nd from 09:00 to 09:45, what is the location? Please specify a room, for example, meeting_room_a or conference_room_3f."
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    },
+    {
+      "event_index": 3,
+      "should_require": [
+        "David's attendance slot 1 location",
+        "David's attendance slot 2 location"
+      ],
+      "questions_asked": [
+        "Could David please clarify the meeting location for the slots on April 21st and April 23rd?",
+        "David, could you please provide the meeting locations for your available slots on April 21st (14:30-15:15) and April 23rd (13:00-13:45)?"
+      ],
+      "covered_requires": [
+        "David's attendance slot 2 location",
+        "David's attendance slot 1 location"
+      ],
+      "redundant_questions": [
+        "David, could you please provide the meeting locations for your available slots on April 21st (14:30-15:15) and April 23rd (13:00-13:45)?"
+      ],
+      "did_without_full_coverage": false,
+      "do_is_feasible": false,
+      "do_exact_match": false
+    }
+  ]
+}

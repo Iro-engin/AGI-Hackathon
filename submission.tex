@@ -1,0 +1,75 @@
+\documentclass{article}
+
+\PassOptionsToPackage{numbers,compress}{natbib}
+\usepackage{neurips_2026}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{docmute}
+\usepackage{adjustbox}
+
+\hypersetup{hidelinks,pdftitle={ATLAS: Minimax-Adaptive Pilot-Preserving Covariance Forecasting},pdfauthor={Anonymous Authors}}
+\allowdisplaybreaks
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{assumption}{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\Hh}{\mathcal{H}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\fro}{\mathrm{F}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\base}{\mathsf{B}}
+\newcommand{\ATLAS}{\textsc{Atlas}}
+\newcommand{\one}{\bm 1}
+
+\title{\textbf{ATLAS: Minimax-Adaptive Pilot-Preserving\\Covariance Forecasting}}
+\author{Anonymous Authors}
+
+\begin{document}
+
+% Scale a tabular only when it would exceed the official text width.
+\let\atlasoldtabular\tabular
+\let\endatlasoldtabular\endtabular
+\renewenvironment{tabular}[1]
+  {\begin{adjustbox}{max width=\linewidth}\atlasoldtabular{#1}}
+  {\endatlasoldtabular\end{adjustbox}}
+
+% Insert the extended NeurIPS theory section immediately before related work.
+\newif\ifatlasinserted
+\atlasinsertedfalse
+\let\atlasoriginalsection\section
+\renewcommand{\section}[1]{%
+  \def\atlasargument{#1}%
+  \def\atlastarget{Relation to prior work}%
+  \ifx\atlasargument\atlastarget
+    \ifatlasinserted\else
+      \global\atlasinsertedtrue
+      \input{main_additions}%
+    \fi
+  \fi
+  \atlasoriginalsection{#1}%
+}
+
+\input{main.tex}
+
+\end{document}

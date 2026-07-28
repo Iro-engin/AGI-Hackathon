@@ -4,19 +4,19 @@ on:
   push:
     branches:
       - tmp-atlas-neurips-build-20260728
+  pull_request:
+    branches:
+      - tmp-atlas-neurips-base-20260728
 
 permissions:
   contents: write
 
 jobs:
   build:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: tmp-atlas-neurips-build-20260728
       - name: Compile LaTeX
         uses: xu-cheng/latex-action@v3
         with:
@@ -34,7 +34,8 @@ jobs:
           pdfinfo main.pdf > release/pdfinfo.txt
           grep -E "Output written|Overfull|Underfull|Warning|undefined" main.log > release/compile_audit.txt || true
           tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex README.md revision_notes_ja.md 2>/dev/null || tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex
-      - name: Commit compiled release
+      - name: Commit compiled release on direct push
+        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com

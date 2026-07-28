@@ -1,15 +1,12 @@
 name: Build ATLAS NeurIPS artifact
 
 on:
-  push:
-    branches:
-      - tmp-atlas-neurips-build-20260728
   pull_request:
     branches:
       - tmp-atlas-neurips-base-20260728
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -17,6 +14,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Fetch official NeurIPS 2026 style
+        run: |
+          curl -L --fail --retry 3 -o /tmp/neurips2026.zip https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip
+          rm -rf /tmp/neurips-kit
+          mkdir -p /tmp/neurips-kit
+          unzip -q /tmp/neurips2026.zip -d /tmp/neurips-kit
+          STYLE=$(find /tmp/neurips-kit -name neurips_2026.sty -print -quit)
+          test -n "$STYLE"
+          cp "$STYLE" ./neurips_2026.sty
       - name: Compile LaTeX
         uses: xu-cheng/latex-action@v3
         with:
@@ -28,24 +34,31 @@ jobs:
           rm -rf release
           mkdir -p release
           cp main.pdf release/ATLAS_NeurIPS2026.pdf
-          cp main.tex release/ATLAS_NeurIPS2026.tex
-          if [ -f README.md ]; then cp README.md release/README.md; fi
-          if [ -f revision_notes_ja.md ]; then cp revision_notes_ja.md release/revision_notes_ja.md; fi
-          grep -E "Output written|Overfull|Underfull|LaTeX Warning|undefined" main.log > release/compile_audit.txt || true
-          grep -E "Output written" main.log > release/page_audit.txt || true
+          cp main.tex proofs.tex checklist.tex references.bib neurips_2026.sty release/
+          cp README.md revision_notes_ja.md release/
+          grep -E "MAIN_END_PAGE|APPENDIX_START_PAGE|CHECKLIST_START_PAGE|Output written|Overfull|Underfull|LaTeX Warning|undefined" main.log > release/compile_audit.txt || true
+          grep -E "MAIN_END_PAGE|APPENDIX_START_PAGE|CHECKLIST_START_PAGE|Output written" main.log > release/page_audit.txt || true
           wc -c main.pdf > release/pdf_size.txt
-          tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex README.md revision_notes_ja.md 2>/dev/null || tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex
-      - name: Commit compiled release on direct push
-        if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add release
-          git commit -m "Store compiled ATLAS NeurIPS artifact [skip ci]" || exit 0
-          git push origin HEAD:tmp-atlas-neurips-build-20260728
+          (cd release && zip -9 ATLAS_NeurIPS2026_source.zip main.tex proofs.tex checklist.tex references.bib neurips_2026.sty README.md revision_notes_ja.md)
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ATLAS-NeurIPS-build
           path: release
           if-no-files-found: error
+
+  audit:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ATLAS-NeurIPS-build
+          path: release
+      - name: Print page and warning audit
+        run: |
+          echo '=== PAGE AUDIT ==='
+          cat release/page_audit.txt
+          echo '=== COMPILE AUDIT ==='
+          cat release/compile_audit.txt

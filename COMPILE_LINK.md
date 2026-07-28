@@ -1,0 +1,1 @@
+[Compile the anonymous ATLAS NeurIPS manuscript](https://latexonline.cc/compile?git=https://github.com/Iro-engin/AGI-Hackathon&target=submission.tex&force=true&command=pdflatex&download=ATLAS_NeurIPS2026.pdf)

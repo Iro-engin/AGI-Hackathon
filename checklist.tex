@@ -1,0 +1,69 @@
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item \textbf{Claims: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?}
+
+\textbf{Answer: Yes.} The abstract and Section~1 state the strict one-step target, frozen-pilot scope, robust upper bound, conditional sub-Gaussian adaptation result, Gaussian rank-one lower bound, and the absence of empirical performance claims.
+
+\item \textbf{Limitations: Does the paper discuss the limitations of the work performed by the authors?}
+
+\textbf{Answer: Yes.} Section~\ref{sec:limitations} discusses the frozen coordinate system, one-sided correction, moment and dependence assumptions, the Gaussian scope of the minimax comparison, complete observations, computation, and the lack of empirical evidence.
+
+\item \textbf{Theory, assumptions, and proofs: Did the authors state the full set of assumptions of all theoretical results and include complete proofs?}
+
+\textbf{Answer: Yes.} Assumptions appear in or immediately before each theorem. Complete proofs and supporting lemmas appear in Appendix~\ref{app:proofs}, including the weighted concentration radius, oracle inequality, H\"older rate, minimax lower bound, certificates, delay, and decision transfer.
+
+\item \textbf{Experimental result reproducibility: If the contribution is a dataset or model, what steps were taken to make the results reproducible or verifiable?}
+
+\textbf{Answer: Yes.} The contribution is a theoretical online algorithm rather than a trained model or dataset. Equations~\eqref{eq:weights}--\eqref{eq:forecast} specify the update, and Appendix~\ref{app:evaluation} specifies the information clock required to verify future implementations. No empirical result is used to support a main claim.
+
+\item \textbf{Open access to data and code: If experiments were run, are the code, data, and instructions needed to reproduce the main experimental results included?}
+
+\textbf{Answer: N/A.} The submission reports no experiments and uses no dataset.
+
+\item \textbf{Experimental setting/details: If experiments were run, were all training and evaluation details specified?}
+
+\textbf{Answer: N/A.} The submission reports no experiments.
+
+\item \textbf{Experiment statistical significance: Does the paper report appropriate uncertainty or significance information for its experiments?}
+
+\textbf{Answer: N/A.} The submission reports no experiments.
+
+\item \textbf{Experiments compute resources: Does the paper provide sufficient information about the compute required for each experiment?}
+
+\textbf{Answer: N/A.} The submission reports no experiments. The per-update computational complexity of the algorithm is stated in Section~\ref{sec:algorithm}.
+
+\item \textbf{Code of Ethics: Have the authors read the NeurIPS Code of Ethics and ensured that the research conforms to it?}
+
+\textbf{Answer: Yes.} The work is a mathematical and algorithmic study using no personal data, human subjects, or restricted assets, and the authors know of no conflict with the Code of Ethics.
+
+\item \textbf{Broader impacts: If appropriate, does the paper discuss potential negative societal impacts?}
+
+\textbf{Answer: Yes.} The Broader Impact section discusses decision instability, pilot misspecification, monitoring, and the limits of automated deployment.
+
+\item \textbf{Safeguards: Are safeguards provided for releasing models with a high risk of misuse?}
+
+\textbf{Answer: N/A.} The paper releases no pretrained model, generative system, scraped dataset, or other high-risk asset. It nevertheless describes pilot-validity monitoring and episode resets as deployment safeguards.
+
+\item \textbf{Licenses: If existing assets are used, are their creators cited and their licenses and terms respected?}
+
+\textbf{Answer: N/A.} No data, model, or third-party code asset is used in the scientific results. The manuscript uses the unmodified official NeurIPS 2026 style file for formatting and cites all research on which the analysis builds.
+
+\item \textbf{Assets: If new assets are released, are they documented?}
+
+\textbf{Answer: N/A.} The paper introduces no dataset, trained model, benchmark, or other research asset.
+
+\item \textbf{Crowdsourcing and research with human subjects: If crowdsourcing or human-subject research was used, are instructions, compensation, and related details reported?}
+
+\textbf{Answer: N/A.} The research uses no crowdsourcing or human subjects.
+
+\item \textbf{IRB approvals: Were participant risks described and appropriate institutional approvals obtained, if applicable?}
+
+\textbf{Answer: N/A.} The research uses no human participants or personally identifiable information.
+
+\item \textbf{Declaration of LLM usage: Does the paper describe LLM usage when it forms an important, original, or non-standard component of the core research method?}
+
+\textbf{Answer: N/A.} The core method, theoretical statements, and proofs do not use an LLM as a scientific component.
+
+\end{enumerate}

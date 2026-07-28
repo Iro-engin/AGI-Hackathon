@@ -1,19 +1,22 @@
-name: Build ATLAS NeurIPS artifact
+name: Build and publish ATLAS NeurIPS artifact
 
 on:
-  pull_request:
+  push:
     branches:
-      - tmp-atlas-neurips-final-base-20260728
+      - tmp-atlas-neurips-build-20260728
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout isolated build branch
         uses: actions/checkout@v4
+        with:
+          ref: tmp-atlas-neurips-build-20260728
       - name: Fetch official NeurIPS 2026 style
         run: |
           curl -L --fail --retry 3 -o /tmp/neurips2026.zip https://media.neurips.cc/Conferences/NeurIPS2026/Formatting_Instructions_For_NeurIPS_2026.zip
@@ -33,6 +36,15 @@ jobs:
           if needle not in text:
               raise SystemExit('insertion point not found')
           text = text.replace(needle, r'\input{main_additions}' + '\n\n' + needle, 1)
+          old_meta = ('The paper makes no empirical performance claim. This scope avoids using '
+                      'contemporaneous held-out replicates as evidence for one-step forecasting and avoids '
+                      'attributing a full-covariance missing-data estimator to a constrained pilot-preserving '
+                      'method. Section~\\ref{sec:limitations} states the resulting boundaries explicitly.')
+          new_meta = ('The paper is a theory contribution. Every target and guarantee is a strict one-step '
+                      'quantity; missing-coordinate estimation and empirical comparisons are outside the stated '
+                      'claims. Section~\\ref{sec:limitations} records these boundaries explicitly.')
+          if old_meta in text:
+              text = text.replace(old_meta, new_meta, 1)
           old_end = r'\typeout{MAIN_END_PAGE=\thepage}' + '\n' + r'\clearpage'
           new_end = r'\clearpage' + '\n' + r'\typeout{MAIN_END_PAGE=\number\numexpr\value{page}-1\relax}'
           if old_end not in text:
@@ -84,7 +96,7 @@ Transient factor augmentation & Yes & Yes & No & No & No \\
           root_file: main.tex
           latexmk_use_xelatex: false
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
-      - name: Audit and stage release
+      - name: Stage audited release
         run: |
           rm -rf release
           mkdir -p release
@@ -95,25 +107,16 @@ Transient factor augmentation & Yes & Yes & No & No & No \\
           grep -E "MAIN_END_PAGE|APPENDIX_START_PAGE|CHECKLIST_START_PAGE|Output written" main.log > release/page_audit.txt || true
           wc -c main.pdf > release/pdf_size.txt
           (cd release && zip -9 ATLAS_NeurIPS2026_source.zip main.tex main_additions.tex proofs.tex checklist.tex references.bib neurips_2026.sty README.md revision_notes_ja.md)
-      - name: Upload artifact
+      - name: Publish release files on isolated branch
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -f release
+          git commit -m "Store final audited ATLAS NeurIPS artifact [skip ci]"
+          git push origin HEAD:tmp-atlas-neurips-build-20260728
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ATLAS-NeurIPS-build
+          name: ATLAS-NeurIPS-final-build
           path: release
           if-no-files-found: error
-
-  audit:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: ATLAS-NeurIPS-build
-          path: release
-      - name: Print page and warning audit
-        run: |
-          echo '=== PAGE AUDIT ==='
-          cat release/page_audit.txt
-          echo '=== COMPILE AUDIT ==='
-          cat release/compile_audit.txt

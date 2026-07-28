@@ -23,6 +23,18 @@ jobs:
           STYLE=$(find /tmp/neurips-kit -name neurips_2026.sty -print -quit)
           test -n "$STYLE"
           cp "$STYLE" ./neurips_2026.sty
+      - name: Insert extended main-text section
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('main.tex')
+          text = path.read_text(encoding='utf-8')
+          needle = r'\section{Relation to prior work}'
+          if needle not in text:
+              raise SystemExit('insertion point not found')
+          text = text.replace(needle, r'\input{main_additions}' + '\n\n' + needle, 1)
+          path.write_text(text, encoding='utf-8')
+          PY
       - name: Compile LaTeX
         uses: xu-cheng/latex-action@v3
         with:
@@ -34,12 +46,12 @@ jobs:
           rm -rf release
           mkdir -p release
           cp main.pdf release/ATLAS_NeurIPS2026.pdf
-          cp main.tex proofs.tex checklist.tex references.bib neurips_2026.sty release/
+          cp main.tex main_additions.tex proofs.tex checklist.tex references.bib neurips_2026.sty release/
           cp README.md revision_notes_ja.md release/
           grep -E "MAIN_END_PAGE|APPENDIX_START_PAGE|CHECKLIST_START_PAGE|Output written|Overfull|Underfull|LaTeX Warning|undefined" main.log > release/compile_audit.txt || true
           grep -E "MAIN_END_PAGE|APPENDIX_START_PAGE|CHECKLIST_START_PAGE|Output written" main.log > release/page_audit.txt || true
           wc -c main.pdf > release/pdf_size.txt
-          (cd release && zip -9 ATLAS_NeurIPS2026_source.zip main.tex proofs.tex checklist.tex references.bib neurips_2026.sty README.md revision_notes_ja.md)
+          (cd release && zip -9 ATLAS_NeurIPS2026_source.zip main.tex main_additions.tex proofs.tex checklist.tex references.bib neurips_2026.sty README.md revision_notes_ja.md)
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

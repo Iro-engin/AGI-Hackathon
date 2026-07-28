@@ -1,0 +1,322 @@
+\section{Proofs and supporting lemmas}
+\label{app:proofs}
+
+Throughout the appendix, $\|\cdot\|$ denotes the operator norm unless another norm is displayed.  All probability statements are conditional on the predictable covariance path whenever that path is random.
+
+\subsection{Pilot-relative identification}
+
+\begin{proof}[Proof of Proposition~\ref{prop:id}]
+Subtracting the pilot from \eqref{eq:full-target} and standardizing gives
+\begin{equation}
+ D^{-1/2}(\Sigma-\Sigma_{\base})D^{-1/2}=QTQ^\top.
+\end{equation}
+Multiplication by $Q^\top$ and $Q$, together with $Q^\top Q=I_m$, yields the displayed formula for $T$.  Hence the correction is unique as a covariance matrix.  Its rank and invariant eigenspaces follow from the spectral decomposition.  When an eigenvalue is repeated, the associated invariant subspace is identified although a particular orthonormal basis is not.
+\end{proof}
+
+\subsection{Weighted matrix concentration and clipping}
+
+For fixed $(t,H)$, abbreviate $w_j=w_{j,t}(H)$ and set
+\begin{equation}
+ X_s=\psi_\tau(y_s)\psi_\tau(y_s)^\top,\qquad
+ Z_s=X_s-\E(X_s\mid\F_{s-1}).
+\end{equation}
+The weighted increments $w_jZ_{t-j}$ form a self-adjoint matrix martingale-difference sequence in reverse chronological notation; equivalently, reorder the finite sum chronologically before applying matrix Freedman.
+
+\begin{lemma}[Clipping bias]
+\label{lem:clipping}
+Under Assumption~\ref{ass:moments},
+\begin{equation}
+ 0\preceq C_s-\E\{X_s\mid\F_{s-1}\}\preceq b_\tau I_m,
+ \qquad b_\tau=M_{2+\delta}\tau^{-\delta}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For any unit vector $u$,
+\begin{align}
+ u^\top\E\{y_sy_s^\top-X_s\mid\F_{s-1}\}u
+ &\le \E\{\|y_s\|_2^2\ind(\|y_s\|_2>\tau)\mid\F_{s-1}\}\\
+ &\le \tau^{-\delta}\E(\|y_s\|_2^{2+\delta}\mid\F_{s-1})
+ \le b_\tau.
+\end{align}
+The matrix inside the conditional expectation is positive semidefinite because radial clipping only multiplies $y_sy_s^\top$ by a scalar in $[0,1]$.  Taking the supremum over $u$ proves the claim.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:concentration}]
+For fixed $(t,H)$, the matrix increments satisfy
+\begin{equation}
+ \|w_jZ_{t-j}\|\le 2\tau^2w_{\max,t}(H).
+\end{equation}
+By assumption, their predictable quadratic variation is at most $v_t(H)$.  The self-adjoint matrix Freedman inequality \citep{tropp2011} therefore gives, for every $z>0$,
+\begin{equation}
+ \Pp\left[
+ \left\|\sum_jw_jZ_{t-j}\right\|>
+ \sqrt{2v_t(H)z}+\frac{2\tau^2w_{\max,t}(H)z}{3}
+ \right]\le 2m e^{-z}.
+\end{equation}
+Choose $z=u=\log(2mJT/\alpha)$ and apply a union bound over at most $JT$ pairs.  The raw bound $\widetilde a_t(H)$ holds simultaneously; replacing it by the nonincreasing majorant $a_t(H)$ preserves validity.  This proves \eqref{eq:centered-bound}.
+
+For the one-step target, decompose
+\begin{align}
+ S_t(H)-C_{t+1}
+={}&\sum_jw_jZ_{t-j}\\
+&+\sum_jw_j\{\E(X_{t-j}\mid\F_{t-j-1})-C_{t-j}\}\\
+&+\sum_jw_j(C_{t-j}-C_{t+1}).
+\label{eq:appendix-decomp}
+\end{align}
+The first line is bounded by $a_t(H)$.  Lemma~\ref{lem:clipping} bounds the second line by $b_\tau$ because the weights sum to one.  The third line is bounded by $\beta_t(H)$ by the triangle inequality.  This yields \eqref{eq:forecast-bound}.
+\end{proof}
+
+\subsection{Lepski selection and positive-part projection}
+
+\begin{lemma}[Positive-part stability]
+\label{lem:positive-part}
+If $C\succeq I_m$ and $S$ is symmetric, then
+\begin{equation}
+ \|I_m+(S-I_m)_+-C\|\le 2\|S-C\|.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Let $e=\|S-C\|$.  Weyl's inequality gives $\lambda_{\min}(S)\ge1-e$.  Hence the correction required to lift every eigenvalue of $S$ below one is bounded by
+\begin{equation}
+ \|I_m+(S-I_m)_+-S\|=(1-\lambda_{\min}(S))_+\le e.
+\end{equation}
+A triangle inequality completes the proof.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:oracle}]
+Work on the simultaneous event from Theorem~\ref{thm:concentration}.  Since $a_t(H)$ is nonincreasing and $\mathfrak b_t(H)$ is nondecreasing, for every $h\le H_t^\circ$,
+\begin{equation}
+ a_t(H_t^\circ)\le a_t(h),\qquad
+ \beta_t(h)\le\mathfrak b_t(H_t^\circ)\le a_t(H_t^\circ)\le a_t(h).
+\end{equation}
+Using \eqref{eq:forecast-bound} twice,
+\begin{align}
+ \|S_t(H_t^\circ)-S_t(h)\|
+ &\le a_t(H_t^\circ)+\beta_t(H_t^\circ)+a_t(h)+\beta_t(h)+2b_\tau\\
+ &\le4a_t(h)+2b_\tau.
+\end{align}
+Thus $H_t^\circ$ is feasible for \eqref{eq:lepski}, so $\widehat H_t\ge H_t^\circ$.  The acceptance inequality with $h=H_t^\circ$ gives
+\begin{align}
+ \|S_t(\widehat H_t)-C_{t+1}\|
+ &\le\|S_t(\widehat H_t)-S_t(H_t^\circ)\|
+      +\|S_t(H_t^\circ)-C_{t+1}\|\\
+ &\le4a_t(H_t^\circ)+2b_\tau
+      +a_t(H_t^\circ)+b_\tau+\beta_t(H_t^\circ)\\
+ &\le6a_t(H_t^\circ)+3b_\tau.
+\end{align}
+Lemma~\ref{lem:positive-part} proves the second inequality.
+\end{proof}
+
+\subsection{A sub-Gaussian radius}
+\label{app:radius}
+
+The robust theorem accepts any valid predictable radius.  The next lemma records the standard high-dimensional scaling used in Corollary~\ref{cor:holder}.  It also explains the effective dimension term in the minimax comparison.
+
+\begin{assumption}[Uniform conditional sub-Gaussianity]
+\label{ass:subg}
+There are constants $K,\bar c<\infty$ such that, for every unit $u$ and every $s$,
+\begin{equation}
+ \E\left[\exp\left\{\frac{(u^\top y_s)^2}{K^2u^\top C_su}\right\}\middle|\F_{s-1}\right]\le2,
+ \qquad \|C_s\|\le\bar c.
+\end{equation}
+\end{assumption}
+
+\begin{lemma}[Weighted sub-Gaussian covariance radius]
+\label{lem:subg-radius}
+Under Assumption~\ref{ass:subg}, there is a constant $c>0$ such that, simultaneously over a finite collection of normalized deterministic or predictable weight vectors $w=(w_j)$, with probability at least $1-\alpha$,
+\begin{equation}
+ \left\|\sum_jw_j\{y_jy_j^\top-C_j\}\right\|
+ \le cK^2\bar c\left[
+ \sqrt{\{m+\log(2JT/\alpha)\}\sum_jw_j^2}
+ +\{m+\log(2JT/\alpha)\}\max_jw_j
+ \right].
+ \label{eq:subg-weighted}
+\end{equation}
+For exponential weights, $\sum_jw_j^2=N_{\mathrm{eff}}^{-1}=O(H^{-1})$ and $\max_jw_j=O(H^{-1})$ after burn-in, yielding \eqref{eq:sg-radius}.
+\end{lemma}
+
+\begin{proof}
+Fix a unit vector $u$.  Conditional sub-Gaussianity implies that
+\begin{equation}
+ \xi_j=(u^\top y_j)^2-u^\top C_ju
+\end{equation}
+has conditional sub-exponential norm at most $c_0K^2\bar c$; see, for example, the square-of-sub-Gaussian calculation in \citet{vershynin2018}.  Conditional Bernstein's inequality gives
+\begin{equation}
+ \Pp\left(\left|\sum_jw_j\xi_j\right|>z\right)
+ \le2\exp\left[-c_1\min\left\{
+ \frac{z^2}{K^4\bar c^2\sum_jw_j^2},
+ \frac{z}{K^2\bar c\max_jw_j}
+ \right\}\right].
+\end{equation}
+Let $\mathcal N$ be a $1/4$-net of the unit sphere with $|\mathcal N|\le9^m$.  For a symmetric matrix $M$,
+$\|M\|\le2\max_{u\in\mathcal N}|u^\top Mu|$.  Apply the scalar inequality to every $u\in\mathcal N$, every weight vector, and every forecast origin, then use a union bound.  Solving the two Bernstein regimes gives \eqref{eq:subg-weighted}.
+
+If radial clipping uses a threshold
+$\tau\ge c_2K\sqrt{\bar c\{m+\log(T/\alpha)\}}$, the usual norm concentration for sub-Gaussian vectors implies that no observation is clipped over the horizon with probability at least $1-\alpha$ after increasing $c_2$.  On that event, the same radius applies to $S_t(H)$ and the clipping bias vanishes.  Alternatively, one may retain clipping and add the explicit $b_\tau$ term from Lemma~\ref{lem:clipping}.
+\end{proof}
+
+\subsection{H\"older adaptation}
+
+\begin{lemma}[Moment of geometric age]
+\label{lem:age}
+For $\beta\in(0,1]$ and normalized exponential weights with half-life $H$,
+\begin{equation}
+ \sum_{j=0}^{t-1}w_{j,t}(H)(j+1)^\beta\le c_\beta(1+H)^\beta.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Because $x\mapsto x^\beta$ is concave,
+\begin{equation}
+ \sum_jw_j(j+1)^\beta\le\left\{1+\sum_jw_jj\right\}^\beta.
+\end{equation}
+The mean age of the truncated geometric distribution is no larger than that of its infinite counterpart, $q_H/(1-q_H)$.  Since $1-q_H=1-2^{-1/H}\ge c/H$ for $H\ge1$, the claim follows.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:holder}]
+Equations \eqref{eq:holder} and Lemma~\ref{lem:age} give
+\begin{equation}
+ \mathfrak b_t(H)\le c_\beta L_t(1+H)^\beta.
+\end{equation}
+On the oracle range $H\gtrsim d_T$, the linear term in \eqref{eq:sg-radius} is bounded by the square-root term, so
+$a_t(H)\le cA\sqrt{d_T/H}$.  Balance this term with $c_\beta L_tH^\beta$.  The continuous solution is
+\begin{equation}
+ H_t^\star\asymp(A^2d_T/L_t^2)^{1/(2\beta+1)},
+\end{equation}
+and either balanced term has order
+\begin{equation}
+ (A^2d_T)^{\beta/(2\beta+1)}L_t^{1/(2\beta+1)}.
+\end{equation}
+A geometric grid contains a point within a constant multiplicative factor of $H_t^\star$, which changes the bound only by a constant depending on $\beta$ and the grid ratio.  Theorem~\ref{thm:oracle} and the assumed bound on $b_\tau$ finish the proof.
+\end{proof}
+
+\subsection{Minimax lower bound}
+
+\begin{lemma}[Packing of rank-one projectors]
+\label{lem:packing}
+For $m\ge8$, there is a set $\mathcal V\subset\mathbb S^{m-1}$ with
+$|\mathcal V|\ge\exp(c_0m)$ such that
+\begin{equation}
+ \|vv^\top-uu^\top\|\ge c_1
+\end{equation}
+for all distinct $u,v\in\mathcal V$, where $c_0,c_1>0$ are universal.
+\end{lemma}
+
+\begin{proof}
+Take a constant-angle packing of the unit sphere and identify antipodal points.  A standard volumetric argument gives exponentially many projective directions.  Since
+$\|vv^\top-uu^\top\|=\sqrt{1-(u^\top v)^2}$, a constant projective angle gives the result.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower}]
+Let $\mathcal V$ be the packing in Lemma~\ref{lem:packing}.  Choose an integer $h\le t$ and amplitude $a=L(h+1)^\beta/c_2$, with $c_2$ a sufficiently large universal constant and $a\le1/4$.  For $v\in\mathcal V$, define an independent Gaussian stream that has identity covariance before time $t-h+1$ and, for $s=t-h+1,\ldots,t+1$, covariance
+\begin{equation}
+ C_s^{(v)}=I_m+\theta_svv^\top,\qquad
+ \theta_s=a\left(\frac{s-(t-h)}{h+1}\right)^\beta.
+ \label{eq:lower-path}
+\end{equation}
+The function $z\mapsto z^\beta$ is $\beta$-H\"older with constant one on $[0,1]$.  With the choice of $c_2$, every path belongs to $\mathcal P_{\beta,L}$.  At the target time,
+\begin{equation}
+ \|C_{t+1}^{(v)}-C_{t+1}^{(u)}\|
+ =a\|vv^\top-uu^\top\|\ge c_1a.
+\end{equation}
+
+Let $P_0$ denote the identity-covariance stream.  For $0\le\theta\le1/4$,
+\begin{align}
+ \mathrm{KL}\{N(0,I_m+\theta vv^\top)\,\|\,N(0,I_m)\}
+ &=\frac12\{\theta-\log(1+\theta)\}
+ \le\frac{\theta^2}{4}.
+\end{align}
+Independence and \eqref{eq:lower-path} imply
+\begin{equation}
+ \mathrm{KL}(P_v\|P_0)
+ \le\frac14\sum_{s=t-h+1}^{t}\theta_s^2
+ \le c_3ha^2.
+\end{equation}
+Take
+\begin{equation}
+ h=\left\lfloor c_4(m/L^2)^{1/(2\beta+1)}\right\rfloor
+\end{equation}
+with $c_4$ small enough.  Then $ha^2\le c_5m$, where $c_5$ can be made smaller than a fixed fraction of $\log|\mathcal V|$.  Fano's inequality yields a universal lower bound on the probability of confusing the alternatives.  The standard testing-to-estimation reduction therefore gives expected operator loss at least $c_6a$.  Finally,
+\begin{equation}
+ a\asymp Lh^\beta
+ \asymp L^{1/(2\beta+1)}m^{\beta/(2\beta+1)}.
+\end{equation}
+The conditions in the theorem ensure $h\le t$, $h\ge1$, and $a\le1/4$.
+\end{proof}
+
+\subsection{Rank, validity, and delay certificates}
+
+\begin{proof}[Proof of Proposition~\ref{prop:certificates}]
+Write the ordered eigenvalues of $C_{t+1}$ as
+$1+\lambda_{1,t+1}\ge\cdots\ge1+\lambda_{r,t+1}>1$, followed by $m-r$ eigenvalues equal to one.  On event \eqref{eq:total-radius}, Weyl's inequality gives
+\begin{equation}
+ |\mu_{i,t}-\lambda_i(C_{t+1})|\le\eps_t
+\end{equation}
+for every $i$.  A sample eigenvalue above $1+2\eps_t$ must therefore correspond to a population eigenvalue above $1+\eps_t$, proving $\underline r_t\le r_{t+1}$ and the displayed spike lower bound.
+
+If $\lambda_{r,t+1}>3\eps_t$, every active sample eigenvalue exceeds $1+2\eps_t$, while every inactive sample eigenvalue is at most $1+\eps_t$.  Thus $\underline r_t=r_{t+1}$.  The eigengap between the active and inactive population subspaces is $\lambda_{r,t+1}$.  The Davis--Kahan theorem \citep{davis1970,yu2015}, together with $\eps_t<\lambda_{r,t+1}/3$, yields
+\begin{equation}
+ \|\sin\Theta(\widehat V_t,V_{t+1})\|
+ \le \frac{2\eps_t}{\lambda_{r,t+1}}.
+\end{equation}
+
+If $T_{t+1}\succeq0$, then $\lambda_{\min}(C_{t+1})\ge1$, so
+$\mu_{m,t}\ge1-\eps_t$ and the negative flag is zero.  Conversely, if
+$\lambda_{\min}(C_{t+1}-I)\le-\gamma_t$, then
+$\mu_{m,t}\le1-\gamma_t+\eps_t<1-\eps_t$ whenever $\gamma_t>2\eps_t$.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:delay}]
+For an infinite-history EWMA, the total weight assigned to the first $d+1$ post-birth observations is
+\begin{equation}
+ (1-q)\sum_{j=0}^{d}q^j=1-q^{d+1}.
+\end{equation}
+The population EWMA spike is therefore $\lambda(1-q^{d+1})$.  A scatter within $e$ of that target has a sample spike above the certification threshold $2e$ as soon as the population spike exceeds $3e$.  Solving
+$\lambda(1-q^{d+1})>3e$ with $q=2^{-1/H}$ gives the birth bound.
+
+After a death, the surviving pre-change EWMA mass is $q^{d+1}$, so the population spike equals $\lambda q^{d+1}$.  Once this is no larger than $e$, every corresponding sample spike is at most $2e$ and is no longer certified.  Solving $\lambda q^{d+1}\le e$ gives the death bound.
+\end{proof}
+
+\subsection{Likelihood and quadratic decisions}
+
+\begin{proof}[Proof of Proposition~\ref{prop:decision}]
+Let
+$E_t=\Sigma_{t+1}^{-1/2}\Delta_t\Sigma_{t+1}^{-1/2}$ and let $e_i$ denote its eigenvalues.  Conditional expected quasi-loss under the true covariance satisfies
+\begin{align}
+ &\E_t\{\ell_{t+1}(\widehat\Sigma_t)-\ell_{t+1}(\Sigma_{t+1})\}\\
+ &\qquad=\log\det(I+E_t)+\tr\{(I+E_t)^{-1}\}-n\\
+ &\qquad=\sum_i\left\{\log(1+e_i)+(1+e_i)^{-1}-1\right\}.
+\end{align}
+For $|e|\le\rho<1$, the scalar function on the last line has derivative $e/(1+e)^2$ and value zero at the origin.  Integration gives
+\begin{equation}
+ 0\le \log(1+e)+(1+e)^{-1}-1
+ \le \frac{e^2}{2(1-\rho)^2}.
+\end{equation}
+Summing proves \eqref{eq:nll-transfer}.
+
+For every $w\in\W_t$,
+\begin{equation}
+ |w^\top(\widehat\Sigma_t-\Sigma_{t+1})w|
+ \le L_w^2\|\Delta_t\|.
+\end{equation}
+Add and subtract the estimated risk at $\widehat w_t$ and $w_t^\star$, and use optimality of $\widehat w_t$ under $\widehat\Sigma_t$.  Two deviations of the preceding form yield the first inequality in \eqref{eq:decision-transfer}.  Finally,
+\begin{equation}
+ \Delta_t=D^{1/2}Q(\widehat C_t-C_{t+1})Q^\top D^{1/2},
+\end{equation}
+so $Q^\top Q=I$ gives the second inequality.
+\end{proof}
+
+\section{Auditable evaluation protocol for future empirical work}
+\label{app:evaluation}
+
+Although the submission makes no empirical performance claim, a future evaluation should preserve the information clock used by the theory.
+\begin{enumerate}
+ \item Fit $(B,\Omega,D,Q)$ using observations no later than the episode start and keep the map fixed until an explicit reset.
+ \item At origin $t$, update every memory candidate with $x_t$ and output $\widehat\Sigma_t$ before observing $x_{t+1}$.
+ \item Evaluate the forecast only on $x_{t+1}$ and, in simulations, compare it with $\Sigma_{t+1}$.  Rank diagnostics compare the origin-$t$ output with $r_{t+1}$.
+ \item Compare \ATLAS with every fixed memory in its candidate grid.  A hindsight-best memory is an oracle comparator and should be labeled as such.
+ \item Use paired differences across common random seeds.  For dependent streams, use a block bootstrap or heteroskedasticity-and-autocorrelation-consistent inference for loss differences.
+\end{enumerate}
+A contemporaneous independent replicate is a valid filtering diagnostic but not a one-step forecast.  A full-covariance missing-data estimator does not validate a constrained pilot-preserving extension.

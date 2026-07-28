@@ -1,35 +1,17 @@
 \documentclass{article}
 
-% The official NeurIPS 2026 style is used when it is present in the source
-% directory.  The fallback below allows this single file to compile in a
-% minimal TeX environment for auditing; submission must use neurips_2026.sty.
-\newif\ifofficialneurips
-\IfFileExists{neurips_2026.sty}{%
-  \officialneuripstrue
-  \usepackage{neurips_2026}
-}{%
-  \officialneuripsfalse
-  \usepackage[letterpaper,textwidth=5.5in,textheight=9in,top=1in,headheight=12pt,headsep=25pt,footskip=30pt]{geometry}
-  \usepackage{fancyhdr}
-  \pagestyle{fancy}
-  \fancyhf{}
-  \fancyhead[C]{Under review as a conference paper at NeurIPS 2026}
-  \fancyfoot[C]{\thepage}
-  \renewcommand{\headrulewidth}{0pt}
-}
-
+\PassOptionsToPackage{numbers,compress}{natbib}
+\usepackage{neurips_2026}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
 \usepackage{amsmath,amssymb,amsthm,mathtools,bm}
-\usepackage{booktabs,array,multirow}
 \usepackage{microtype}
 \usepackage{xcolor}
-\usepackage{enumitem}
-\usepackage{url}
-\usepackage{hyperref}
-\usepackage[round,authoryear]{natbib}
+
 \hypersetup{hidelinks,pdftitle={ATLAS: Minimax-Adaptive Pilot-Preserving Covariance Forecasting},pdfauthor={Anonymous Authors}}
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{4pt plus 1pt minus 1pt}
-\setlist{nosep,leftmargin=1.4em}
 \allowdisplaybreaks
 
 \newtheorem{theorem}{Theorem}
@@ -38,7 +20,6 @@
 \newtheorem{lemma}[theorem]{Lemma}
 \theoremstyle{definition}
 \newtheorem{assumption}{Assumption}
-\newtheorem{definition}{Definition}
 \theoremstyle{remark}
 \newtheorem{remark}{Remark}
 
@@ -51,7 +32,6 @@
 \newcommand{\tr}{\operatorname{tr}}
 \newcommand{\rank}{\operatorname{rank}}
 \newcommand{\diag}{\operatorname{diag}}
-\newcommand{\argmin}{\operatorname*{arg\,min}}
 \newcommand{\op}{\mathrm{op}}
 \newcommand{\fro}{\mathrm{F}}
 \newcommand{\ind}{\mathbf{1}}
@@ -59,178 +39,146 @@
 \newcommand{\base}{\mathsf{B}}
 \newcommand{\ATLAS}{\textsc{Atlas}}
 \newcommand{\one}{\bm 1}
-\newcommand{\psd}{\mathbb{S}_{+}}
-\newcommand{\clip}{\psi_{\tau}}
 
 \title{\textbf{ATLAS: Minimax-Adaptive Pilot-Preserving\\Covariance Forecasting}}
 \author{Anonymous Authors}
-\date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Structured covariance pilots stabilize prediction and downstream optimization, but a deployed pilot can miss dependence that appears, rotates, and disappears after training.  We study strict one-step-ahead correction of a fixed positive-definite pilot.  \ATLAS standardizes observations by the pilot, removes its factor span, maintains radially clipped exponentially weighted scatters over a geometric memory grid, and selects memory by a Lepski comparison.  Its forecast adds only the positive-semidefinite part of the selected residual, so the pilot remains unchanged and every output is positive definite.  Our analysis separates concentration around the exponentially weighted population target from clipping and one-step lag bias.  We prove a simultaneous finite-sample oracle inequality under heavy tails and unknown local smoothness.  For conditionally sub-Gaussian observations on a $\beta$-H\"older covariance path, the resulting operator error is, up to logarithms,
-$L_t^{1/(2\beta+1)}m^{\beta/(2\beta+1)}$.  A matching minimax lower bound holds even for independent Gaussian streams with rank-one residual covariance.  We also derive honest rank and pilot-validity certificates, change-detection delay bounds around the population EWMA target, and dynamic quadratic-decision regret.  The paper is a theory contribution: we deliberately remove unsupported missing-data and empirical-superiority claims and state the frozen-pilot and positive-residual scope explicitly.
+Structured covariance pilots stabilize prediction and downstream optimization, yet a deployed pilot can miss dependence that appears, rotates, and disappears after training. We study strict one-step-ahead correction of a fixed positive-definite pilot. \ATLAS standardizes observations by the pilot, removes its factor span, maintains radially clipped exponentially weighted scatters on a geometric memory grid, and selects memory through a confidence-calibrated Lepski comparison. Its forecast adds only positive-semidefinite residual covariance, so the pilot remains unchanged and every output remains positive definite. We separate concentration around the exponentially weighted population target from clipping and one-step lag bias, obtaining a simultaneous finite-sample oracle inequality under heavy tails. Under a standard sub-Gaussian covariance-concentration condition and a locally $\beta$-H\"older covariance path, \ATLAS adapts to unknown smoothness and attains, up to logarithms, operator error $L_t^{1/(2\beta+1)}m^{\beta/(2\beta+1)}$. A matching minimax lower bound holds for independent Gaussian streams with rank-one residual covariance. The same forecast radius yields honest rank and pilot-validity certificates, change-detection delay bounds, and dynamic quadratic-decision regret. The theory assumes a frozen pilot within each deployment episode, complete residual observations, and a one-sided positive-semidefinite correction.
 \end{abstract}
 
 \section{Introduction}
 
-Many covariance predictors encode stable structure learned before deployment: a factor model, a shrinkage target, a state estimator, or a covariance induced by a pretrained representation.  Such a pilot can substantially reduce variance.  It can also become locally incomplete.  A new common disturbance may create a few covariance directions for tens of observations, rotate as its mechanism changes, and then disappear.  Re-estimating the entire pilot discards stable information; freezing it without correction leaves downstream likelihoods and decisions miscalibrated.
+Many learning systems deploy a covariance model that encodes stable structure estimated before use: a factor model, shrinkage target, state estimator, or covariance induced by a pretrained representation. Such a pilot reduces estimation variance. It may nevertheless omit dependence that emerges after deployment. A common disturbance can create a few covariance directions, rotate as its mechanism changes, and later disappear. Re-estimating the full model discards stable information; leaving it fixed miscalibrates predictive likelihoods and downstream quadratic decisions.
 
-This paper studies \emph{pilot-preserving online covariance forecasting}.  During a deployment episode the pilot is fixed.  After observing $x_t$, the learner predicts the conditional covariance of $x_{t+1}$.  It may add covariance that the pilot omitted, but it may not rewrite the pilot or subtract covariance that the pilot overstates.  This one-sided formulation gives an identifiable and auditable correction: a persistent negative residual is evidence that the augmentation premise has failed, rather than another factor to fit.
+We formulate \emph{pilot-preserving online covariance forecasting}. A deployment episode begins with a fixed positive-definite pilot. After observing $x_t$, the learner predicts the conditional covariance of $x_{t+1}$. It may add covariance in directions unexplained by the pilot, but it cannot rewrite the pilot or subtract covariance that the pilot overstates. This one-sided restriction makes the correction identifiable and auditable. Persistent negative residual covariance is treated as evidence against the augmentation model, rather than as another factor to fit.
 
-Three statistical choices interact.  First, the appropriate memory changes with the local speed of covariance motion.  Second, heavy-tailed outer products can dominate a spectral update.  Third, a sample eigenvalue above the pilot level can reflect a transient direction or estimation noise.  Existing risk-model augmentation fixes the number of added factors and the exponential half-life \citep{tzikas2026}.  Online subspace trackers estimate a changing signal subspace, but they do not preserve a supplied covariance pilot or target a positive-definite one-step forecast \citep{balzano2010,narayanamurthy2018,zhu2022}.  Change-point methods specialize to abrupt regime changes, whereas our path may move continuously \citep{adams2007,altamirano2023,puchkin2023}.
+The statistical difficulty comes from three interacting choices. The appropriate memory changes with the local speed of covariance motion. Heavy-tailed outer products can dominate a spectral update. A sample eigenvalue above the pilot level may represent a transient factor or estimation noise. Existing risk-model augmentation fixes both the added rank and exponential half-life \citep{tzikas2026}. Online subspace tracking estimates a changing low-dimensional span, but does not preserve a supplied full-rank covariance pilot or target a positive-definite one-step forecast \citep{balzano2010,narayanamurthy2018,zhu2022}. Change-point methods focus on discrete switches, whereas covariance paths may move continuously \citep{adams2007,altamirano2023,puchkin2023}.
 
 \paragraph{Contributions.}
-We make four claims, all stated for the same strict $t\mapsto t+1$ protocol.
-\begin{enumerate}
-\item We formulate an identifiable correction in the standardized orthogonal complement of a fixed pilot and give a positive-semidefinite forecast that cannot silently reassign pilot variation.
-\item We derive a robust multiscale estimator and a Lepski selector whose implementation uses the same high-probability radii as the theorem.  The oracle inequality separates stochastic error, clipping bias, and forecast-lag bias.
-\item We prove adaptation to unknown H\"older exponent and scale, and a matching minimax lower bound over a Gaussian rank-one submodel.  Thus the difficulty is not an artifact of estimating a large unrestricted covariance.
-\item We turn the covariance radius into rank, pilot-validity, likelihood, and quadratic-decision certificates.  Rank recovery is reported only when a total forecast radius is available; predictive compression and structural certification are not conflated.
-\end{enumerate}
+First, we define an identifiable correction in the standardized orthogonal complement of a frozen pilot. The forecast preserves the pilot exactly and is positive definite. Second, we develop a clipped multiscale estimator whose implemented Lepski threshold is the same high-probability threshold used in the proof. Its oracle inequality separates stochastic error, clipping bias, and the lag between the last observation and the next covariance target. Third, we prove adaptation to unknown local H\"older smoothness and a matching minimax lower bound over a Gaussian rank-one submodel. The lower bound shows that the rate does not arise from estimating an unrestricted $m\times m$ covariance. Fourth, we convert the same radius into certified rank, subspace, change-delay, pilot-invalidity, likelihood, and quadratic-decision guarantees.
 
-The revision intentionally narrows scope.  We do not claim a missing-data generalized EM result, because a full-covariance stress estimator does not validate a constrained pilot-preserving EM.  We also do not use contemporaneous held-out replicates as evidence for one-step forecasting.  These exclusions remove two sources of apparent breadth and strengthen the logical connection between the algorithm and its guarantees.
+The paper makes no empirical performance claim. This scope avoids using contemporaneous held-out replicates as evidence for one-step forecasting and avoids attributing a full-covariance missing-data estimator to a constrained pilot-preserving method. Section~\ref{sec:limitations} states the resulting boundaries explicitly.
 
-\section{Protocol and Pilot-Relative Model}
+\section{Protocol and pilot-relative model}
 \label{sec:model}
 
-Let $(\F_t)_{t\ge0}$ be a filtration and $x_t\in\R^n$ satisfy $\E(x_t\mid\F_{t-1})=0$.  A deployment episode supplies a fixed pilot
+Let $(\F_t)_{t\ge0}$ be a filtration and $x_t\in\R^n$ satisfy $\E(x_t\mid\F_{t-1})=0$. A deployment episode supplies a fixed pilot
 \begin{equation}
  \Sigma_{\base}=B\Omega B^\top+D\succ0,
  \qquad D=\diag(d_1,\ldots,d_n)\succ0,
  \label{eq:pilot}
 \end{equation}
-where $B\in\R^{n\times k}$ has full column rank.  Define $A=D^{-1/2}B$ and let $Q\in\R^{n\times m}$, $m=n-k$, have orthonormal columns spanning $\operatorname{span}(A)^\perp$.  The residual observation is
+where $B\in\R^{n\times k}$ has full column rank. Define $A=D^{-1/2}B$ and let $Q\in\R^{n\times m}$, $m=n-k$, have orthonormal columns spanning $\operatorname{span}(A)^\perp$. The residual observation is
 \begin{equation}
  y_t=Q^\top D^{-1/2}x_t.
  \label{eq:residual}
 \end{equation}
-The pilot is held fixed until an explicit refit starts a new episode and resets the online accumulators.  This restriction is necessary: if $Q$ or $D$ changes, a recursion that mixes past residual coordinates no longer equals the estimator defined in the current coordinates.
+The map $(D,Q)$ remains fixed throughout the episode. When the pilot is refit, a new episode begins and the online accumulators reset. Without this restriction, a recursion would mix past observations expressed in incompatible coordinates.
 
 At forecast origin $t$, the target is
 \begin{equation}
  C_{t+1}=\E(y_{t+1}y_{t+1}^\top\mid\F_t)=I_m+T_{t+1},
- \qquad T_{t+1}\succeq0.
+ \qquad T_{t+1}\succeq0,
  \label{eq:target}
 \end{equation}
-The corresponding covariance in the original units is
+and, in the original units,
 \begin{equation}
  \Sigma_{t+1}=\Sigma_{\base}+D^{1/2}QT_{t+1}Q^\top D^{1/2}.
  \label{eq:full-target}
 \end{equation}
-Assumption $T_{t+1}\succeq0$ says that the pilot mainly omits covariance in the residual space.  Section~\ref{sec:certificates} supplies a falsification test for this assumption.
+Assumption $T_{t+1}\succeq0$ says that the pilot mainly omits covariance in its residual space. We later give a negative-residual certificate that can reject this assumption.
 
 \begin{proposition}[Pilot-relative identification]
 \label{prop:id}
-Suppose $D\succ0$ and $A$ has full column rank.  Given $(B,D,\Sigma)$ satisfying \eqref{eq:full-target}, the pilot-factor covariance and residual covariance are unique in covariance space.  With $M=D^{-1/2}\Sigma D^{-1/2}$,
-\begin{align}
- \Omega&=(A^\top A)^{-1}A^\top(M-I)A(A^\top A)^{-1},\\
- T&=Q^\top(M-I)Q.
-\end{align}
-Hence $\rank(T)$ and its invariant eigenspaces are identified.
+Given $(\Sigma_{\base},D,Q)$ and a covariance $\Sigma$ satisfying \eqref{eq:full-target}, the residual correction is unique:
+\begin{equation}
+ T=Q^\top D^{-1/2}(\Sigma-\Sigma_{\base})D^{-1/2}Q.
+\end{equation}
+Consequently $\rank(T)$ and its invariant eigenspaces are identified.
 \end{proposition}
 
-The orthogonality restriction is a normalization with operational content.  Without it, a component in $\operatorname{span}(A)$ can move between $\Omega$ and the correction without changing $\Sigma$.
-
-\paragraph{Evaluation targets.}
-After observing $y_t$, a learner returns $\widehat C_t$ before $y_{t+1}$ arrives.  We use the one-step Gaussian quasi-loss
+After observing $y_t$, a predictor returns $\widehat C_t$ before $y_{t+1}$ arrives. The one-step Gaussian quasi-loss is
 \begin{equation}
  \ell_{t+1}(\widehat C_t)=\log\det\widehat C_t+y_{t+1}^\top\widehat C_t^{-1}y_{t+1}.
  \label{eq:nll}
 \end{equation}
-When the path is known, covariance error is $\|\widehat C_t-C_{t+1}\|_{\op}$.  For a feasible decision set $\W_t$, decision error is excess quadratic risk under $\Sigma_{t+1}$.  A contemporaneous independent draw from $C_t$ evaluates filtering, not the protocol in \eqref{eq:nll}; the distinction matters at births, deaths, and rotations.
+In simulations, the corresponding operator target is $\|\widehat C_t-C_{t+1}\|_{\op}$. A same-time independent draw from $C_t$ evaluates filtering, not the protocol in \eqref{eq:nll}; the distinction is material at births, deaths, and rotations.
 
-\section{The ATLAS Forecast}
+\section{The ATLAS forecast}
 \label{sec:algorithm}
 
 For half-life $H$, let $q_H=2^{-1/H}$ and
 \begin{equation}
- w_{j,t}(H)=\frac{(1-q_H)q_H^j}{1-q_H^t},
- \qquad j=0,\ldots,t-1.
+ w_{j,t}(H)=\frac{(1-q_H)q_H^j}{1-q_H^t},\quad j=0,\ldots,t-1,
+ \qquad
+ N_{\mathrm{eff},t}(H)=\Big\{\textstyle\sum_j w_{j,t}(H)^2\Big\}^{-1}.
  \label{eq:weights}
 \end{equation}
-Their effective sample size is $N_{\mathrm{eff},t}(H)=\{\sum_jw_{j,t}(H)^2\}^{-1}$, asymptotic to $(1+q_H)/(1-q_H)$.  For a common clipping radius $\tau$, define
+For a clipping radius $\tau$, define
 \begin{equation}
  \psi_\tau(y)=y\min\{1,\tau/\|y\|_2\},\qquad
  S_t(H)=\sum_{j=0}^{t-1}w_{j,t}(H)\psi_\tau(y_{t-j})\psi_\tau(y_{t-j})^\top.
  \label{eq:scatter}
 \end{equation}
-Using one $\tau$ over the memory grid makes clipping bias common to the Lepski comparisons.
+A common $\tau$ over the memory grid makes the clipping bias common to cross-scale comparisons.
 
-Let $\Hh=\{H_1<\cdots<H_J\}$ be geometric.  For each $H$, let $a_t(H)$ be a simultaneous high-probability bound for the centered scatter; an explicit matrix-Freedman choice appears in Theorem~\ref{thm:concentration}.  The selector is
+Let $\Hh=\{H_1<\cdots<H_J\}$ be geometric. For each $H$, let $a_t(H)$ be a simultaneous high-probability radius for the centered clipped scatter. We replace raw radii by their nonincreasing majorant over $H$. Let $b_\tau$ bound clipping bias. The selector is
 \begin{equation}
  \widehat H_t=\max\left\{H\in\Hh:
  \|S_t(H)-S_t(h)\|_{\op}\le4a_t(h)+2b_\tau,
- \ \forall h\le H\right\},
+ \quad \forall h\le H\right\}.
  \label{eq:lepski}
 \end{equation}
-where $b_\tau$ is a valid common clipping-bias bound.  Unlike the previous implementation, \eqref{eq:lepski} does not replace the theorem's threshold by an unrelated empirical multiplier.
-
-The forecast uses the positive part of the selected residual:
+The forecast adds the positive part of the selected residual:
 \begin{equation}
  \widehat C_t=I_m+\{S_t(\widehat H_t)-I_m\}_{+},
  \qquad
  \widehat\Sigma_t=\Sigma_{\base}+D^{1/2}Q(\widehat C_t-I)Q^\top D^{1/2}.
  \label{eq:forecast}
 \end{equation}
-For a symmetric $G=U\diag(g_i)U^\top$, $G_+=U\diag((g_i)_+)U^\top$.  Equation~\eqref{eq:forecast} preserves the pilot exactly and remains positive definite.  It also avoids claiming that every sample eigenvalue above one is a discovered factor.  A separately thresholded certified rank is defined in Section~\ref{sec:certificates}.
+For symmetric $G=U\diag(g_i)U^\top$, $G_+=U\diag((g_i)_+)U^\top$. Equation~\eqref{eq:forecast} preserves the pilot and remains positive definite. It does not interpret every retained eigenvalue as a discovered factor; certified rank uses a separate threshold in Section~\ref{sec:certificates}.
 
-\begin{figure}[t]
-\centering
-\fbox{\begin{minipage}{0.93\linewidth}
-\textbf{ATLAS at forecast origin $t$}
-\begin{enumerate}[leftmargin=1.25em]
-\item Project the new observation by the fixed episode map $y_t=Q^\top D^{-1/2}x_t$ and radially clip it.
-\item Update $S_t(H)$ and $a_t(H)$ for every $H\in\Hh$.
-\item Select $\widehat H_t$ by \eqref{eq:lepski}.
-\item Return \eqref{eq:forecast}.  If a valid total radius is supplied, also return the certified rank and negative-residual flag in Section~\ref{sec:certificates}.
-\end{enumerate}
-\end{minipage}}
-\caption{The fixed pilot defines one coordinate system over a deployment episode.}
-\label{fig:algorithm}
-\end{figure}
+\paragraph{Online implementation.}
+At each origin, project and clip $x_t$, update $S_t(H)$ and $a_t(H)$ for every $H$, apply \eqref{eq:lepski}, and return \eqref{eq:forecast}. Maintaining $J$ dense scatters costs $O(Jm^2)$ time and memory per update. A full eigendecomposition costs $O(m^3)$; a warm-started partial solver costs $O(m^2r)$ when only leading directions are required.
 
-Maintaining $J$ scatters costs $O(Jm^2)$ time and memory per observation.  A dense eigendecomposition of the selected scatter costs $O(m^3)$; a partial solver costs $O(m^2r)$ when only certified directions are requested.
-
-\section{Finite-Sample Forecast Guarantees}
+\section{Finite-sample adaptation}
 \label{sec:upper}
 
-The analysis centers the estimator on its exponentially weighted population target before comparing that target with $C_{t+1}$.  This prevents the error center from changing inside the change-delay proof.
-
-Define
+The analysis first centers each estimator on its exponentially weighted population target and then compares that target with $C_{t+1}$. Define
 \begin{align}
  \overline C_t^\tau(H)&=\sum_jw_{j,t}(H)
  \E\!\left[\psi_\tau(y_{t-j})\psi_\tau(y_{t-j})^\top\mid\F_{t-j-1}\right],\\
- \beta_t(H)&=\sum_jw_{j,t}(H)\|C_{t-j}-C_{t+1}\|_{\op}.
+ \beta_t(H)&=\sum_jw_{j,t}(H)\|C_{t-j}-C_{t+1}\|_{\op},
+ \qquad
+ \mathfrak b_t(H)=\max_{h\le H}\beta_t(h).
  \label{eq:targets}
 \end{align}
-Let $\mathfrak b_t(H)=\max_{h\le H}\beta_t(h)$ be the monotone drift envelope on the grid.
+The term $\beta_t(H)$ includes the one-step gap from the latest observation to the forecast target.
 
 \begin{assumption}[Conditional moments]
 \label{ass:moments}
 For some $\delta\in(0,2]$ and $M_{2+\delta}<\infty$,
-$\E(\|y_s\|_2^{2+\delta}\mid\F_{s-1})\le M_{2+\delta}$ almost surely.  Centered clipped outer products form a self-adjoint matrix martingale-difference sequence.
+$\E(\|y_s\|_2^{2+\delta}\mid\F_{s-1})\le M_{2+\delta}$ almost surely.
 \end{assumption}
 
-For $X_s=\psi_\tau(y_s)\psi_\tau(y_s)^\top$, suppose
+Let $X_s=\psi_\tau(y_s)\psi_\tau(y_s)^\top$ and suppose the predictable quadratic variation of the weighted centered outer products is bounded by $v_t(H)$. With $u=\log(2mJT/\alpha)$, set
 \begin{equation}
- \left\|\sum_jw_{j,t}(H)^2
- \E\{(X_{t-j}-\E_{t-j-1}X_{t-j})^2\mid\F_{t-j-1}\}\right\|_{\op}
- \le v_t(H).
-\end{equation}
-Set $u=\log(2mJT/\alpha)$ and
-\begin{equation}
- a_t(H)=\sqrt{2v_t(H)u}+\frac{2\tau^2w_{\max,t}(H)u}{3},
- \qquad b_\tau=M_{2+\delta}\tau^{-\delta}.
+ \widetilde a_t(H)=\sqrt{2v_t(H)u}+\frac{2\tau^2w_{\max,t}(H)u}{3},
+ \quad
+ a_t(H)=\max_{G\in\Hh:G\ge H}\widetilde a_t(G),
+ \quad
+ b_\tau=M_{2+\delta}\tau^{-\delta}.
  \label{eq:radius}
 \end{equation}
-The crude choice $v_t(H)=4\tau^4/N_{\mathrm{eff},t}(H)$ is always valid; sharper predictable bounds preserve every result below.
+The crude bound $v_t(H)\le4\tau^4/N_{\mathrm{eff},t}(H)$ is always valid; sharper predictable bounds give the usual sub-Gaussian dimension dependence.
 
 \begin{theorem}[Simultaneous robust one-step bound]
 \label{thm:concentration}
-Under Assumption~\ref{ass:moments}, with probability at least $1-\alpha$, simultaneously for every $t\le T$ and $H\in\Hh$,
+Under Assumption~\ref{ass:moments}, with probability at least $1-\alpha$, simultaneously for all $t\le T$ and $H\in\Hh$,
 \begin{align}
  \|S_t(H)-\overline C_t^\tau(H)\|_{\op}&\le a_t(H),\label{eq:centered-bound}\\
  \|S_t(H)-C_{t+1}\|_{\op}&\le a_t(H)+b_\tau+\beta_t(H).
@@ -238,95 +186,82 @@ Under Assumption~\ref{ass:moments}, with probability at least $1-\alpha$, simult
 \end{align}
 \end{theorem}
 
-The three terms in \eqref{eq:forecast-bound} have different meanings.  $a_t(H)$ falls with effective sample size.  $b_\tau$ is the cost of robustness.  $\beta_t(H)$ includes the extra one-step gap from the most recent observation to the forecast target and grows with stale memory.
-
-Let $H_t^\circ$ be the largest grid point satisfying $\mathfrak b_t(H)\le a_t(H)$; assume the grid starts short enough that this set is nonempty.
+Let $H_t^\circ$ be the largest grid point satisfying $\mathfrak b_t(H)\le a_t(H)$, and suppose the shortest memory makes this set nonempty.
 
 \begin{theorem}[Adaptive oracle inequality]
 \label{thm:oracle}
-On the simultaneous event in Theorem~\ref{thm:concentration}, the selector \eqref{eq:lepski} satisfies
-\begin{equation}
- \|S_t(\widehat H_t)-C_{t+1}\|_{\op}
- \le6a_t(H_t^\circ)+3b_\tau.
- \label{eq:oracle}
-\end{equation}
-Consequently the pilot-preserving forecast obeys
-\begin{equation}
- \|\widehat C_t-C_{t+1}\|_{\op}
- \le12a_t(H_t^\circ)+6b_\tau.
+On the simultaneous event in Theorem~\ref{thm:concentration},
+\begin{align}
+ \|S_t(\widehat H_t)-C_{t+1}\|_{\op}&\le6a_t(H_t^\circ)+3b_\tau,\label{eq:oracle}\\
+ \|\widehat C_t-C_{t+1}\|_{\op}&\le12a_t(H_t^\circ)+6b_\tau.
  \label{eq:positive-part-bound}
-\end{equation}
+\end{align}
 \end{theorem}
 
-The factor two in \eqref{eq:positive-part-bound} is deterministic: because $C_{t+1}\succeq I$, the eigenvalues of $S_t(\widehat H_t)$ below one lie within its operator error from $C_{t+1}$; lifting them to one changes the matrix by no more than that error.
+The first inequality matches the stochastic radius to the unknown local drift envelope. The second pays a deterministic factor of two for projecting the residual onto the positive-semidefinite cone.
 
-\subsection{Adaptation to unknown smoothness}
+\subsection{Unknown local smoothness}
 
-Suppose that, locally at origin $t$, the covariance path is $\beta$-H\"older:
+Suppose that, locally at origin $t$,
 \begin{equation}
  \|C_{t-j}-C_{t+1}\|_{\op}\le L_t(j+1)^\beta,
  \qquad \beta\in(0,1].
  \label{eq:holder}
 \end{equation}
-Neither $\beta$ nor $L_t$ enters \eqref{eq:lepski}.  Exponential weights satisfy
+Neither $\beta$ nor $L_t$ enters the selector. Exponential weights satisfy
 $\sum_jw_{j,t}(H)(j+1)^\beta\le c_\beta(1+H)^\beta$.
 
 \begin{corollary}[H\"older adaptation]
 \label{cor:holder}
-Assume \eqref{eq:holder} and, on the relevant grid range,
+Assume \eqref{eq:holder}. Suppose the radii on the oracle range obey the standard sub-Gaussian covariance-concentration scaling
 \begin{equation}
- a_t(H)\le A\sqrt{d_T/H},\qquad d_T=m+\log(JT/\alpha),
- \end{equation}
-with $b_\tau$ no larger than the stochastic term at the oracle scale.  Then
+ a_t(H)\le A\left\{\sqrt{d_T/H}+d_T/H\right\},
+ \qquad d_T=m+\log(JT/\alpha),
+ \label{eq:sg-radius}
+\end{equation}
+and the oracle memory is at least of order $d_T$. If $b_\tau$ is no larger than the stochastic term at that scale, then
 \begin{equation}
  \|\widehat C_t-C_{t+1}\|_{\op}
- \le C_\beta\left(A^2d_T\right)^{\beta/(2\beta+1)}
- L_t^{1/(2\beta+1)}+C_\beta b_\tau,
+ \le C_\beta(A^2d_T)^{\beta/(2\beta+1)}L_t^{1/(2\beta+1)}+C_\beta b_\tau,
  \label{eq:holder-rate}
 \end{equation}
-up to the constant discretization factor of the geometric grid.  The selected memory has oracle order
+up to the constant discretization factor of the geometric grid. The selected memory has oracle order
 $H_t^\star\asymp(A^2d_T/L_t^2)^{1/(2\beta+1)}$.
 \end{corollary}
 
-For $\beta=1$, the rate is $(A^2d_TL_t)^{1/3}$.  Stable intervals support long memory; rapid motion forces short memory.  The selector adapts pointwise, so one fixed half-life cannot be optimal over a path whose local $L_t$ changes materially.
+Condition \eqref{eq:sg-radius} holds for independent uniformly sub-Gaussian residuals with bounded covariance, and for martingale models satisfying the corresponding conditional matrix-mgf bound; see Appendix~\ref{app:radius}. For $\beta=1$, the leading rate is $(A^2d_TL_t)^{1/3}$. Stable intervals support long memory, while rapid motion forces short memory.
 
-\section{A Matching Minimax Lower Bound}
+\section{Minimax optimality}
 \label{sec:lower}
 
-The dependence on dimension and smoothness in \eqref{eq:holder-rate} is unavoidable even when the residual has rank one and observations are Gaussian.  This rules out the explanation that the rate merely pays for an unrestricted $m\times m$ covariance.
-
-Let $\mathcal P_{\beta,L}$ contain independent Gaussian streams whose covariance is $C_s=I_m+\theta_svv^\top$ for some unit vector $v$, with $0\le\theta_s\le1/4$ and
-$|\theta_s-\theta_u|\le L|s-u|^\beta$.  An estimator at origin $t$ may use $y_1,\ldots,y_t$ and predicts $C_{t+1}$.
+The dimension and smoothness dependence in \eqref{eq:holder-rate} is unavoidable even for rank-one residual covariance. Let $\mathcal P_{\beta,L}$ contain independent Gaussian streams with
+$C_s=I_m+\theta_svv^\top$ for some unit vector $v$, where $0\le\theta_s\le1/4$ and
+$|\theta_s-\theta_u|\le L|s-u|^\beta$. An estimator at origin $t$ may use $y_1,\ldots,y_t$ and predicts $C_{t+1}$.
 
 \begin{theorem}[Pointwise minimax lower bound]
 \label{thm:lower}
-There are universal constants $c,c'>0$ such that, whenever $t\ge c'(m/L^2)^{1/(2\beta+1)}$ and
-$L^{1/(2\beta+1)}m^{\beta/(2\beta+1)}\le c'$, 
+There exist universal constants $c,c'>0$ such that, whenever
+$t\ge c'(m/L^2)^{1/(2\beta+1)}$ and the displayed rate is at most a constant,
 \begin{equation}
- \inf_{\widetilde C_t}
- \sup_{P\in\mathcal P_{\beta,L}}
+ \inf_{\widetilde C_t}\sup_{P\in\mathcal P_{\beta,L}}
  \E_P\|\widetilde C_t-C_{t+1}\|_{\op}
- \ge c L^{1/(2\beta+1)}m^{\beta/(2\beta+1)}.
+ \ge cL^{1/(2\beta+1)}m^{\beta/(2\beta+1)}.
  \label{eq:lower}
 \end{equation}
-The infimum ranges over all measurable one-step predictors, not only exponentially weighted or pilot-preserving estimators.
+The infimum ranges over all measurable one-step predictors.
 \end{theorem}
 
-The proof packs exponentially many rank-one directions and introduces a smooth temporal bump during the last $h$ observations.  A bump of target height $a=Lh^\beta$ has cumulative Kullback--Leibler information of order $ha^2$.  Choosing $ha^2\asymp m$ gives
-$h\asymp(m/L^2)^{1/(2\beta+1)}$ and
-$a\asymp L^{1/(2\beta+1)}m^{\beta/(2\beta+1)}$.  Fano's inequality then yields \eqref{eq:lower}.  Corollary~\ref{cor:holder} matches this benchmark up to logarithms and the robust clipping term.
+The proof packs exponentially many rank-one directions and places a smooth temporal bump over the last $h$ observations. A target separation $a=Lh^\beta$ carries Kullback--Leibler information of order $ha^2$. Balancing $ha^2\asymp m$ yields the lower rate in \eqref{eq:lower}. Corollary~\ref{cor:holder} therefore adapts to every $\beta\in(0,1]$ and $L$ in the stated range, up to logarithms and the robust clipping term.
 
-\section{Rank, Change, and Pilot-Validity Certificates}
+\section{Certificates and downstream consequences}
 \label{sec:certificates}
 
-Prediction and structural interpretation require different thresholds.  ATLAS always returns \eqref{eq:forecast}.  It reports a \emph{certified} rank only when the deployment supplies a valid total radius $\eps_t$ satisfying
+Prediction and structural interpretation require different thresholds. \ATLAS always returns \eqref{eq:forecast}. It reports a certified rank only when a valid total radius $\eps_t$ satisfies
 \begin{equation}
  \|S_t(\widehat H_t)-C_{t+1}\|_{\op}\le\eps_t.
  \label{eq:total-radius}
 \end{equation}
-Such a radius may use a declared drift envelope, or the oracle bound in an analysis.  An empirical prediction threshold without documented coverage is not a certificate.
-
-Let $\mu_{1,t}\ge\cdots\ge\mu_{m,t}$ be eigenvalues of the selected scatter and define
+Let $\mu_{1,t}\ge\cdots\ge\mu_{m,t}$ denote eigenvalues of the selected scatter and define
 \begin{equation}
  \underline r_t=\#\{i:\mu_{i,t}>1+2\eps_t\},
  \qquad
@@ -334,343 +269,88 @@ Let $\mu_{1,t}\ge\cdots\ge\mu_{m,t}$ be eigenvalues of the selected scatter and 
  \label{eq:certificates}
 \end{equation}
 
-\begin{proposition}[Honest residual certificates]
+\begin{proposition}[Rank and pilot-validity certificates]
 \label{prop:certificates}
 On event \eqref{eq:total-radius}:
-\begin{enumerate}
-\item $\underline r_t\le r_{t+1}=\rank(T_{t+1})$.  Every certified spike satisfies
-$\lambda_{i,t+1}\ge\mu_{i,t}-1-\eps_t$.
-\item If $\lambda_{r_{t+1},t+1}>3\eps_t$, then $\underline r_t=r_{t+1}$ and the certified eigenspace $\widehat V_t$ satisfies
-\begin{equation}
- \|\sin\Theta(\widehat V_t,V_{t+1})\|_{\op}
- \le2\eps_t/\lambda_{r_{t+1},t+1}.
-\end{equation}
-\item If $T_{t+1}\succeq0$, then $\mathcal F_t^-=0$.  If
-$\lambda_{\min}(C_{t+1}-I)\le-\gamma_t$ with $\gamma_t>2\eps_t$, then $\mathcal F_t^-=1$.
-\end{enumerate}
+(i) $\underline r_t\le r_{t+1}=\rank(T_{t+1})$, and every certified spike satisfies
+$\lambda_{i,t+1}\ge\mu_{i,t}-1-\eps_t$;
+(ii) if $\lambda_{r_{t+1},t+1}>3\eps_t$, then $\underline r_t=r_{t+1}$ and
+$\|\sin\Theta(\widehat V_t,V_{t+1})\|_{\op}\le2\eps_t/\lambda_{r_{t+1},t+1}$;
+(iii) if $T_{t+1}\succeq0$, then $\mathcal F_t^-=0$, whereas
+$\lambda_{\min}(C_{t+1}-I)\le-\gamma_t$ with $\gamma_t>2\eps_t$ implies $\mathcal F_t^-=1$.
 \end{proposition}
 
-The third statement makes the one-sided model falsifiable.  A repeated negative flag means that the pilot overstates covariance in at least one direction by more than uncertainty.  The correct response is to refit or replace the pilot, not to add more positive factors.
+Thus weak spikes may improve prediction without supporting a structural factor claim. A repeated negative flag says that the pilot overstates covariance beyond uncertainty; the appropriate action is to refit or replace the pilot.
 
-\paragraph{Detection delay around the EWMA target.}
-Consider an infinite-history EWMA with fixed $H$ and $q=2^{-1/H}$.  Suppose a rank-one spike of strength $\lambda$ is born abruptly and let $e$ bound the sample scatter around its EWMA population target.  After $d$ post-change observations, the population spike is $\lambda(1-q^{d+1})$.  The certificate detects it once this exceeds $3e$.  After a death, the residual population spike is $\lambda q^{d+1}$ and disappears once it is at most $e$.
+\paragraph{Change delay.}
+For an infinite-history EWMA with fixed $H$ and $q=2^{-1/H}$, suppose a rank-one spike of strength $\lambda$ is born abruptly and the sample scatter stays within $e$ of its EWMA population target. After $d$ post-change observations the population spike equals $\lambda(1-q^{d+1})$; after a death the surviving spike equals $\lambda q^{d+1}$.
 
 \begin{proposition}[Birth and death delay]
 \label{prop:delay}
-If $\lambda>3e$, then
+If $\lambda>3e$, a threshold $1+2e$ satisfies
 \begin{align}
- d_{\mathrm{birth}}
- &\le\left\lceil\frac{H}{\log2}
- \log\frac{\lambda}{\lambda-3e}\right\rceil-1,\\
- d_{\mathrm{death}}
- &\le\left\lceil\frac{H}{\log2}
- \log\frac{\lambda}{e}\right\rceil-1.
+ d_{\mathrm{birth}}&\le\left\lceil\frac{H}{\log2}\log\frac{\lambda}{\lambda-3e}\right\rceil-1,\\
+ d_{\mathrm{death}}&\le\left\lceil\frac{H}{\log2}\log\frac{\lambda}{e}\right\rceil-1.
 \end{align}
 \end{proposition}
 
-This statement deliberately centers the stochastic error on the EWMA population target.  The separate lag term in Theorem~\ref{thm:concentration} is needed when the objective is the instantaneous one-step covariance.
+The proposition centers stochastic error on the EWMA population target. The lag term in Theorem~\ref{thm:concentration} remains necessary for instantaneous one-step forecasting.
 
-\section{Likelihood and Decision Consequences}
-\label{sec:decision}
-
+\paragraph{Likelihood and decisions.}
 Let $\Delta_t=\widehat\Sigma_t-\Sigma_{t+1}$ and
 $\rho_t=\|\Sigma_{t+1}^{-1/2}\Delta_t\Sigma_{t+1}^{-1/2}\|_{\op}<1$.
 
 \begin{proposition}[Forecast and decision transfer]
 \label{prop:decision}
-Conditionally on $\F_t$, the expected excess Gaussian quasi-loss satisfies
+Conditionally on $\F_t$,
 \begin{equation}
  0\le\E_t\{\ell_{t+1}(\widehat\Sigma_t)-\ell_{t+1}(\Sigma_{t+1})\}
  \le\frac{\|\Sigma_{t+1}^{-1/2}\Delta_t\Sigma_{t+1}^{-1/2}\|_{\fro}^2}{2(1-\rho_t)^2}.
  \label{eq:nll-transfer}
 \end{equation}
-Let $\W_t\subset\{w:\one^\top w=1,\|w\|_2\le L_w\}$ be compact.  If $w_t^\star$ and $\widehat w_t$ minimize quadratic risk under $\Sigma_{t+1}$ and $\widehat\Sigma_t$, respectively, then
+For a compact feasible set $\W_t\subset\{w:\one^\top w=1,\|w\|_2\le L_w\}$, let $w_t^\star$ and $\widehat w_t$ minimize quadratic risk under $\Sigma_{t+1}$ and $\widehat\Sigma_t$. Then
 \begin{equation}
  0\le\widehat w_t^\top\Sigma_{t+1}\widehat w_t-w_t^{\star\top}\Sigma_{t+1}w_t^\star
- \le2L_w^2\|\Delta_t\|_{\op}.
+ \le2L_w^2\|\Delta_t\|_{\op},
+ \quad
+ \|\Delta_t\|_{\op}\le\|D\|_{\op}\|\widehat C_t-C_{t+1}\|_{\op}.
  \label{eq:decision-transfer}
 \end{equation}
-Moreover,
-$\|\Delta_t\|_{\op}\le\|D\|_{\op}\|\widehat C_t-C_{t+1}\|_{\op}$.
 \end{proposition}
 
-Summing \eqref{eq:decision-transfer} gives a dynamic decision-regret bound.  Under Corollary~\ref{cor:holder}, with probability at least $1-\alpha$,
-\begin{equation}
- \sum_{t=1}^{T-1}\mathrm{Reg}_t
- \le C L_w^2\|D\|_{\op}
- \sum_{t=1}^{T-1}
- \left\{(A^2d_T)^{\beta/(2\beta+1)}L_t^{1/(2\beta+1)}+b_\tau\right\}.
- \label{eq:dynamic-regret}
-\end{equation}
-This result connects a statistical adaptation guarantee to the quantity optimized by a downstream quadratic controller or allocator.  It does not assert that covariance operator error and decision loss rank methods identically; the feasible set and covariance geometry can make directions economically or operationally unequal.
+Combining \eqref{eq:decision-transfer} with Corollary~\ref{cor:holder} controls dynamic quadratic-decision regret by the sum of the local minimax rates. This transfer does not claim that operator error and decision loss rank all estimators identically; feasible-set geometry can emphasize particular covariance directions.
 
-\section{Relation to Prior Work}
+\section{Relation to prior work}
 \label{sec:related}
 
-Static covariance estimation uses shrinkage, sparsity, low rank, or robust influence functions \citep{ledoit2004,fan2013,minsker2018,ke2019,abdalla2022}.  Those results typically target a stationary covariance and do not address memory selection along a moving path.  Goldenshluger--Lepski ideas adapt smoothing scales by comparing estimators \citep{goldenshluger2011}; our use must additionally accommodate matrix martingales, clipping bias, a one-step target, and the pilot constraint.
+Static covariance estimation uses shrinkage, sparsity, low rank, and robust influence functions \citep{ledoit2004,cai2012,fan2013,minsker2018,ke2019}. High-dimensional time-series methods account for temporal dependence but generally target a stationary covariance or a prespecified local smoothing scale \citep{chen2013}. Goldenshluger--Lepski procedures adapt smoothing by comparing estimators \citep{goldenshluger2011}; here the comparison must handle matrix martingales, clipping bias, a one-step target, and a supplied covariance pilot.
 
-Online PCA and robust subspace tracking estimate a latent subspace, often under low-rank signal-plus-sparse-outlier models \citep{brand2002,balzano2010,narayanamurthy2018,zhu2022}.  ATLAS instead forecasts a full positive-definite covariance relative to a supplied pilot and allows rank-zero intervals.  Change-point methods infer abrupt switches or run length \citep{adams2007,altamirano2023,puchkin2023}; H\"older paths include continuous rotation and smooth variance motion.  The methods solve different tasks, although their delay analyses provide useful comparison points.
+Online PCA and robust subspace tracking estimate a latent span, often under low-rank-plus-outlier models \citep{brand2002,balzano2010,narayanamurthy2018,zhu2022}. \ATLAS instead forecasts a full positive-definite covariance relative to a pilot and permits rank-zero intervals. Change-point methods infer abrupt switches or run length \citep{adams2007,altamirano2023,puchkin2023}; the H\"older class also covers smooth variance motion and rotation. The closest application-driven formulation enhances a financial risk model by likelihood with user-specified rank and half-life and supports model refinement under missing returns \citep{tzikas2026}. We freeze the pilot, adapt memory nonparametrically, and prove one-step minimax guarantees, but do not inherit its missing-data capability.
 
-The closest application-driven formulation augments an existing financial factor model by likelihood with user-chosen rank and half-life and can refine the supplied model under missing returns \citep{tzikas2026}.  We freeze the pilot, estimate memory nonparametrically, and provide minimax one-step theory.  Conversely, this paper does not retain that work's missing-data capability.  The distinction is substantive rather than cosmetic: updating the pilot or its diagonal scale changes the orthogonality constraint, while a full-covariance Student-$t$ EM does not test a constrained pilot-preserving algorithm.
-
-\section{Limitations and Deployment Scope}
+\section{Limitations}
 \label{sec:limitations}
 
-\paragraph{Frozen episodes.}
-ATLAS requires a fixed pilot coordinate system within an episode.  A time-varying pilot would require transporting every accumulated scatter into the new coordinates and bounding the transport error.  We do not hide this cost inside an $O(Jm^2)$ claim.  When the pilot is refit, the implementation starts a new episode.
-
-\paragraph{One-sided correction.}
-The positive-semidefinite residual repairs omitted covariance, not overstatement.  Proposition~\ref{prop:certificates} detects sufficiently large negative residual directions; it does not estimate a signed correction.  A two-sided model needs additional restrictions to prevent negative directions from being exchanged with the pilot.
-
-\paragraph{Heavy tails and dependence.}
-The robust theorem assumes finite $(2+\delta)$ moments and a matrix-martingale difference structure after conditioning.  Strong serial dependence requires blocking, mixing, or a model-specific predictable-variation bound.  The sharp minimax comparison uses a Gaussian submodel and therefore establishes the local nonstationarity cost, not minimax optimality over every heavy-tailed class.
-
-\paragraph{Rank interpretation.}
-Weak spikes below the uncertainty threshold can improve predictive compression without supporting a structural factor claim.  The forecast and certified rank are separate outputs.  Honest adaptation of confidence sets over nested smoothness classes generally needs an envelope or self-similarity condition; we therefore condition rank certification on a valid total radius rather than deriving one from an uncalibrated empirical constant.
-
-\paragraph{Data and computation.}
-This theory paper assumes complete residual observations.  Missing-coordinate extensions require an estimator that respects the same fixed pilot map; they are outside the present claims.  Dense eigendecomposition limits very large $m$, although warm-started partial solvers can exploit a small certified rank.
+The pilot coordinate system must remain fixed within an episode. A time-varying pilot would require transporting accumulated scatters and controlling transport error. The positive-semidefinite correction repairs omitted covariance but cannot correct pilot overstatement; the negative-residual certificate only detects that failure. The robust theorem assumes finite $(2+\delta)$ moments and conditional matrix-martingale structure. Strong serial dependence needs mixing, blocking, or a model-specific matrix-mgf argument. The sharp minimax comparison uses a Gaussian submodel, while the heavy-tail result includes a clipping term. Complete residual observations are required. Dense eigendecomposition can dominate computation when $m$ is large. Finally, the paper establishes statistical guarantees rather than empirical superiority; applications require a separate strict $t\mapsto t+1$ evaluation against the complete fixed-memory grid and strong adaptive baselines.
 
 \section{Conclusion}
 
-ATLAS treats a structured covariance model as a fixed deployment primitive and learns only what that pilot omits.  A robust multiscale residual forecast adapts to unknown local smoothness, preserves positive definiteness, and achieves the minimax one-step operator rate up to logarithms even though the lower bound already holds for rank-one Gaussian residuals.  The same radius yields honest rank, change, pilot-validity, likelihood, and decision statements.  Narrowing the paper to these claims removes the earlier gap between a theoretical algorithm and a prediction-tuned implementation: every formal guarantee now refers to the strict one-step protocol and the same high-probability comparison rule.
+\ATLAS treats a structured covariance pilot as a fixed deployment primitive and learns only the positive residual dependence that the pilot omits. Robust multiscale estimation adapts to unknown local smoothness, preserves positive definiteness, and attains the minimax one-step operator rate up to logarithms on a rank-one Gaussian submodel. A single forecast radius supports structural, change-detection, likelihood, and decision guarantees while exposing pilot misspecification rather than absorbing it silently.
 
+\typeout{MAIN_END_PAGE=\thepage}
 \clearpage
-\begin{thebibliography}{99}
 
-\bibitem[Abdalla and Zhivotovskiy(2022)]{abdalla2022}
-P. Abdalla and N. Zhivotovskiy.
-Covariance estimation: optimal dimension-free guarantees for adversarial corruption and heavy tails.
-\emph{arXiv:2205.08494}, 2022.
-
-\bibitem[Adams and MacKay(2007)]{adams2007}
-R. P. Adams and D. J. C. MacKay.
-Bayesian online changepoint detection.
-\emph{arXiv:0710.3742}, 2007.
-
-\bibitem[Altamirano et~al.(2023)]{altamirano2023}
-M. Altamirano, F.-X. Briol, and J. Knoblauch.
-Robust and scalable Bayesian online changepoint detection.
-In \emph{ICML}, 2023.
-
-\bibitem[Balzano et~al.(2010)]{balzano2010}
-L. Balzano, R. Nowak, and B. Recht.
-Online identification and tracking of subspaces from highly incomplete information.
-In \emph{Allerton}, 2010.
-
-\bibitem[Brand(2002)]{brand2002}
-M. Brand.
-Incremental singular value decomposition of uncertain data with missing values.
-In \emph{ECCV}, 2002.
-
-\bibitem[Davis and Kahan(1970)]{davis1970}
-C. Davis and W. M. Kahan.
-The rotation of eigenvectors by a perturbation. III.
-\emph{SIAM Journal on Numerical Analysis}, 7(1):1--46, 1970.
-
-\bibitem[Fan et~al.(2013)]{fan2013}
-J. Fan, Y. Liao, and M. Mincheva.
-Large covariance estimation by thresholding principal orthogonal complements.
-\emph{Journal of the Royal Statistical Society B}, 75(4):603--680, 2013.
-
-\bibitem[Goldenshluger and Lepski(2011)]{goldenshluger2011}
-A. Goldenshluger and O. Lepski.
-Bandwidth selection in kernel density estimation: oracle inequalities and adaptive minimax optimality.
-\emph{Annals of Statistics}, 39(3):1608--1632, 2011.
-
-\bibitem[Ke et~al.(2019)]{ke2019}
-Y. Ke, S. Minsker, Z. Ren, Q. Sun, and W.-X. Zhou.
-User-friendly covariance estimation for heavy-tailed distributions.
-\emph{Statistical Science}, 34(3):454--471, 2019.
-
-\bibitem[Ledoit and Wolf(2004)]{ledoit2004}
-O. Ledoit and M. Wolf.
-A well-conditioned estimator for large-dimensional covariance matrices.
-\emph{Journal of Multivariate Analysis}, 88(2):365--411, 2004.
-
-\bibitem[Minsker(2018)]{minsker2018}
-S. Minsker.
-Sub-Gaussian estimators of the mean of a random matrix with heavy-tailed entries.
-\emph{Annals of Statistics}, 46(6A):2871--2903, 2018.
-
-\bibitem[Narayanamurthy and Vaswani(2018)]{narayanamurthy2018}
-P. Narayanamurthy and N. Vaswani.
-Nearly optimal robust subspace tracking.
-In \emph{ICML}, 2018.
-
-\bibitem[Puchkin and Shcherbakova(2023)]{puchkin2023}
-N. Puchkin and V. Shcherbakova.
-A contrastive approach to online change point detection.
-In \emph{AISTATS}, 2023.
-
-\bibitem[Tropp(2011)]{tropp2011}
-J. A. Tropp.
-Freedman's inequality for matrix martingales.
-\emph{Electronic Communications in Probability}, 16:262--270, 2011.
-
-\bibitem[Tzikas et~al.(2026)]{tzikas2026}
-A. E. Tzikas, E. J. Cand\`es, T. Hastie, S. P. Boyd, M. J. Kochenderfer, and R. N. Kahn.
-Enhancing a risk model by adding transient statistical factors.
-\emph{arXiv:2605.12977}, 2026.
-
-\bibitem[Yu et~al.(2015)]{yu2015}
-Y. Yu, T. Wang, and R. J. Samworth.
-A useful variant of the Davis--Kahan theorem for statisticians.
-\emph{Biometrika}, 102(2):315--323, 2015.
-
-\bibitem[Zhu and Shen(2022)]{zhu2022}
-T. Zhu and J. Shen.
-Residual-based sampling for online outlier-robust PCA.
-In \emph{ICML}, 2022.
-
-\end{thebibliography}
+\bibliographystyle{plainnat}
+\bibliography{references}
 
 \appendix
-\section{Proofs}
-\label{app:proofs}
+\typeout{APPENDIX_START_PAGE=\thepage}
+\input{proofs}
 
-\subsection{Proof of Proposition~\ref{prop:id}}
-Standardizing \eqref{eq:full-target} gives
-$M-I=A\Omega A^\top+QTQ^\top$.  Because $Q^\top A=0$, multiplication by the left inverse $(A^\top A)^{-1}A^\top$ and its transpose yields the displayed formula for $\Omega$.  Multiplication by $Q^\top$ and $Q$ yields $T$.  The spectral decomposition identifies rank and invariant eigenspaces; a repeated eigenvalue identifies its subspace but not a particular basis. \hfill$\square$
+\section{Broader impact}
+Covariance forecasts influence automated allocation, anomaly monitoring, and control. Correcting omitted common shocks can reduce miscalibrated risk, but aggressive updates can destabilize downstream decisions. \ATLAS limits this hazard by preserving the pilot, adding only positive-semidefinite covariance, and separating predictive output from certified structural claims. The method can still fail when the pilot overstates covariance or when its moment and dependence assumptions break. The negative-residual flag, episode resets, and explicit uncertainty thresholds provide monitoring mechanisms; they do not replace domain review. Financial examples motivate the problem but the method does not constitute investment advice.
 
-\subsection{Proof of Theorem~\ref{thm:concentration}}
-Write $X_s=\psi_\tau(y_s)\psi_\tau(y_s)^\top$ and
-$Z_s=X_s-\E(X_s\mid\F_{s-1})$.  For fixed $(t,H)$,
-\begin{align}
- S_t(H)-C_{t+1}
- ={}&\sum_jw_{j,t}(H)Z_{t-j}\\
- &+\sum_jw_{j,t}(H)\{\E_{t-j-1}X_{t-j}-C_{t-j}\}\\
- &+\sum_jw_{j,t}(H)(C_{t-j}-C_{t+1}).
- \label{eq:proof-decomp}
-\end{align}
-The weighted increments are self-adjoint martingale differences, have norm at most $2\tau^2w_{\max,t}(H)$, and predictable quadratic variation at most $v_t(H)$.  Matrix Freedman \citep{tropp2011} bounds the first line by $a_t(H)$ with failure probability $\alpha/(JT)$.  A union bound gives simultaneous validity.
-
-For the clipping term, for any unit $u$,
-\begin{align}
- u^\top\E\{yy^\top-\psi_\tau(y)\psi_\tau(y)^\top\mid\F\}u
- &\le\E\{\|y\|^2\ind(\|y\|>\tau)\mid\F\}\\
- &\le\tau^{-\delta}\E(\|y\|^{2+\delta}\mid\F)
- \le b_\tau.
-\end{align}
-The last line of \eqref{eq:proof-decomp} is bounded by $\beta_t(H)$.  This proves both claims. \hfill$\square$
-
-\subsection{Proof of Theorem~\ref{thm:oracle}}
-Work on the simultaneous event.  For every $H$,
-\begin{equation}
- \|S_t(H)-C_{t+1}\|_{\op}\le a_t(H)+\mathfrak b_t(H)+b_\tau.
- \label{eq:generic-event}
-\end{equation}
-The stochastic radius is nonincreasing on the ordered grid, while $\mathfrak b_t$ is nondecreasing.  If $h\le H_t^\circ$, then
-$a_t(H_t^\circ)\le a_t(h)$ and
-$\mathfrak b_t(h)\le\mathfrak b_t(H_t^\circ)\le a_t(H_t^\circ)\le a_t(h)$.  Therefore
-\begin{align}
- \|S_t(H_t^\circ)-S_t(h)\|_{\op}
- &\le a_t(H_t^\circ)+\mathfrak b_t(H_t^\circ)
-      +a_t(h)+\mathfrak b_t(h)+2b_\tau\\
- &\le4a_t(h)+2b_\tau.
-\end{align}
-Thus $H_t^\circ$ is feasible and $\widehat H_t\ge H_t^\circ$.  Applying the acceptance inequality with $h=H_t^\circ$ and then \eqref{eq:generic-event},
-\begin{align}
- \|S_t(\widehat H_t)-C_{t+1}\|_{\op}
- &\le4a_t(H_t^\circ)+2b_\tau
-      +a_t(H_t^\circ)+\mathfrak b_t(H_t^\circ)+b_\tau\\
- &\le6a_t(H_t^\circ)+3b_\tau.
-\end{align}
-
-It remains to analyze the positive part.  Let $S=S_t(\widehat H_t)$, $C=C_{t+1}\succeq I$, and $e=\|S-C\|_{\op}$.  Weyl's inequality gives $\lambda_{\min}(S)\ge1-e$.  Hence
-$\|\{S-I\}_+-(S-I)\|_{\op}\le e$.  Since
-$\widehat C=I+\{S-I\}_+$,
-$\|\widehat C-C\|_{\op}\le2e$. \hfill$\square$
-
-\subsection{Proof of Corollary~\ref{cor:holder}}
-For $\beta\le1$, Jensen's inequality and the exact average age of the geometric weights give
-\begin{equation}
- \beta_t(H)\le L_t\sum_jw_{j,t}(H)(j+1)^\beta
- \le c_\beta L_t(1+H)^\beta.
-\end{equation}
-Ignoring grid rounding, balance $A\sqrt{d_T/H}$ with $c_\beta L_tH^\beta$.  The solution is
-$H\asymp(A^2d_T/L_t^2)^{1/(2\beta+1)}$ and each balanced term has order
-$(A^2d_T)^{\beta/(2\beta+1)}L_t^{1/(2\beta+1)}$.  A geometric grid changes $H$ and the rate by constants.  Theorem~\ref{thm:oracle} completes the proof. \hfill$\square$
-
-\subsection{Proof of Theorem~\ref{thm:lower}}
-Let $\mathcal V\subset\mathbb S^{m-1}$ be a packing with
-$|\mathcal V|\ge\exp(c_0m)$ and
-$\|vv^\top-uu^\top\|_{\op}\ge c_1$ for distinct $u,v\in\mathcal V$.  Such a packing follows from a standard volumetric argument on the projective sphere.
-
-Choose an integer $h\le t$ and amplitude $a=Lh^\beta\le1/4$.  For $v\in\mathcal V$, set the covariance to identity before $t-h+1$, and for $s=t-h+1,\ldots,t+1$ set
-\begin{equation}
- C_s^{(v)}=I+\theta_svv^\top,
- \qquad
- \theta_s=a\left(\frac{s-(t-h)}{h+1}\right)^\beta.
-\end{equation}
-The map $z\mapsto z^\beta$ is $\beta$-H\"older with constant one on $[0,1]$, so the path belongs to $\mathcal P_{\beta,L}$ up to an inessential universal adjustment of $a$.  At the target, distinct alternatives are separated in operator norm by at least $c_1a$.
-
-Let $P_0$ denote the identity-covariance stream.  For a rank-one Gaussian perturbation,
-\begin{equation}
- \mathrm{KL}\{N(0,I+\theta vv^\top)\|N(0,I)\}
- =\frac12\{\theta-\log(1+\theta)\}
- \le\frac{\theta^2}{4}
-\end{equation}
-for $0\le\theta\le1/4$.  Independence and the construction imply
-\begin{equation}
- \mathrm{KL}(P_v\|P_0)
- \le\frac14\sum_{s=t-h+1}^{t}\theta_s^2
- \le c_2ha^2.
-\end{equation}
-Take
-$h=\lfloor c_3(m/L^2)^{1/(2\beta+1)}\rfloor$ with $c_3$ small.  Then $ha^2=L^2h^{2\beta+1}\le c_4m$, and $c_4$ can be made smaller than a fixed fraction of $\log|\mathcal V|$.  Fano's inequality gives a constant lower bound on the probability of confusing the target covariances.  The standard reduction from testing to estimation yields expected operator error at least $c_5a$, and
-$a=Lh^\beta\asymp L^{1/(2\beta+1)}m^{\beta/(2\beta+1)}$. \hfill$\square$
-
-\subsection{Proofs of Propositions~\ref{prop:certificates} and \ref{prop:delay}}
-Under \eqref{eq:total-radius}, Weyl's inequality gives
-$|\mu_i(S)-\lambda_i(C)|\le\eps_t$.  A null residual direction has population covariance eigenvalue one, so it cannot produce a sample eigenvalue above $1+2\eps_t$; this proves no false certified directions.  For a certified direction,
-$1+\lambda_i\ge\mu_i-\eps_t$, which gives the lower bound.  If every active spike exceeds $3\eps_t$, all active sample eigenvalues exceed $1+2\eps_t$ and all inactive ones do not.  Davis--Kahan, together with the rank-boundary gap $\lambda_r$, gives the stated subspace inequality.  The negative-residual statements follow from the same Weyl bound applied to the smallest eigenvalue.
-
-For a birth, the post-change mass of an infinite-history EWMA after $d$ observations is $1-q^{d+1}$.  The population spike is therefore $\lambda(1-q^{d+1})$.  Requiring this to exceed $3e$ and solving for $d$ gives the first formula.  After a death the surviving pre-change mass is $q^{d+1}$; requiring $\lambda q^{d+1}\le e$ gives the second. \hfill$\square$
-
-\subsection{Proof of Proposition~\ref{prop:decision}}
-Let $E=\Sigma^{-1/2}(\widehat\Sigma-\Sigma)\Sigma^{-1/2}$ and let $e_i$ be its eigenvalues.  Conditional expected excess quasi-loss equals
-\begin{equation}
- \sum_i\{\log(1+e_i)+(1+e_i)^{-1}-1\}.
-\end{equation}
-For $|e_i|\le\rho<1$, integration of the derivative bounds the scalar term by $e_i^2/[2(1-\rho)^2]$, proving \eqref{eq:nll-transfer}.
-
-For every $w\in\W_t$,
-$|w^\top(\widehat\Sigma-\Sigma)w|\le L_w^2\|\widehat\Sigma-\Sigma\|_{\op}$.  Add and subtract the two estimated risks and use optimality of $\widehat w_t$ under $\widehat\Sigma_t$ and $w_t^\star$ under $\Sigma_{t+1}$; two such deviations give \eqref{eq:decision-transfer}.  Finally,
-$\Delta=D^{1/2}Q(\widehat C-C)Q^\top D^{1/2}$ and $Q^\top Q=I$, so
-$\|\Delta\|_{\op}\le\|D\|_{\op}\|\widehat C-C\|_{\op}$. \hfill$\square$
-
-\section{Implementation Notes and Auditable Evaluation Protocol}
-
-A reference implementation should preserve the following information clock.
-\begin{enumerate}
-\item Fit $(B,\Omega,D,Q)$ using observations no later than the episode start.
-\item At origin $t$, update every memory candidate with $x_t$ and output $\widehat\Sigma_t$.
-\item Evaluate only on $x_{t+1}$ and, in simulations, compare with $\Sigma_{t+1}$.  Rank diagnostics compare the origin-$t$ output with $r_{t+1}$.
-\item Compare ATLAS with every fixed memory in its candidate grid.  A hindsight-best fixed memory is an oracle comparator and must be labeled as such.
-\item Use paired differences across common random seeds.  For dependent real streams, use a block bootstrap or HAC inference for loss differences.
-\end{enumerate}
-These rules directly address the most consequential failure modes in the earlier empirical draft.  A same-time independent replicate is useful for covariance filtering but cannot be relabeled as a one-step forecast.  Omitting candidate memories from the fixed-window table can reverse a winner.  A missing-data table produced by a full-covariance EM cannot support a constrained pilot-preserving EM claim.
-
-\section{Broader Impact}
-
-Covariance forecasts influence automated allocation, anomaly monitoring, and control.  A correction that reacts to omitted common shocks can reduce miscalibrated risk, but aggressive updates can destabilize downstream decisions.  ATLAS limits this hazard by preserving the pilot, adding only positive-semidefinite covariance, and separating predictive output from certified structural claims.  The same design can fail when the pilot overstates covariance; the negative-residual flag should trigger human review or pilot refitting.  Financial examples illustrate methodology and do not constitute investment advice.
-
-\section{NeurIPS Paper Checklist}
-
-\begin{enumerate}[leftmargin=1.6em,label=\arabic*.]
-\item \textbf{Claims: Yes.}  The abstract and introduction state the strict one-step protocol, frozen-pilot scope, upper and lower rates, and the removal of unsupported empirical claims.
-\item \textbf{Limitations: Yes.}  Section~\ref{sec:limitations} discusses frozen episodes, one-sided correction, dependence, rank certification, missing data, and computation.
-\item \textbf{Theory assumptions and proofs: Yes.}  All assumptions appear before the results; complete proofs are included in Appendix~\ref{app:proofs}.
-\item \textbf{Experimental reproducibility: N/A.}  The submission is designated as a Theory contribution and makes no empirical performance claim.  The appendix specifies an auditable protocol for future experiments.
-\item \textbf{Data and code: N/A for the stated results.}  No dataset or numerical result is needed to establish the theorems.  The online recursion is fully specified in Equations~\eqref{eq:weights}--\eqref{eq:forecast}.
-\item \textbf{Statistical significance: N/A.}  No empirical comparison is reported.
-\item \textbf{Compute resources: N/A.}  The theoretical results require no large-scale computation.  Per-update complexity is stated in Section~\ref{sec:algorithm}.
-\item \textbf{Ethics: Yes.}  The work conforms to the NeurIPS Code of Ethics to the best of the authors' knowledge.
-\item \textbf{Broader impacts: Yes.}  Positive and negative deployment consequences appear in the Broader Impact section.
-\item \textbf{Licenses and personal data: N/A.}  The paper introduces no dataset, human-subject study, or personally identifiable information.
-\item \textbf{Use of existing assets: Yes.}  Prior methods and the 2026 transient-factor formulation are cited and their different targets are stated.
-\item \textbf{Reproducibility of mathematical statements: Yes.}  Constants are universal unless indexed, the prediction target is explicit, and the lower-bound class is defined before the theorem.
-\end{enumerate}
+\newpage
+\typeout{CHECKLIST_START_PAGE=\thepage}
+\input{checklist}
 
 \end{document}

@@ -6,32 +6,44 @@ on:
       - tmp-atlas-neurips-build-20260728
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: tmp-atlas-neurips-build-20260728
       - name: Compile LaTeX
         uses: xu-cheng/latex-action@v3
         with:
           root_file: main.tex
           latexmk_use_xelatex: false
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
-      - name: Stage artifact
+      - name: Audit and stage release
         run: |
-          mkdir -p artifact
-          cp main.pdf artifact/ATLAS_NeurIPS2026.pdf
-          cp main.tex artifact/ATLAS_NeurIPS2026.tex
-          if [ -f README.md ]; then cp README.md artifact/README.md; fi
-          if [ -f revision_notes_ja.md ]; then cp revision_notes_ja.md artifact/revision_notes_ja.md; fi
-          pdfinfo main.pdf > artifact/pdfinfo.txt
-          grep -E "Output written|Overfull|Underfull|Warning|undefined" main.log > artifact/compile_audit.txt || true
+          rm -rf release
+          mkdir -p release
+          cp main.pdf release/ATLAS_NeurIPS2026.pdf
+          cp main.tex release/ATLAS_NeurIPS2026.tex
+          if [ -f README.md ]; then cp README.md release/README.md; fi
+          if [ -f revision_notes_ja.md ]; then cp revision_notes_ja.md release/revision_notes_ja.md; fi
+          pdfinfo main.pdf > release/pdfinfo.txt
+          grep -E "Output written|Overfull|Underfull|Warning|undefined" main.log > release/compile_audit.txt || true
+          tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex README.md revision_notes_ja.md 2>/dev/null || tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex
+      - name: Commit compiled release
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add release
+          git commit -m "Store compiled ATLAS NeurIPS artifact [skip ci]" || exit 0
+          git push origin HEAD:tmp-atlas-neurips-build-20260728
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ATLAS-NeurIPS-build
-          path: artifact
+          path: release
           if-no-files-found: error

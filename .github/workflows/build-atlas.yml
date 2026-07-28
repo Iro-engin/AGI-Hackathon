@@ -3,7 +3,7 @@ name: Build ATLAS NeurIPS artifact
 on:
   pull_request:
     branches:
-      - tmp-atlas-neurips-base-20260728
+      - tmp-atlas-neurips-final-base-20260728
 
 permissions:
   contents: read

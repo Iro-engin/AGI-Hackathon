@@ -31,8 +31,9 @@ jobs:
           cp main.tex release/ATLAS_NeurIPS2026.tex
           if [ -f README.md ]; then cp README.md release/README.md; fi
           if [ -f revision_notes_ja.md ]; then cp revision_notes_ja.md release/revision_notes_ja.md; fi
-          pdfinfo main.pdf > release/pdfinfo.txt
-          grep -E "Output written|Overfull|Underfull|Warning|undefined" main.log > release/compile_audit.txt || true
+          grep -E "Output written|Overfull|Underfull|LaTeX Warning|undefined" main.log > release/compile_audit.txt || true
+          grep -E "Output written" main.log > release/page_audit.txt || true
+          wc -c main.pdf > release/pdf_size.txt
           tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex README.md revision_notes_ja.md 2>/dev/null || tar -czf release/ATLAS_NeurIPS2026_source.tar.gz main.tex
       - name: Commit compiled release on direct push
         if: github.event_name == 'push' && github.actor != 'github-actions[bot]'

@@ -45,3 +45,5 @@ Before submission, independently verify:
 4. No undefined citations or references in `compile_audit.txt`.
 5. Anonymous metadata, source, supplementary files, and external links.
 6. The mathematical constants and all proofs, especially the minimax lower bound, through independent coauthor review.
+
+Build audit trigger: 2026-07-28 final clean branch.

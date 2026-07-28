@@ -1,0 +1,159 @@
+\section{Model approximation, calibration, and interpretation}
+\label{sec:calibration}
+
+The exact model in \eqref{eq:full-target} isolates the statistical problem.  This section characterizes what the one-sided correction estimates when the model is only approximate, explains how the radii enter an implementation, and distinguishes predictive output from structural certification.
+
+\subsection{Best correction when the pilot is misspecified}
+
+For an arbitrary target covariance, define the standardized discrepancy
+\begin{equation}
+ M_{t+1}=D^{-1/2}(\Sigma_{t+1}-\Sigma_{\base})D^{-1/2}.
+ \label{eq:standardized-discrepancy}
+\end{equation}
+The class of admissible pilot-preserving covariances is
+\begin{equation}
+ \mathcal C_{\base}=\left\{\Sigma_{\base}+D^{1/2}QGQ^\top D^{1/2}:G\succeq0\right\}.
+ \label{eq:pilot-class}
+\end{equation}
+This class excludes corrections in the pilot span, cross-block corrections, and negative residual covariance.
+
+\begin{proposition}[Best one-sided approximation]
+\label{prop:best-approximation}
+The Frobenius projection of $M_{t+1}$ onto $\{QGQ^\top:G\succeq0\}$ is
+\begin{equation}
+ G_{t+1}^\dagger=\{Q^\top M_{t+1}Q\}_+.
+ \label{eq:best-correction}
+\end{equation}
+Let
+$R_{t+1}=M_{t+1}-QG_{t+1}^\dagger Q^\top$.  Then $\|R_{t+1}\|_{\fro}$ is the irreducible standardized approximation error over $\mathcal C_{\base}$, and every pilot-preserving forecast obeys
+\begin{equation}
+ \left\|D^{-1/2}(\widehat\Sigma_t-\Sigma_{t+1})D^{-1/2}\right\|_{\fro}
+ \le \|\widehat G_t-G_{t+1}^\dagger\|_{\fro}+\|R_{t+1}\|_{\fro},
+ \label{eq:approximation-decomp}
+\end{equation}
+where $\widehat G_t=\widehat C_t-I_m$.
+\end{proposition}
+
+\begin{proof}
+Complete $Q$ to an orthogonal basis $[Q_\perp,Q]$ and express $M_{t+1}$ in the resulting blocks.  All blocks except the $Q$--$Q$ block are constant in
+$\|M_{t+1}-QGQ^\top\|_{\fro}^2$.  The remaining problem is
+$\min_{G\succeq0}\|Q^\top M_{t+1}Q-G\|_{\fro}^2$, whose solution is the spectral positive part.  Equation~\eqref{eq:approximation-decomp} follows from the triangle inequality.
+\end{proof}
+
+Under the exact model, $R_{t+1}=0$ and $G_{t+1}^\dagger=T_{t+1}$.  Under misspecification, the statistical theorems control estimation of the admissible positive residual, while $R_{t+1}$ records the modeling error.  The negative-residual flag detects a sufficiently large negative component in the $Q$--$Q$ block.  It cannot detect a discrepancy confined to the pilot span or a cross block from residual observations alone; an episode-level pilot audit must address those components.
+
+\subsection{Operational calibration of uncertainty}
+
+A valid radius is part of the certified algorithm, not a display parameter chosen after observing test losses.  Table~\ref{tab:radius-regimes} separates three uses.
+
+\begin{table}[t]
+\caption{Radius regimes and the claims they support.  Prediction-tuned thresholds may be useful operationally, but they do not inherit the paper's structural guarantees.}
+\label{tab:radius-regimes}
+\centering
+\small
+\begin{tabular}{p{0.19\linewidth}p{0.23\linewidth}p{0.27\linewidth}p{0.22\linewidth}}
+\toprule
+Regime & Required envelope & Radius construction & Supported claim \\
+\midrule
+Finite $(2+\delta)$ moment
+& $(M_{2+\delta},\delta)$ and clipping level $\tau$
+& Matrix Freedman radius \eqref{eq:radius} plus $b_\tau$
+& Simultaneous robust oracle inequality \\
+Sub-Gaussian
+& Upper bounds on $(K,\bar c)$ fixed before the episode
+& Weighted net--Bernstein radius in Lemma~\ref{lem:subg-radius}
+& H\"older adaptation and minimax comparison \\
+Prediction-tuned
+& Independent calibration episode or declared heuristic
+& Empirical scale multiplier or predictive validation
+& Forecast only; no honest rank or invalidity certificate \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Moment and tail envelopes can come from domain restrictions or an independent pre-deployment sample.  Estimating them online from the same path is possible, but requires a self-normalized matrix inequality and changes the theorem.  We therefore keep the certified version explicit.  The crude bounded-increment radius is always implementable once $(M_{2+\delta},\delta,\tau)$ are declared; it can be conservative in high dimension.  The sub-Gaussian radius is sharper and drives the minimax result.  A practical system may expose both a prediction-oriented output and a certified output, provided it labels them separately.
+
+\subsection{Why memory must adapt locally}
+
+Ignoring constants and the clipping term, the one-step risk proxy under \eqref{eq:holder} is
+\begin{equation}
+ \mathcal R_t(H)\asymp A\sqrt{d_T/H}+L_tH^\beta.
+ \label{eq:risk-proxy}
+\end{equation}
+The first term decreases with memory and the second increases.  On a stable interval with $L_t=0$, the longest admissible memory is optimal.  As $L_t$ grows, the minimizer moves to
+$H_t^\star\asymp(A^2d_T/L_t^2)^{1/(2\beta+1)}$ and eventually reaches the shortest grid point.  A single half-life can therefore be near-oracle on both intervals only when the grid is effectively degenerate or the path never changes its local scale.  The Lepski comparison detects when long- and short-memory scatters cease to agree beyond uncertainty, which is the observable implication of the bias term in \eqref{eq:risk-proxy}.
+
+This interpretation also clarifies the difference from change-point detection.  No discrete changepoint is needed: a smoothly rotating or strengthening factor gradually changes the largest acceptable memory.  After an abrupt event, Proposition~\ref{prop:delay} describes the additional delay caused by exponential averaging and the certification threshold.
+
+\subsection{Output semantics}
+
+\begin{table}[t]
+\caption{ATLAS outputs have different evidentiary requirements.  The forecast is always defined; structural outputs require a valid total radius.}
+\label{tab:outputs}
+\centering
+\small
+\begin{tabular}{p{0.20\linewidth}p{0.27\linewidth}p{0.43\linewidth}}
+\toprule
+Output & Requirement & Interpretation \\
+\midrule
+$\widehat\Sigma_t$ & Selected scatter and fixed pilot & Positive-definite one-step covariance forecast \\
+$\underline r_t$ & Total radius $\eps_t$ & Lower confidence bound on next-period residual rank \\
+$\widehat V_t$ & Rank separation $\lambda_r>3\eps_t$ & Certified active residual subspace \\
+$\mathcal F_t^-$ & Total radius $\eps_t$ & Evidence that one-sided pilot augmentation is invalid \\
+Episode reset & External pilot audit or repeated flags & Starts a new fixed coordinate system; does not transport old scatters \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The rank output is intentionally a lower confidence bound.  Directions below the threshold may still improve quasi-likelihood, but the data do not support calling them factors at the stated confidence level.  Conversely, the invalidity flag is diagnostic rather than corrective: positive-semidefinite augmentation cannot repair an overstated pilot without changing the model class.
+
+\subsection{Dynamic decision regret}
+
+Proposition~\ref{prop:decision} turns local operator error into a cumulative downstream guarantee.
+
+\begin{corollary}[Dynamic quadratic-decision regret]
+\label{cor:dynamic-regret}
+Under the conditions of Corollary~\ref{cor:holder}, on its simultaneous event,
+\begin{equation}
+ \sum_{t=1}^{T-1}\left\{
+ \widehat w_t^\top\Sigma_{t+1}\widehat w_t
+ -w_t^{\star\top}\Sigma_{t+1}w_t^\star\right\}
+ \le C L_w^2\|D\|_{\op}
+ \sum_{t=1}^{T-1}\left[
+ (A^2d_T)^{\beta/(2\beta+1)}L_t^{1/(2\beta+1)}+b_\tau
+ \right].
+ \label{eq:dynamic-regret}
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+Apply \eqref{eq:decision-transfer} at every origin, substitute \eqref{eq:holder-rate}, and sum.
+\end{proof}
+
+The bound is dynamic rather than static-regret relative to one fixed decision.  It compares each action with the oracle that knows the next covariance, so the local path variation appears through $L_t$.  This is the relevant benchmark when a covariance forecast feeds a repeatedly solved controller or allocation problem.
+
+\subsection{Proof architecture}
+
+The upper and lower analyses use the same bias--variance scale.  Theorem~\ref{thm:concentration} decomposes the error into a centered weighted matrix martingale, clipping bias, and the distance from historical covariances to $C_{t+1}$.  Theorem~\ref{thm:oracle} shows that the largest mutually consistent memory is no shorter than the oracle crossing of stochastic error and drift.  Corollary~\ref{cor:holder} evaluates that crossing for a H\"older path.
+
+For the lower bound, a packing of rank-one projectors supplies exponentially many covariance directions.  A temporal bump of width $h$ and terminal height $a=Lh^\beta$ produces operator separation of order $a$, while the entire observed history carries Kullback--Leibler information of order $ha^2$.  Setting $ha^2$ proportional to the logarithm of the packing size, which is order $m$, yields exactly the scale in \eqref{eq:holder-rate}.  Thus the memory selected by the upper bound has the same order as the least favorable temporal window in the lower bound.
+
+\begin{table}[t]
+\caption{Conceptual scope relative to neighboring method classes.  ``Adaptive'' refers to data-driven temporal memory, not merely recursive updating.}
+\label{tab:scope}
+\centering
+\small
+\begin{tabular}{lccccc}
+\toprule
+Method class & Full PD forecast & Supplied pilot & Adaptive memory & Heavy-tail bound & Smooth-drift lower bound \\
+\midrule
+Static robust covariance & Yes & No & No & Yes & No \\
+Online subspace tracking & No & No & Sometimes & Model-specific & No \\
+Online changepoint methods & Model-specific & No & Run length & Sometimes & Abrupt changes \\
+Transient factor augmentation & Yes & Yes & No & No & No \\
+\ATLAS & Yes & Yes & Yes & Yes & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:scope} identifies the combination addressed here.  It does not imply dominance on another method's native task.  Subspace trackers can handle sparse outliers or missing coordinates that lie outside our assumptions; changepoint methods can deliver calibrated run-length posteriors; transient-factor likelihood methods can refine the pilot and accommodate missing returns.  The contribution is the strict one-step, frozen-pilot, locally adaptive problem together with matching statistical guarantees.

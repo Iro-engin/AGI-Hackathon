@@ -82,8 +82,11 @@ def load_uci(path: Path) -> pd.DataFrame:
             except UnicodeDecodeError:
                 text = raw.decode("latin-1")
             frames.append(parse_batch(text, batch))
-    data = pd.concat(frames, ignore_index=True)
-    return data.sort_values(["batch", "row_in_batch"]).reset_index(drop=True)
+    return (
+        pd.concat(frames, ignore_index=True)
+        .sort_values(["batch", "row_in_batch"])
+        .reset_index(drop=True)
+    )
 
 
 def condition_design(gas: np.ndarray, concentration: np.ndarray) -> np.ndarray:
@@ -175,19 +178,20 @@ def residual_coordinates(frame: pd.DataFrame, pilot: FrozenPilot) -> np.ndarray:
 
 
 def calibration_envelopes(
-    residual_by_batch: Mapping[int, np.ndarray], safety: float = 2.0
+    residual_by_batch: Mapping[int, np.ndarray],
+    calibration_batches: Sequence[int],
+    safety: float = 2.0,
 ) -> Tuple[float, float]:
-    maxima = []
-    standardized_norms = []
-    for batch in (1, 2):
+    maxima: List[float] = []
+    norms: List[float] = []
+    for batch in calibration_batches:
         rows = residual_by_batch[batch]
         covariance = covariance_of_rows(rows)
         maxima.append(float(np.max(np.linalg.eigvalsh(covariance))))
-        standardized_norms.extend(np.linalg.norm(rows, axis=1).tolist())
+        norms.extend(np.linalg.norm(rows, axis=1).tolist())
     M = max(1.25, safety * max(maxima))
-    # K is a declared calibration envelope, not a distribution-free estimate.
-    median_norm = float(np.median(standardized_norms))
-    K = max(1.0, min(3.0, safety * median_norm / math.sqrt(residual_by_batch[1].shape[1])))
+    m = residual_by_batch[calibration_batches[0]].shape[1]
+    K = max(1.0, min(3.0, safety * float(np.median(norms)) / math.sqrt(m)))
     return K, M
 
 
@@ -195,12 +199,15 @@ def batch_memory_windows(
     batches: Mapping[int, np.ndarray], last_batch: int, memories: Sequence[int]
 ) -> Tuple[np.ndarray, Dict[int, int]]:
     history = np.vstack([batches[b] for b in range(1, last_batch + 1)])
-    counts: Dict[int, int] = {}
-    for memory in sorted(memories):
-        if memory <= last_batch:
-            counts[memory] = int(
-                sum(len(batches[b]) for b in range(last_batch - memory + 1, last_batch + 1))
+    counts = {
+        memory: int(
+            sum(
+                len(batches[b])
+                for b in range(last_batch - memory + 1, last_batch + 1)
             )
+        )
+        for memory in sorted(memories)
+    }
     return history, counts
 
 
@@ -221,15 +228,17 @@ def run_analysis(
     kappa: float,
 ) -> None:
     out.mkdir(parents=True, exist_ok=True)
-    calibration = data[data["batch"].isin([1, 2])].copy()
+    calibration_batches = (1, 2, 3, 4)
+    evaluation_batches = tuple(range(5, 11))
+    calibration = data[data["batch"].isin(calibration_batches)].copy()
     pilot = fit_frozen_pilot(calibration)
     residual_by_batch: Dict[int, np.ndarray] = {
         batch: residual_coordinates(data[data["batch"] == batch], pilot)
         for batch in range(1, 11)
     }
     m = residual_by_batch[1].shape[1]
-    K, M = calibration_envelopes(residual_by_batch)
-    memories = [1, 2, 4, 8]
+    K, M = calibration_envelopes(residual_by_batch, calibration_batches)
+    memories = [1, 2, 4]
     gammas = (0.5, 0.25, 0.125, 0.0625, 0.03125)
     config = RadiusConfig(
         K=K,
@@ -250,8 +259,8 @@ def run_analysis(
     hedge_log_weights = {memory: 0.0 for memory in memories}
     hedge_eta = 0.05
 
-    for last_batch in range(2, 10):
-        target_batch = last_batch + 1
+    for target_batch in evaluation_batches:
+        last_batch = target_batch - 1
         history, memory_counts = batch_memory_windows(
             residual_by_batch, last_batch, memories
         )
@@ -273,7 +282,10 @@ def run_analysis(
         weights = np.array([math.exp(hedge_log_weights[memory]) for memory in available])
         weights /= np.sum(weights)
         hedge = sym(
-            sum(weight * fixed_forecasts[memory] for weight, memory in zip(weights, available))
+            sum(
+                weight * fixed_forecasts[memory]
+                for weight, memory in zip(weights, available)
+            )
         )
         expanding = spectral_clip(covariance_of_rows(history), 1.0, M)
         target = residual_by_batch[target_batch]
@@ -298,8 +310,8 @@ def run_analysis(
         )
         for method, forecast in forecasts.items():
             forecast_cache[(target_batch, method)] = forecast
-            inv = np.linalg.inv(forecast)
-            energy = np.einsum("ni,ij,nj->n", target, inv, target, optimize=True)
+            inverse = np.linalg.inv(forecast)
+            energy = np.einsum("ni,ij,nj->n", target, inverse, target, optimize=True)
             rows.append(
                 {
                     "origin_batch": last_batch,
@@ -343,34 +355,34 @@ def run_analysis(
 
     rng = np.random.default_rng(20260730)
     methods = sorted(results["method"].unique())
-    target_batches = sorted(target_cache)
     bootstrap_rows: List[dict] = []
     for replication in range(bootstrap_replications):
-        sampled_batches = rng.choice(target_batches, size=len(target_batches), replace=True)
+        sampled_batches = rng.choice(
+            evaluation_batches, size=len(evaluation_batches), replace=True
+        )
         scores: Dict[str, List[float]] = {method: [] for method in methods}
         for target_batch in sampled_batches:
             target = target_cache[int(target_batch)]
             indices = rng.integers(0, len(target), size=len(target))
             sampled = target[indices]
             for method in methods:
-                key = (int(target_batch), method)
-                if key in forecast_cache:
-                    scores[method].append(mean_nll(forecast_cache[key], sampled))
-        for method, values in scores.items():
-            if values:
-                bootstrap_rows.append(
-                    {
-                        "replication": replication,
-                        "method": method,
-                        "mean_nll": float(np.mean(values)),
-                    }
+                scores[method].append(
+                    mean_nll(forecast_cache[(int(target_batch), method)], sampled)
                 )
+        for method, values in scores.items():
+            bootstrap_rows.append(
+                {
+                    "replication": replication,
+                    "method": method,
+                    "mean_nll": float(np.mean(values)),
+                }
+            )
     bootstrap = pd.DataFrame(bootstrap_rows)
     bootstrap.to_csv(out / "hierarchical_bootstrap.csv", index=False)
     atlas = bootstrap[bootstrap["method"] == "ATLAS-SB"][
         ["replication", "mean_nll"]
     ].rename(columns={"mean_nll": "atlas_nll"})
-    comparison_rows: List[dict] = []
+    comparisons: List[dict] = []
     for method in methods:
         if method == "ATLAS-SB":
             continue
@@ -379,7 +391,7 @@ def run_analysis(
         ].rename(columns={"mean_nll": "other_nll"})
         merged = atlas.merge(other, on="replication", how="inner")
         difference = merged["atlas_nll"] - merged["other_nll"]
-        comparison_rows.append(
+        comparisons.append(
             {
                 "competitor": method,
                 "mean_difference": float(difference.mean()),
@@ -388,24 +400,25 @@ def run_analysis(
                 "atlas_win_probability": float((difference < 0).mean()),
             }
         )
-    pd.DataFrame(comparison_rows).to_csv(
+    pd.DataFrame(comparisons).to_csv(
         out / "paired_bootstrap_comparisons.csv", index=False
     )
-    composition = data.groupby(["batch", "gas"], as_index=False).size()
-    composition.to_csv(out / "composition_audit.csv", index=False)
+    data.groupby(["batch", "gas"], as_index=False).size().to_csv(
+        out / "composition_audit.csv", index=False
+    )
     pd.DataFrame(
         [
             {
                 "observations": len(data),
                 "features": 128,
-                "calibration_batches": "1,2",
-                "evaluation_batches": "3-10",
+                "calibration_batches": "1-4",
+                "evaluation_batches": "5-10",
                 "pilot_rank": pilot.pilot_rank,
                 "monitor_dimension": m,
                 "K_calibration_envelope": K,
                 "M_calibration_envelope": M,
                 "tau": tau,
-                "candidate_memories": "1,2,4,8 batches",
+                "candidate_memories": "1,2,4 batches",
                 "bootstrap_replications": bootstrap_replications,
                 "c_det": c_det,
                 "kappa": kappa,
@@ -425,8 +438,7 @@ def main() -> None:
     parser.add_argument("--c-det", type=float, default=2.0)
     parser.add_argument("--kappa", type=float, default=0.25)
     args = parser.parse_args()
-    archive = download_archive(args.archive)
-    data = load_uci(archive)
+    data = load_uci(download_archive(args.archive))
     run_analysis(data, args.out, args.bootstrap, args.c_det, args.kappa)
 
 

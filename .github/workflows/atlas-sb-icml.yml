@@ -35,9 +35,13 @@ jobs:
         run: pip install -r icml_atlas_sb/requirements.txt
 
       - name: Run strict multidimensional Monte Carlo
+        id: mc
+        continue-on-error: true
         working-directory: icml_atlas_sb
         run: |
           rm -rf generated/monte_carlo
+          mkdir -p generated
+          set -o pipefail
           python run_monte_carlo.py \
             --out generated/monte_carlo \
             --seeds 6 \
@@ -47,9 +51,13 @@ jobs:
             2>&1 | tee generated_monte_carlo.log
 
       - name: Run public UCI next-batch analysis
+        id: uci
+        continue-on-error: true
         working-directory: icml_atlas_sb
         run: |
           rm -rf generated/uci
+          mkdir -p generated
+          set -o pipefail
           python run_uci.py \
             --archive data/gas_sensor_array_drift.zip \
             --out generated/uci \
@@ -59,18 +67,25 @@ jobs:
             2>&1 | tee generated_uci.log
 
       - name: Generate tables and figures
+        id: assets
+        if: ${{ steps.mc.outcome == 'success' && steps.uci.outcome == 'success' }}
+        continue-on-error: true
         working-directory: icml_atlas_sb
         run: |
           mkdir -p paper/generated
+          set -o pipefail
           python make_assets.py \
             --mc generated/monte_carlo \
             --uci generated/uci \
             --out paper/generated \
             2>&1 | tee generated_assets.log
 
-      - name: Compile ICML paper when source exists
-        if: ${{ hashFiles('icml_atlas_sb/paper/main.tex') != '' }}
+      - name: Compile ICML paper
+        id: compile
+        if: ${{ steps.assets.outcome == 'success' }}
+        continue-on-error: true
         run: |
+          set -o pipefail
           curl -L --fail --retry 3 \
             -o /tmp/icml2026.zip \
             https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip
@@ -86,7 +101,8 @@ jobs:
             texlive-latex-base texlive-latex-extra texlive-fonts-recommended \
             texlive-science latexmk poppler-utils qpdf ghostscript zip
           cd icml_atlas_sb/paper
-          latexmk -pdf -file-line-error -halt-on-error -interaction=nonstopmode main.tex
+          latexmk -pdf -file-line-error -halt-on-error -interaction=nonstopmode main.tex \
+            2>&1 | tee ../generated_compile.log
           mkdir -p ../release
           cp main.pdf ../release/ATLAS_SB_ICML2026.pdf
           cp main.tex proofs.tex references.bib icml2026.sty icml2026.bst ../release/
@@ -101,26 +117,44 @@ jobs:
             main.tex proofs.tex references.bib icml2026.sty icml2026.bst generated
           sha256sum * > SHA256SUMS.txt
 
-      - name: Commit generated results and release
+      - name: Record pipeline status
+        if: always()
+        run: |
+          mkdir -p icml_atlas_sb/status
+          cat > icml_atlas_sb/status/latest.txt <<EOF
+          commit=${GITHUB_SHA}
+          monte_carlo=${{ steps.mc.outcome }}
+          uci=${{ steps.uci.outcome }}
+          assets=${{ steps.assets.outcome }}
+          compile=${{ steps.compile.outcome }}
+          EOF
+
+      - name: Commit generated results, release, and diagnostics
+        if: always()
         run: |
           git config user.name 'atlas-sb-bot'
           git config user.email 'atlas-sb-bot@users.noreply.github.com'
-          git add icml_atlas_sb/generated icml_atlas_sb/paper/generated \
+          git add -f icml_atlas_sb/status
+          for path in \
+            icml_atlas_sb/generated \
+            icml_atlas_sb/paper/generated \
+            icml_atlas_sb/release \
             icml_atlas_sb/generated_monte_carlo.log \
             icml_atlas_sb/generated_uci.log \
-            icml_atlas_sb/generated_assets.log
-          if [ -d icml_atlas_sb/release ]; then
-            git add icml_atlas_sb/release
-          fi
+            icml_atlas_sb/generated_assets.log \
+            icml_atlas_sb/generated_compile.log; do
+            if [ -e "$path" ]; then git add -f "$path"; fi
+          done
           if git diff --cached --quiet; then
             echo 'No generated changes to commit.'
           else
-            git commit -m '[skip atlas] Regenerate ATLAS-SB ICML artifacts'
+            git commit -m '[skip atlas] Regenerate ATLAS-SB ICML artifacts and diagnostics'
             git pull --rebase origin main
             git push origin HEAD:main
           fi
 
       - name: Upload workflow artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ATLAS-SB-ICML-build
@@ -128,5 +162,14 @@ jobs:
             icml_atlas_sb/generated
             icml_atlas_sb/paper/generated
             icml_atlas_sb/release
+            icml_atlas_sb/status
             icml_atlas_sb/generated_*.log
           if-no-files-found: error
+
+      - name: Fail workflow after diagnostics if needed
+        if: always()
+        run: |
+          test '${{ steps.mc.outcome }}' = 'success'
+          test '${{ steps.uci.outcome }}' = 'success'
+          test '${{ steps.assets.outcome }}' = 'success'
+          test '${{ steps.compile.outcome }}' = 'success'

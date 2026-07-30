@@ -1,0 +1,50 @@
+name: Publish ATLAS-SB review artifacts
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-atlas-review.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/publish-atlas-review.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: atlas-sb-icml-ci
+          fetch-depth: 0
+      - name: Download successful build artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -L --fail \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -o /tmp/atlas.zip \
+            https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/8746071790/zip
+          rm -rf /tmp/atlas && mkdir -p /tmp/atlas
+          unzip -q /tmp/atlas.zip -d /tmp/atlas
+          mkdir -p review_artifacts/atlas_sb
+          PDF=$(find /tmp/atlas -name ATLAS_SB_ICML2026.pdf -print -quit)
+          SHEET=$(find /tmp/atlas -name contact_sheet.png -print -quit)
+          AUDIT=$(find /tmp/atlas -name compile_audit.txt -print -quit)
+          PAGE=$(find /tmp/atlas -name page_limit_audit.txt -print -quit)
+          PDFINFO=$(find /tmp/atlas -name pdfinfo.txt -print -quit)
+          test -n "$PDF" && cp "$PDF" review_artifacts/atlas_sb/
+          test -n "$SHEET" && cp "$SHEET" review_artifacts/atlas_sb/
+          test -n "$AUDIT" && cp "$AUDIT" review_artifacts/atlas_sb/
+          test -n "$PAGE" && cp "$PAGE" review_artifacts/atlas_sb/
+          test -n "$PDFINFO" && cp "$PDFINFO" review_artifacts/atlas_sb/
+      - name: Commit review artifacts
+        run: |
+          git config user.name atlas-review-bot
+          git config user.email atlas-review-bot@users.noreply.github.com
+          git add -f review_artifacts/atlas_sb
+          git commit -m '[skip atlas] Publish review PDF and contact sheet'
+          git push origin HEAD:atlas-sb-icml-ci

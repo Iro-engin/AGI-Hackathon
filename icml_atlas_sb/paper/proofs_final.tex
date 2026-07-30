@@ -1,0 +1,188 @@
+\section{Certificate Proofs}
+\label{app:proofs}
+
+\subsection{Rolling matrix empirical-Bernstein certificate}
+
+We use the following specialization of the matrix empirical-Bernstein supermartingale of \citet{wang2024matrixeb}.  Let $(\mathcal G_j)$ be a filtration, let $X_j$ be symmetric and adapted, and let $\widehat X_j$ be predictable.  If $0\preceq X_j\preceq I/2$ and $0\preceq\widehat X_j\preceq I/2$, then, for fixed $\gamma\in(0,1)$ and failure probability $\delta$,
+\begin{equation}
+ \lambda_{\max}\!\left\{\sum_{j=1}^n(X_j-\E_{j-1}X_j)\right\}
+ \le \frac{\log(m/\delta)+\lambda_{\max}\{\sum_{j=1}^n\phi(\gamma)(X_j-\widehat X_j)^2\}}{\gamma}
+ \label{eq:wr-special}
+\end{equation}
+with probability at least $1-\delta$, where $\phi(\gamma)=-\log(1-\gamma)-\gamma$.  The conditional means may vary with $j$; the exponential supermartingale only requires their predictability.
+
+\begin{lemma}[Simultaneous observable rolling certificate]
+\label{lem:eb}
+For the clipped matrices $Z_s$ in Section~\ref{sec:model}, define
+\begin{align}
+ \overline C_t^\tau(H)&=\frac{\tau^2}{H}\sum_{s=t-H+1}^t\E_{s-1}Z_s,\\
+ V_t(H)&=\sum_{s=t-H+1}^t Z_s^2.
+\end{align}
+With probability at least $1-\alpha/4$, simultaneously over $t\le T$ and $H\in\mathcal H$,
+\begin{equation}
+ \|S_t(H)-\overline C_t^\tau(H)\|_{\op}\le \widehat e_t(H).
+ \label{eq:eb-event}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Fix $(t,H,\gamma)$ and put $a=t-H+1$.  For the upper tail apply \eqref{eq:wr-special} to the shifted filtration $\mathcal G_j=\mathcal F_{a+j-1}$, $X_j=Z_{a+j-1}/2$, and $\widehat X_j=0$.  Since $0\preceq Z_s\preceq I$, the boundedness conditions hold and $(X_j-\widehat X_j)^2=Z_{a+j-1}^2/4$.  Multiplication by $2\tau^2/H$ gives
+\begin{equation}
+ \lambda_{\max}\{S_t(H)-\overline C_t^\tau(H)\}
+ \le \frac{2\tau^2}{H\gamma}\left[\log(m/\delta)+\frac{\phi(\gamma)}4\lambda_{\max}\{V_t(H)\}\right].
+\end{equation}
+For the lower tail use $X_j^-=(I-Z_{a+j-1})/2$ and $\widehat X_j^-=I/2$.  Again $(X_j^--\widehat X_j^-)^2=Z_{a+j-1}^2/4$, so the same right-hand side controls $\lambda_{\max}\{\overline C_t^\tau(H)-S_t(H)\}$.  Set $\delta=\alpha/(8TJ|\Gamma|)$, take a union bound over the two tails and all $(t,H,\gamma)$, and minimize over $\Gamma$.  \end{proof}
+
+\subsection{Sub-Gaussian certificate and clipping}
+
+\begin{lemma}[Deterministic covariance radius]
+\label{lem:det-radius}
+Under Assumption~\ref{ass:sg}, there is a universal $c_r$ such that, with probability at least $1-\alpha/4$, simultaneously over all rolling windows,
+\begin{equation}
+ \left\|\frac1H\sum_{s=t-H+1}^t y_sy_s^\top-\overline C_t(H)\right\|_{\op}
+ \le r(H):=c_rK^2M\left\{\sqrt{\frac{d_\alpha}{H}}+\frac{d_\alpha}{H}\right\}.
+ \label{eq:det-radius-app}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+For fixed unit $v$, $(v^\top y_s)^2-v^\top C_sv$ is conditionally centered sub-exponential with Orlicz norm at most $cK^2M$.  Conditional scalar Bernstein gives
+\begin{equation}
+ \Pr\left(\left|\frac1H\sum_s\{(v^\top y_s)^2-v^\top C_sv\}\right|>cK^2M\{\sqrt{x/H}+x/H\}\right)\le2e^{-x}.
+\end{equation}
+Take a $1/4$-net $\mathcal N$ with $|\mathcal N|\le9^m$, use $\|A\|_{\op}\le2\max_{v\in\mathcal N}|v^\top Av|$, set $x=m\log9+\log(8TJ/\alpha)$, and take a union bound over $(t,H)$.  The covariances may vary because the scalar argument is conditional.  \end{proof}
+
+Let $x_\alpha=\log(8T/\alpha)$ and choose
+\begin{equation}
+ \tau^2=c_\tau K^2M\{m+2\sqrt{mx_\alpha}+2x_\alpha\}.
+ \label{eq:tau-app}
+\end{equation}
+
+\begin{lemma}[Clipping bias]
+\label{lem:clip}
+For sufficiently large universal $c_\tau$,
+\begin{equation}
+ b_\tau:=\sup_s\|C_s-\tau^2\E_{s-1}Z_s\|_{\op}
+ \le c_bK^2M(m+x_\alpha+1)e^{-x_\alpha}.
+ \label{eq:clip-bias-app}
+\end{equation}
+Moreover, $\Pr(\max_{s\le T}\|y_s\|\le\tau)\ge1-\alpha/4$.
+\end{lemma}
+
+\begin{proof}
+Conditional sub-Gaussian norm concentration gives
+\begin{equation}
+ \Pr_{s-1}\{\|y_s\|^2>c_\tau K^2M(m+2\sqrt{mx}+2x)\}\le e^{-x}.
+\end{equation}
+Set $x=x_\alpha$ and take a union bound.  For unit $v$,
+\begin{align}
+ v^\top(C_s-\tau^2\E_{s-1}Z_s)v
+ &\le \E_{s-1}[\|y_s\|^2\mathbf1\{\|y_s\|>\tau\}]\\
+ &\le c_bK^2M(m+x_\alpha+1)e^{-x_\alpha},
+\end{align}
+where the last inequality follows by integrating the norm tail.  Take the supremum over $v$.  \end{proof}
+
+On the intersection of Lemmas~\ref{lem:eb}--\ref{lem:clip},
+\begin{equation}
+ \|S_t(H)-\overline C_t(H)\|_{\op}
+ \le \min\{r(H),\widehat e_t(H)+b_\tau\}
+ \le \rho_t(H),
+ \label{eq:joint-certificate}
+\end{equation}
+and $\kappa r(H)+b_\tau\le\rho_t(H)\le r(H)+b_\tau$.  This proves Theorem~\ref{thm:certificate} after combining the failure probabilities.
+
+\subsection{Stabilized Lepski selection}
+
+Define
+\begin{equation}
+ B_t(H)=\|\overline C_t(H)-C_{t+1}\|_{\op},\quad
+ B_t^\uparrow(H)=\max_{h\le H}B_t(h),
+\end{equation}
+and $H_t^\circ=\max\{H:B_t^\uparrow(H)\le\kappa r(H)\}$.
+
+\begin{proof}[Proof of Theorem~\ref{thm:oracle}]
+Fix $h\le H_t^\circ$.  By \eqref{eq:joint-certificate},
+\begin{align}
+ \|S_t(H_t^\circ)-S_t(h)\|_{\op}
+ &\le\rho_t(H_t^\circ)+\rho_t(h)+B_t(H_t^\circ)+B_t(h)\\
+ &\le\overline\rho_t(H_t^\circ)+\overline\rho_t(h)+2\kappa r(h).
+\end{align}
+Hence $H_t^\circ$ is admissible under \eqref{eq:selector} and $\widehat H_t\ge H_t^\circ$.  Applying admissibility of $\widehat H_t$ with $h=H_t^\circ$ gives
+\begin{align}
+ \|S_t(\widehat H_t)-C_{t+1}\|_{\op}
+ &\le\overline\rho_t(\widehat H_t)+\overline\rho_t(H_t^\circ)+2\kappa r(H_t^\circ)\\
+ &\quad+\rho_t(H_t^\circ)+B_t(H_t^\circ)\\
+ &\le6\overline\rho_t(H_t^\circ),
+\end{align}
+using monotonicity of $\overline\rho_t$ and $\kappa r(H_t^\circ),B_t(H_t^\circ)\le\overline\rho_t(H_t^\circ)$.  Since $I\preceq C_{t+1}\preceq MI$, Weyl's inequality yields
+$\|\Pi_{[I,MI]}(S)-C_{t+1}\|_{\op}\le2\|S-C_{t+1}\|_{\op}$.  \end{proof}
+
+\subsection{Local smoothness and expected risk}
+
+Under \eqref{eq:holder},
+\begin{equation}
+ B_t(H)\le\frac{L_t}{H}\sum_{j=0}^{H-1}(j+1)^\beta
+ \le c_\beta L_tH^\beta.
+ \label{eq:bias-holder}
+\end{equation}
+Balancing this term with $\kappa K^2M\sqrt{d_\alpha/H}$ gives
+$H_t^\star\asymp(K^4M^2d_\alpha/L_t^2)^{1/(2\beta+1)}$.
+
+\begin{proof}[Proof of Corollary~\ref{cor:rate}]
+Choose a dyadic grid point within a factor two of $H_t^\star$.  Equation~\eqref{eq:bias-holder} and the fixed $\kappa$ show that a neighboring constant-factor window belongs to the balancing set.  Since $H_t^\star\gtrsim d_\alpha$, the $d_\alpha/H$ term is dominated.  Theorem~\ref{thm:oracle} and $\rho_t(H)\le r(H)+b_\tau$ give the displayed rate on the good event.  On its complement, spectral clipping gives loss at most $M-1$.  Integrating yields \eqref{eq:upper-rate}.  \end{proof}
+
+\subsection{Matching lower bound}
+
+\begin{proof}[Proof of Theorem~\ref{thm:lower}]
+A volumetric argument on the projective sphere gives $\mathcal V\subset\mathbb S^{m-1}$ with $|\mathcal V|\ge\exp(c_0m)$ and $\|vv^\top-uu^\top\|_{\op}\ge c_1$ for distinct $u,v$.  Fix width $h$ and amplitude $a=c_2Lh^\beta$.  Set $\theta_s=0$ before $t-h+1$ and, for $s=t-h+1,\ldots,t+1$, set
+\begin{equation}
+ \theta_s=a\left(\frac{s-(t-h)}{h+1}\right)^\beta.
+\end{equation}
+For small $c_2$ these paths lie in the H\"older class.  Let $P_v$ be the law through $t$ under direction $v$ and $P_0$ the identity law.  For $0\le\theta\le1/4$,
+\begin{equation}
+ \KL\{N(0,I+\theta vv^\top),N(0,I)\}
+ =\tfrac12\{\theta-\log(1+\theta)\}\le\theta^2/4.
+\end{equation}
+Thus $\KL(P_v,P_0)\le c_3ha^2$.  Choose
+$h=\lfloor c_4(m/L^2)^{1/(2\beta+1)}\rfloor$ with $c_4$ small enough that $c_3ha^2\le\frac18\log|\mathcal V|$.  Fano's inequality gives constant direction-classification error.  At $t+1$, distinct targets are separated by $c_1a$ in operator norm.  Testing-to-estimation reduction gives risk at least $c_5a\asymp L^{1/(2\beta+1)}m^{\beta/(2\beta+1)}$.  \end{proof}
+
+\subsection{Rank and pilot-validity certificates}
+
+Let $\mu_{1,t}\ge\cdots\ge\mu_{m,t}$ be eigenvalues of $S_t(\widehat H_t)$.  Suppose $\overline B_t(H)\ge B_t(H)$ and put
+$\varepsilon_t=\rho_t(\widehat H_t)+\overline B_t(\widehat H_t)$.
+
+\begin{proposition}[Conservative certificates]
+\label{prop:certificate-app}
+On the certificate event,
+\begin{equation}
+ \underline r_t:=\#\{i:\mu_{i,t}>1+2\varepsilon_t\}
+ \le\rank(C_{t+1}-I).
+\end{equation}
+If the smallest positive residual eigenvalue exceeds $3\varepsilon_t$, equality holds and the certified subspace obeys a Davis--Kahan bound.  If $\mu_{m,t}<1-\varepsilon_t$, the one-sided model is rejected.
+\end{proposition}
+
+\begin{proof}
+The total error is at most $\varepsilon_t$.  Weyl's inequality prevents any null residual eigenvalue from generating a sample eigenvalue above $1+2\varepsilon_t$.  Under separation every positive residual eigenvalue crosses the threshold while null directions do not.  Davis--Kahan \citep{davis1970rotation} gives the subspace result.  The final statement follows from the smallest-eigenvalue version of Weyl's inequality.  \end{proof}
+
+\section{Exact Strict One-Step Benchmark}
+\label{app:benchmark}
+
+Let $R_s,U_s$ be independent Rademacher variables and
+$Y_s=R_s\sqrt{C_s(1+\eta U_s)}$, $\eta=1/4$, where $C_s=2$ before a break and $C_s=4$ after it.  Then $\E Y_s=0$, $\E Y_s^2=C_s$, and $Y_s^2\in[1.5,5]$.  If a window of length $H$ contains $d\le H$ post-break observations, its mean is $2+2d/H$ and its variance is
+\begin{equation}
+ \frac{(H-d)\eta^2(2)^2+d\eta^2(4)^2}{H^2}=\frac{H+3d}{4H^2}.
+\end{equation}
+The exact strict next-period MSE for target $4$ is
+\begin{equation}
+ R_H(d)=4(1-d/H)^2+\frac{H+3d}{4H^2},\qquad 0\le d\le H,
+\end{equation}
+and $R_H(d)=1/H$ for $d\ge H$.  Thus the oracle fixed memory changes from long to short and back to long.
+
+\section{Experimental Protocol Details}
+\label{app:experiments}
+
+\paragraph{Monte Carlo.}
+The code generates bounded streams $y_t=C_t^{1/2}\epsilon_t$ with independent Rademacher coordinates.  It evaluates dimensions $4,8,16$, four covariance paths, and the complete window grid $\{256,512,1024,2048\}$.  Every origin uses observations through $t$ and is evaluated on $C_{t+1}$ and $y_{t+1}$.  The predictive output is a precision-space exponential-weights aggregate.  A covariance-space mixture and the certified hard selector are reported separately.  The infeasible local oracle uses $C_{t+1}$.  Radius coverage is checked around the rolling population covariance; rank certificates add known simulation drift.
+
+\paragraph{Public data.}
+The UCI Gas Sensor Array Drift at Different Concentrations data contain 13,910 observations, 128 features, six gases, and ten chronological batches \citep{vergara2013uci,vergara2012drift,fonollosa2015dataset}.  Batches 1--4 fit gas/concentration residualization, feature scaling, the frozen pilot, and calibration envelopes.  The analysis monitors 24 fixed whitened directions immediately below the pilot factors.  Batches 5--10 are each forecast once.  Because measurement-time ordering within a batch is undocumented, the task is next-batch forecasting.  Hierarchical bootstrap inference resamples target batches and observations within each sampled batch.

@@ -70,9 +70,33 @@ jobs:
             --kappa 0.25 \
             2>&1 | tee generated_uci.log
 
+      - name: Audit expert-loss cap
+        id: loss_audit
+        if: ${{ steps.mc.outcome == 'success' && steps.uci.outcome == 'success' }}
+        continue-on-error: true
+        working-directory: icml_atlas_sb
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd
+          mc=pd.read_csv('generated/monte_carlo/strict_results.csv')
+          fixed=mc[mc.method.str.startswith('Fixed-')]
+          pivot=fixed.pivot_table(index=['seed','scenario','dimension','time'],columns='method',values='realized_nll')
+          mc_max=float((pivot.max(axis=1)-pivot.min(axis=1)).max())
+          uci=pd.read_csv('generated/uci/batch_ahead_results.csv')
+          ufixed=uci[uci.method.str.startswith('Fixed-')]
+          upivot=ufixed.pivot_table(index='target_batch',columns='method',values='mean_nll')
+          uci_max=float((upivot.max(axis=1)-upivot.min(axis=1)).max())
+          text=f'monte_carlo_max_expert_loss_range={mc_max}\nuci_max_expert_loss_range={uci_max}\ncap=30.0\n'
+          Path('generated/loss_cap_audit.txt').write_text(text)
+          print(text)
+          if mc_max >= 30.0 or uci_max >= 30.0:
+              raise SystemExit('The numerical cap was active; implementation and regret theorem differ.')
+          PY
+
       - name: Generate tables and figures
         id: assets
-        if: ${{ steps.mc.outcome == 'success' && steps.uci.outcome == 'success' }}
+        if: ${{ steps.mc.outcome == 'success' && steps.uci.outcome == 'success' && steps.loss_audit.outcome == 'success' }}
         continue-on-error: true
         working-directory: icml_atlas_sb
         run: |
@@ -84,6 +108,7 @@ jobs:
             --uci generated/uci \
             --out paper/generated \
             2>&1 | tee generated_assets.log
+          cp generated/loss_cap_audit.txt paper/generated/
 
       - name: Compile and preflight ICML paper
         id: compile
@@ -111,11 +136,12 @@ jobs:
             2>&1 | tee ../generated_compile.log
           mkdir -p ../release/render
           cp main.pdf ../release/ATLAS_SB_ICML2026.pdf
-          cp main.tex proofs.tex aggregation_proof.tex references.bib \
+          cp main.tex proofs.tex proofs_final.tex aggregation_proof.tex references.bib \
             icml2026.sty icml2026.bst ../release/
           cp -r generated ../release/generated
           cp ../README.md ../requirements.txt ../atlas_sb.py ../run_monte_carlo.py \
             ../run_uci.py ../run_uci_fast.py ../make_assets.py ../release/
+          cp ../generated/loss_cap_audit.txt ../release/
           grep -E 'MAIN_END_PAGE|APPENDIX_START_PAGE|Output written|Overfull|Underfull|undefined|LaTeX Warning' main.log \
             > ../release/compile_audit.txt || true
           pdfinfo main.pdf > ../release/pdfinfo.txt
@@ -124,8 +150,8 @@ jobs:
           pdftoppm -png -r 110 main.pdf ../release/render/page >/dev/null 2>&1
           python - <<'PY'
           from pathlib import Path
-          from PIL import Image, ImageOps, ImageDraw
-          pages = sorted(Path('../release/render').glob('page-*.png'))
+          from PIL import Image, ImageDraw
+          pages=sorted(Path('../release/render').glob('page-*.png'))
           thumbs=[]
           for path in pages:
               image=Image.open(path).convert('RGB')
@@ -157,9 +183,10 @@ jobs:
           fi
           cd ../release
           zip -9 -r ATLAS_SB_ICML2026_source.zip \
-            main.tex proofs.tex aggregation_proof.tex references.bib \
+            main.tex proofs.tex proofs_final.tex aggregation_proof.tex references.bib \
             icml2026.sty icml2026.bst README.md requirements.txt atlas_sb.py \
-            run_monte_carlo.py run_uci.py run_uci_fast.py make_assets.py generated
+            run_monte_carlo.py run_uci.py run_uci_fast.py make_assets.py \
+            loss_cap_audit.txt generated
           sha256sum * > SHA256SUMS.txt
 
       - name: Record pipeline status
@@ -171,6 +198,7 @@ jobs:
           event=${{ github.event_name }}
           monte_carlo=${{ steps.mc.outcome }}
           uci=${{ steps.uci.outcome }}
+          loss_audit=${{ steps.loss_audit.outcome }}
           assets=${{ steps.assets.outcome }}
           compile=${{ steps.compile.outcome }}
           EOF

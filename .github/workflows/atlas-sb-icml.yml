@@ -62,7 +62,7 @@ jobs:
           rm -rf generated/uci
           mkdir -p generated
           set -o pipefail
-          python run_uci.py \
+          python run_uci_fast.py \
             --archive data/gas_sensor_array_drift.zip \
             --out generated/uci \
             --bootstrap 500 \

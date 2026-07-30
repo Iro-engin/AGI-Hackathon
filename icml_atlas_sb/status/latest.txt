@@ -1,0 +1,7 @@
+commit=183ebba5b5fa41030855f6833bb606b3c4197cf0
+event=push
+monte_carlo=cancelled
+uci=skipped
+loss_audit=skipped
+assets=skipped
+compile=skipped

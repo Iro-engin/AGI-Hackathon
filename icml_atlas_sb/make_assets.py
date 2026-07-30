@@ -4,19 +4,29 @@ import argparse
 import json
 import math
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 
-METHOD_ORDER = [
+MC_ORDER = [
     "Pilot",
     "Fixed-256",
     "Fixed-512",
     "Fixed-1024",
     "Fixed-2048",
+    "Hedge",
+    "ATLAS-SB",
+    "Local oracle",
+]
+UCI_ORDER = [
+    "Pilot",
+    "Fixed-1-batch",
+    "Fixed-2-batch",
+    "Fixed-4-batch",
+    "Expanding",
     "Hedge",
     "ATLAS-SB",
     "Local oracle",
@@ -29,11 +39,7 @@ def mean_se(values: pd.Series) -> tuple[float, float]:
 
 
 def latex_escape(text: str) -> str:
-    return (
-        text.replace("_", r"\_")
-        .replace("%", r"\%")
-        .replace("&", r"\&")
-    )
+    return text.replace("_", r"\_").replace("%", r"\%").replace("&", r"\&")
 
 
 def format_mean_se(mean: float, se: float, digits: int = 3) -> str:
@@ -54,13 +60,17 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         )
     )
     rows: List[dict] = []
-    for method in METHOD_ORDER:
+    for method in MC_ORDER:
         block = seed_level[seed_level["method"] == method]
         if block.empty:
             continue
         op_mean, op_se = mean_se(block["op"])
         nll_mean, nll_se = mean_se(block["nll"])
-        runtime = float(block["update_ms"].dropna().mean()) if block["update_ms"].notna().any() else np.nan
+        runtime = (
+            float(block["update_ms"].dropna().mean())
+            if block["update_ms"].notna().any()
+            else np.nan
+        )
         rows.append(
             {
                 "method": method,
@@ -82,11 +92,11 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         r"\centering\small",
         r"\begin{tabular}{lccc}",
         r"\toprule",
-        r"Method & Rel. operator error & Excess NLL & Update ms \\",
+        r"Method & Rel. operator error & Excess NLL & Select ms \\",
         r"\midrule",
     ]
     for row in rows:
-        label = "Local oracle$^\dagger$" if row["method"] == "Local oracle" else row["method"]
+        label = "Local oracle$^\\dagger$" if row["method"] == "Local oracle" else row["method"]
         op_text = format_mean_se(row["op_mean"], row["op_se"])
         nll_text = format_mean_se(row["nll_mean"], row["nll_se"])
         if row["method"] != "Local oracle" and abs(row["op_mean"] - best_op) < 1e-12:
@@ -99,7 +109,7 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         r"\bottomrule",
         r"\end{tabular}",
         r"\vspace{-1mm}",
-        r"\begin{flushleft}\footnotesize $^\dagger$Uses the true next covariance to choose among fixed windows and is infeasible. Monte Carlo errors use the known conditional covariance; no contemporaneous replicate is used.\end{flushleft}",
+        r"\begin{flushleft}\footnotesize $^\dagger$Uses the true next covariance to choose among fixed windows and is infeasible. Errors use the known $C_{t+1}$; no contemporaneous replicate is used.\end{flushleft}",
         r"\end{table}",
     ]
     (output / "mc_table.tex").write_text("\n".join(lines), encoding="utf-8")
@@ -115,7 +125,7 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
     rank_exact = float(selectors["rank_exact"].mean())
     audit_lines = [
         r"\begin{table}[t]",
-        r"\caption{Certificate audit in simulations. Rank thresholds add the known simulation drift to the stochastic radius.}",
+        r"\caption{Simulation certificate audit. Rank thresholds add the known local drift.}",
         r"\label{tab:audit}",
         r"\centering\small",
         r"\begin{tabular}{lc}",
@@ -124,7 +134,7 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         r"\midrule",
         f"Pointwise scale--time coverage & {100 * pointwise:.1f}\\% \\",
         f"Whole-path simultaneous coverage & {100 * path:.1f}\\% \\",
-        f"Empirical radius tighter than deterministic radius & {100 * tightening:.1f}\\% \\",
+        f"Empirical radius below deterministic radius & {100 * tightening:.1f}\\% \\",
         f"Certified-rank false-positive rate & {100 * rank_fp:.2f}\\% \\",
         f"Exact certified-rank rate & {100 * rank_exact:.1f}\\% \\",
         r"\bottomrule",
@@ -134,47 +144,43 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
     (output / "audit_table.tex").write_text("\n".join(audit_lines), encoding="utf-8")
 
     atlas = seed_level[seed_level["method"] == "ATLAS-SB"]
-    blocks = []
+    block_rows: List[dict] = []
     for (scenario, dimension), block in seed_level.groupby(["scenario", "dimension"]):
         fixed = block[block["method"].str.startswith("Fixed-")]
         fixed_mean = fixed.groupby("method")["op"].mean()
-        best_fixed = str(fixed_mean.idxmin())
         atlas_value = float(
             atlas[(atlas["scenario"] == scenario) & (atlas["dimension"] == dimension)]["op"].mean()
         )
-        best_value = float(fixed_mean.min())
-        blocks.append(
+        block_rows.append(
             {
                 "scenario": scenario,
                 "dimension": int(dimension),
-                "best_fixed": best_fixed,
-                "atlas_gap_pct": 100.0 * (atlas_value / best_value - 1.0),
+                "best_fixed": str(fixed_mean.idxmin()),
+                "atlas_gap_pct": 100.0 * (atlas_value / float(fixed_mean.min()) - 1.0),
             }
         )
-    block_frame = pd.DataFrame(blocks)
-    within_five = float(np.mean(block_frame["atlas_gap_pct"] <= 5.0))
-    median_gap = float(block_frame["atlas_gap_pct"].median())
-    significant_op = paired[(paired["metric"] == "op") & (paired["t_stat"] < -2.0)]
-    worse_op = paired[(paired["metric"] == "op") & (paired["t_stat"] > 2.0)]
+    blocks = pd.DataFrame(block_rows)
+    within_five = float(np.mean(blocks["atlas_gap_pct"] <= 5.0))
+    median_gap = float(blocks["atlas_gap_pct"].median())
+    significant_wins = paired[(paired["metric"] == "op") & (paired["t_stat"] < -2.0)]
+    significant_losses = paired[(paired["metric"] == "op") & (paired["t_stat"] > 2.0)]
 
     mixed = selectors[
         (selectors["scenario"] == "mixed")
         & (selectors["dimension"] == 8)
         & (selectors["seed"] == selectors["seed"].min())
     ].sort_values("time")
-    figure = plt.figure(figsize=(5.8, 2.5))
-    axis = figure.add_subplot(111)
-    axis.plot(mixed["time"], mixed["selected_window"], linewidth=0.9)
-    axis.set_yscale("log", base=2)
-    axis.set_xlabel("Forecast origin")
-    axis.set_ylabel("Selected window")
-    figure.tight_layout()
-    figure.savefig(output / "selected_window.pdf", bbox_inches="tight")
-    plt.close(figure)
+    fig, ax = plt.subplots(figsize=(5.8, 2.5))
+    ax.plot(mixed["time"], mixed["selected_window"], linewidth=0.9)
+    ax.set_yscale("log", base=2)
+    ax.set_xlabel("Forecast origin")
+    ax.set_ylabel("Selected window")
+    fig.tight_layout()
+    fig.savefig(output / "selected_window.pdf", bbox_inches="tight")
+    plt.close(fig)
 
     summary = pd.read_csv(mc_dir / "summary.csv")
-    figure = plt.figure(figsize=(4.7, 3.0))
-    axis = figure.add_subplot(111)
+    fig, ax = plt.subplots(figsize=(4.7, 3.0))
     for method, marker in (("ATLAS-SB", "o"), ("Local oracle", "s")):
         block = (
             summary[summary["method"] == method]
@@ -182,15 +188,15 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
             .mean()
             .sort_values("dimension")
         )
-        axis.plot(block["dimension"], block["op_mean"], marker=marker, label=method)
-    axis.set_xscale("log", base=2)
-    axis.set_yscale("log")
-    axis.set_xlabel("Residual dimension $m$")
-    axis.set_ylabel("Relative operator error")
-    axis.legend(fontsize=8)
-    figure.tight_layout()
-    figure.savefig(output / "dimension_scaling.pdf", bbox_inches="tight")
-    plt.close(figure)
+        ax.plot(block["dimension"], block["op_mean"], marker=marker, label=method)
+    ax.set_xscale("log", base=2)
+    ax.set_yscale("log")
+    ax.set_xlabel("Residual dimension $m$")
+    ax.set_ylabel("Relative operator error")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    fig.savefig(output / "dimension_scaling.pdf", bbox_inches="tight")
+    plt.close(fig)
 
     return {
         "mc_pointwise_coverage": pointwise,
@@ -200,8 +206,8 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         "mc_rank_exact": rank_exact,
         "mc_within_five": within_five,
         "mc_median_gap": median_gap,
-        "mc_significant_wins": int(len(significant_op)),
-        "mc_significant_losses": int(len(worse_op)),
+        "mc_significant_wins": int(len(significant_wins)),
+        "mc_significant_losses": int(len(significant_losses)),
     }
 
 
@@ -210,21 +216,10 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
     summary = pd.read_csv(uci_dir / "summary.csv")
     comparisons = pd.read_csv(uci_dir / "paired_bootstrap_comparisons.csv")
     metadata = pd.read_csv(uci_dir / "metadata.csv").iloc[0]
-    preferred_order = [
-        "Pilot",
-        "Fixed-1-batch",
-        "Fixed-2-batch",
-        "Fixed-4-batch",
-        "Fixed-8-batch",
-        "Expanding",
-        "Hedge",
-        "ATLAS-SB",
-        "Local oracle",
-    ]
     lookup = {row["method"]: row for _, row in summary.iterrows()}
     lines = [
         r"\begin{table}[t]",
-        r"\caption{Public UCI gas-sensor drift data: strict next-batch forecasts. Batches 1--2 fix preprocessing and the pilot; batches 3--10 are evaluated once in chronological order.}",
+        r"\caption{Public UCI gas-sensor drift data: strict next-batch forecasts. Batches 1--4 fix preprocessing, the pilot, and envelopes; batches 5--10 are evaluated once.}",
         r"\label{tab:uci}",
         r"\centering\scriptsize",
         r"\begin{tabular}{lccc}",
@@ -233,11 +228,11 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
         r"\midrule",
     ]
     feasible_nll = float(summary[summary["method"] != "Local oracle"]["mean_nll"].min())
-    for method in preferred_order:
+    for method in UCI_ORDER:
         if method not in lookup:
             continue
         row = lookup[method]
-        label = "Local oracle$^\dagger$" if method == "Local oracle" else method
+        label = "Local oracle$^\\dagger$" if method == "Local oracle" else method
         nll = f"{row['mean_nll']:.3f}"
         if method != "Local oracle" and abs(row["mean_nll"] - feasible_nll) < 1e-12:
             nll = r"\textbf{" + nll + "}"
@@ -247,7 +242,7 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
         r"\bottomrule",
         r"\end{tabular}",
         r"\vspace{-1mm}",
-        r"\begin{flushleft}\tiny $^\dagger$Chooses a fixed memory using the target-batch sample covariance and is infeasible. Row order inside a batch is not treated as measurement time.\end{flushleft}",
+        r"\begin{flushleft}\tiny $^\dagger$Chooses a fixed memory using the target-batch sample covariance and is infeasible. Within-batch row order is not treated as time.\end{flushleft}",
         r"\end{table}",
     ]
     (output / "uci_table.tex").write_text("\n".join(lines), encoding="utf-8")
@@ -256,36 +251,33 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
     best_fixed = summary[summary["method"].str.startswith("Fixed-")].sort_values("mean_nll").iloc[0]
     comparison = comparisons[comparisons["competitor"] == best_fixed["method"]]
     if comparison.empty:
-        ci_low = ci_high = win_prob = float("nan")
+        ci_low = ci_high = win_probability = float("nan")
     else:
-        comparison = comparison.iloc[0]
-        ci_low = float(comparison["ci_2_5"])
-        ci_high = float(comparison["ci_97_5"])
-        win_prob = float(comparison["atlas_win_probability"])
+        item = comparison.iloc[0]
+        ci_low = float(item["ci_2_5"])
+        ci_high = float(item["ci_97_5"])
+        win_probability = float(item["atlas_win_probability"])
 
-    figure = plt.figure(figsize=(5.5, 2.8))
-    axis = figure.add_subplot(111)
+    fig, ax = plt.subplots(figsize=(5.5, 2.8))
     for method in ("Pilot", best_fixed["method"], "Hedge", "ATLAS-SB"):
         block = results[results["method"] == method].sort_values("target_batch")
-        if not block.empty:
-            axis.plot(block["target_batch"], block["mean_nll"], marker="o", label=method)
-    axis.set_xlabel("Target batch")
-    axis.set_ylabel("Mean Gaussian NLL")
-    axis.legend(fontsize=7)
-    figure.tight_layout()
-    figure.savefig(output / "uci_batch_nll.pdf", bbox_inches="tight")
-    plt.close(figure)
+        ax.plot(block["target_batch"], block["mean_nll"], marker="o", label=method)
+    ax.set_xlabel("Target batch")
+    ax.set_ylabel("Mean Gaussian NLL")
+    ax.legend(fontsize=7)
+    fig.tight_layout()
+    fig.savefig(output / "uci_batch_nll.pdf", bbox_inches="tight")
+    plt.close(fig)
 
     selected = results[results["method"] == "ATLAS-SB"].sort_values("target_batch")
-    figure = plt.figure(figsize=(5.0, 2.5))
-    axis = figure.add_subplot(111)
-    axis.step(selected["target_batch"], selected["selected_memory"], where="mid")
-    axis.set_xlabel("Target batch")
-    axis.set_ylabel("Selected batches")
-    axis.set_yticks(sorted(selected["selected_memory"].dropna().unique()))
-    figure.tight_layout()
-    figure.savefig(output / "uci_selected_memory.pdf", bbox_inches="tight")
-    plt.close(figure)
+    fig, ax = plt.subplots(figsize=(5.0, 2.5))
+    ax.step(selected["target_batch"], selected["selected_memory"], where="mid")
+    ax.set_xlabel("Target batch")
+    ax.set_ylabel("Selected batches")
+    ax.set_yticks(sorted(selected["selected_memory"].dropna().unique()))
+    fig.tight_layout()
+    fig.savefig(output / "uci_selected_memory.pdf", bbox_inches="tight")
+    plt.close(fig)
 
     return {
         "uci_atlas_nll": float(atlas_row["mean_nll"]),
@@ -293,11 +285,9 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
         "uci_best_fixed_nll": float(best_fixed["mean_nll"]),
         "uci_diff_ci_low": ci_low,
         "uci_diff_ci_high": ci_high,
-        "uci_win_probability": win_prob,
+        "uci_win_probability": win_probability,
         "uci_pilot_rank": int(metadata["pilot_rank"]),
         "uci_monitor_dimension": int(metadata["monitor_dimension"]),
-        "uci_M": float(metadata["M_calibration_envelope"]),
-        "uci_K": float(metadata["K_calibration_envelope"]),
     }
 
 
@@ -321,8 +311,11 @@ def write_macros(values: Dict[str, float | str], output: Path) -> None:
         "UCIPilotRank": str(values["uci_pilot_rank"]),
         "UCIMonitorDimension": str(values["uci_monitor_dimension"]),
     }
-    lines = [f"\\newcommand{{\\{name}}}{{{value}}}" for name, value in mapping.items()]
-    (output / "result_macros.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (output / "result_macros.tex").write_text(
+        "\n".join(f"\\newcommand{{\\{name}}}{{{value}}}" for name, value in mapping.items())
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def main() -> None:
@@ -339,10 +332,12 @@ def main() -> None:
     (args.out / "claim_audit.json").write_text(
         json.dumps(values, indent=2, sort_keys=True), encoding="utf-8"
     )
-    lines = ["# ATLAS-SB result audit", ""]
-    for key, value in sorted(values.items()):
-        lines.append(f"- **{key}**: {value}")
-    (args.out / "results_summary.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (args.out / "results_summary.md").write_text(
+        "# ATLAS-SB result audit\n\n"
+        + "\n".join(f"- **{key}**: {value}" for key, value in sorted(values.items()))
+        + "\n",
+        encoding="utf-8",
+    )
     print(json.dumps(values, indent=2, sort_keys=True))
 
 

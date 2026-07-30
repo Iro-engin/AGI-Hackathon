@@ -1,0 +1,50 @@
+\section{Prequential Precision Aggregation}
+\label{app:aggregation}
+
+For expert $j$ at origin $t$, let $C_{j,t}$ have eigenvalues in $[1,M]$ and put $\Theta_{j,t}=C_{j,t}^{-1}$.  Define
+\begin{equation}
+ g_t(\Theta)=-\log\det\Theta+y_{t+1}^\top\Theta y_{t+1}.
+\end{equation}
+The function $g_t$ is convex on the positive-definite cone.  Starting from $w_{j,1}=1/J$, exponential weights use
+\begin{equation}
+ w_{j,t+1}=\frac{w_{j,t}\exp\{-\eta g_t(\Theta_{j,t})\}}
+ {\sum_{k=1}^Jw_{k,t}\exp\{-\eta g_t(\Theta_{k,t})\}},
+\end{equation}
+and the ATLAS-SB predictive output is
+\begin{equation}
+ \overline\Theta_t=\sum_{j=1}^Jw_{j,t}\Theta_{j,t},\qquad
+ \widehat C_t^{\rm pred}=\overline\Theta_t^{-1}.
+\end{equation}
+
+\begin{theorem}[Prequential log-loss regret]
+\label{thm:aggregation-app}
+Suppose $\|y_{t+1}\|\le\tau$ and every expert covariance has eigenvalues in $[1,M]$.  Let
+\begin{equation}
+ R=m\log M+\tau^2(1-M^{-1}).
+\end{equation}
+For every $\eta>0$,
+\begin{equation}
+ \sum_{t=1}^T g_t(\overline\Theta_t)
+ -\min_{1\le j\le J}\sum_{t=1}^T g_t(\Theta_{j,t})
+ \le \frac{\log J}{\eta}+\frac{\eta R^2T}{8}.
+ \label{eq:aggregation-regret-app}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Convexity gives
+$g_t(\overline\Theta_t)\le\sum_jw_{j,t}g_t(\Theta_{j,t})$.
+For $M^{-1}I\preceq\Theta\preceq I$, the log-determinant term lies in $[0,m\log M]$ and the quadratic term lies in
+$[\|y_{t+1}\|^2/M,\|y_{t+1}\|^2]$.  Hence the range of expert losses at any time is at most $R$.  Apply Hoeffding's lemma to the usual exponential-weights potential:
+\begin{equation}
+ \log\sum_jw_{j,t}e^{-\eta g_{j,t}}
+ \le-\eta\sum_jw_{j,t}g_{j,t}+\eta^2R^2/8.
+\end{equation}
+Summing, telescoping the log normalizers, and comparing with the term of any fixed expert $j$ yields
+\begin{equation}
+ \sum_t\sum_jw_{j,t}g_{j,t}-\sum_tg_{j,t}
+ \le\frac{\log J}{\eta}+\frac{\eta R^2T}{8}.
+\end{equation}
+Combine this inequality with convexity and minimize over $j$.  \end{proof}
+
+The theorem compares with the best fixed memory in hindsight, not the time-varying local oracle.  The certified Lepski selector and the predictive aggregate therefore answer different questions: the former supplies high-probability structural statements, while the latter supplies finite-sample predictive regret.

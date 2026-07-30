@@ -5,6 +5,10 @@ on:
     paths:
       - 'icml_atlas_sb/**'
       - '.github/workflows/atlas-sb-icml.yml'
+  pull_request:
+    paths:
+      - 'icml_atlas_sb/**'
+      - '.github/workflows/atlas-sb-icml.yml'
   workflow_dispatch:
 
 permissions:
@@ -12,7 +16,7 @@ permissions:
 
 jobs:
   build:
-    if: ${{ !contains(github.event.head_commit.message || '', '[skip atlas]') }}
+    if: ${{ github.event_name == 'pull_request' || !contains(github.event.head_commit.message || '', '[skip atlas]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
@@ -123,6 +127,7 @@ jobs:
           mkdir -p icml_atlas_sb/status
           cat > icml_atlas_sb/status/latest.txt <<EOF
           commit=${GITHUB_SHA}
+          event=${{ github.event_name }}
           monte_carlo=${{ steps.mc.outcome }}
           uci=${{ steps.uci.outcome }}
           assets=${{ steps.assets.outcome }}
@@ -130,7 +135,7 @@ jobs:
           EOF
 
       - name: Commit generated results, release, and diagnostics
-        if: always()
+        if: ${{ always() && github.event_name != 'pull_request' }}
         run: |
           git config user.name 'atlas-sb-bot'
           git config user.email 'atlas-sb-bot@users.noreply.github.com'

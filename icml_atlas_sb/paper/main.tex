@@ -1,0 +1,289 @@
+\documentclass{article}
+
+\usepackage{icml2026}
+\usepackage{amsmath,amssymb,amsthm,mathtools,bm}
+\usepackage{booktabs,array,multirow,graphicx}
+\usepackage{microtype}
+\usepackage{xspace}
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{hidelinks,pdftitle={ATLAS-SB: Stabilized Empirical-Bernstein Memory Selection for Pilot-Preserving Covariance Forecasting},pdfauthor={Anonymous Authors}}
+\allowdisplaybreaks
+\graphicspath{{generated/}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{assumption}{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\R}{\mathbb R}
+\newcommand{\E}{\mathbb E}
+\newcommand{\F}{\mathcal F}
+\newcommand{\Hh}{\mathcal H}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\op}{\mathrm{op}}
+\newcommand{\fro}{\mathrm F}
+\newcommand{\one}{\bm 1}
+\newcommand{\base}{\mathsf B}
+\newcommand{\ATLAS}{\textsc{Atlas-SB}\xspace}
+\newcommand{\KL}{\operatorname{KL}}
+\input{generated/result_macros}
+
+\icmltitlerunning{ATLAS-SB: Certified Adaptive Covariance Forecasting}
+
+\begin{document}
+\twocolumn[
+\icmltitle{ATLAS-SB: Stabilized Empirical-Bernstein Memory Selection\\for Pilot-Preserving Covariance Forecasting}
+
+\begin{icmlauthorlist}
+\icmlauthor{Anonymous Authors}{anon}
+\end{icmlauthorlist}
+\icmlaffiliation{anon}{Anonymous Institution}
+\icmlcorrespondingauthor{Anonymous Authors}{anonymous@invalid.example}
+\vskip 0.3in
+]
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+Structured covariance pilots reduce estimation variance but can miss dependence that emerges after deployment.  We study strict one-step-ahead covariance forecasting relative to a positive-definite pilot frozen within each deployment episode.  \ATLAS projects observations onto the standardized residual space, maintains radially clipped rolling covariances over a dyadic window grid, and selects memory through a stabilized radius that combines an observable matrix empirical-Bernstein certificate with a deterministic sub-Gaussian floor.  The radius is simultaneously valid and bounded below by a fixed fraction of the oracle stochastic scale, preventing data-dependent undersmoothing.  Under conditionally sub-Gaussian innovations and a locally H\"older covariance path, \ATLAS adapts to unknown local smoothness and attains, up to logarithms, the expected operator-risk rate $L_t^{1/(2\beta+1)}m^{\beta/(2\beta+1)}$ in the interior regime; a matching lower bound holds for a Gaussian rank-one residual subclass.  Strict multidimensional simulations audit certificate coverage, memory selection, rank diagnostics, and all fixed-window competitors.  A public ten-batch gas-sensor study freezes preprocessing and the pilot on batches 1--2 and forecasts batches 3--10 once in chronological order.
+\end{abstract}
+
+\section{Introduction}
+
+Many deployed learning systems contain a structured covariance model estimated before operation: a factor model, a shrinkage target, a sensor baseline, or a covariance induced by a pretrained representation.  Such a \emph{pilot} stabilizes prediction and downstream optimization.  It can nevertheless omit dependence that appears after deployment, rotates, and later vanishes.  Re-estimating the full pilot sacrifices stable structure; leaving it unchanged can miscalibrate likelihoods and quadratic decisions.
+
+We formulate \emph{pilot-preserving online covariance forecasting}.  A deployment episode begins with a fixed positive-definite pilot.  After observing $x_t$, the learner forecasts the conditional covariance of $x_{t+1}$.  It may add positive-semidefinite covariance in directions unexplained by the pilot, but it may not rewrite the pilot or subtract covariance that the pilot overstates.  The one-sided restriction produces an auditable object: a persistent negative residual becomes evidence against the model rather than another component to fit.
+
+The problem combines three choices.  The appropriate memory varies with local covariance motion.  A data-dependent uncertainty radius can become spuriously small and force undersmoothing.  A transient sample eigenvalue need not support a structural factor claim.  Existing risk-model augmentation uses user-specified rank and half-life \citep{tzikas2026transient}; online subspace trackers target a changing span rather than a full covariance forecast \citep{balzano2010grouse,narayanamurthy2018norst}; time-varying covariance estimators do not preserve a supplied pilot \citep{chen2013covariance,fryzlewicz2013volatility,dendramis2021timevarying,jung2019timevarying}.
+
+\paragraph{Contributions.}
+First, we define a frozen-pilot residual model and a strict $t\mapsto t+1$ information clock.  Second, \ATLAS combines an observable matrix empirical-Bernstein radius with a deterministic sub-Gaussian floor.  The empirical term can tighten the threshold, while the floor closes the oracle-window admissibility gap that arises with a purely random radius.  Third, we prove a simultaneous rolling-window certificate, an adaptive Lepski oracle inequality, an expected-risk H\"older upper rate, and a same-risk Gaussian rank-one lower bound.  Fourth, we evaluate the exact implemented selector, every fixed candidate, a prequential Hedge baseline, and an infeasible local oracle in multidimensional strict simulations and on public sensor drift data.  We make no missing-data, heavy-tail minimax, or unconditional rank-recovery claim.
+
+\section{Frozen-Pilot Forecasting}
+\label{sec:model}
+
+Let $(\F_t)$ be a filtration and $x_t\in\R^n$ satisfy $\E(x_t\mid\F_{t-1})=0$.  A pre-deployment sample supplies
+\begin{equation}
+ \Sigma_{\base}=B\Omega B^\top+D\succ0,\qquad D=\diag(d_1,\ldots,d_n)\succ0.
+ \label{eq:pilot}
+\end{equation}
+Put $A=D^{-1/2}B$ and let $Q\in\R^{n\times m}$ have orthonormal columns spanning $\operatorname{span}(A)^\perp$.  Within an episode, $(B,\Omega,D,Q)$ remains fixed and
+\begin{equation}
+ y_t=Q^\top D^{-1/2}x_t.
+ \label{eq:residual}
+\end{equation}
+At origin $t$, the target is
+\begin{equation}
+ C_{t+1}=\E(y_{t+1}y_{t+1}^\top\mid\F_t)=I_m+T_{t+1},\qquad T_{t+1}\succeq0.
+ \label{eq:target}
+\end{equation}
+The original-unit covariance is $\Sigma_{t+1}=\Sigma_{\base}+D^{1/2}QT_{t+1}Q^\top D^{1/2}$.  Equation~\eqref{eq:target} is a model restriction, not merely an identification normalization: it excludes transient covariance inside the pilot span, pilot--residual cross blocks, and negative corrections.  Section~\ref{sec:diagnostics} gives a falsification diagnostic.
+
+After $y_t$ arrives and before $y_{t+1}$ arrives, a method returns $\widehat C_t$.  We evaluate
+\begin{equation}
+ \ell_{t+1}(\widehat C_t)=\log\det\widehat C_t+y_{t+1}^\top\widehat C_t^{-1}y_{t+1},
+ \label{eq:nll}
+\end{equation}
+operator error when $C_{t+1}$ is known, and next-batch NLL on public data.  A same-time independent replicate would evaluate filtering and is not used.
+
+\section{ATLAS-SB}
+\label{sec:method}
+
+\subsection{Rolling clipped scatters}
+
+For $\tau>0$, define $\psi_\tau(y)=y\min\{1,\tau/\|y\|\}$ and
+\begin{equation}
+ Z_s=\frac{\psi_\tau(y_s)\psi_\tau(y_s)^\top}{\tau^2},\qquad 0\preceq Z_s\preceq I_m.
+\end{equation}
+For a dyadic grid $\Hh=\{H_1,2H_1,\ldots,H_J\}$,
+\begin{equation}
+ S_t(H)=\frac{\tau^2}{H}\sum_{s=t-H+1}^tZ_s,\qquad
+ V_t(H)=\sum_{s=t-H+1}^tZ_s^2.
+ \label{eq:rolling}
+\end{equation}
+Because $Z_s$ is rank one, $Z_s^2=\|\psi_\tau(y_s)\|^2Z_s/\tau^2$.  Entering and departing observations therefore update all candidates in $O(Jm^2)$ time.
+
+\subsection{Two valid radii and stabilization}
+
+Let $\phi(\gamma)=-\log(1-\gamma)-\gamma$ and use a fixed dyadic betting grid $\Gamma\subset(0,1)$.  With
+$\ell_\alpha=\log\{8mTJ|\Gamma|/\alpha\}$, define the observable radius
+\begin{equation}
+ \widehat e_t(H)=\min_{\gamma\in\Gamma}
+ \frac{2\tau^2}{H\gamma}
+ \left[\ell_\alpha+\frac{\phi(\gamma)}4\lambda_{\max}\{V_t(H)\}\right].
+ \label{eq:emp-radius}
+\end{equation}
+It uses only clipped observations.  Under Assumption~\ref{ass:sg} below, a second certificate is
+\begin{equation}
+ r(H)=c_rK^2M\left\{\sqrt{\frac{d_\alpha}{H}}+\frac{d_\alpha}{H}\right\},\qquad
+ d_\alpha=m+\log(8TJ/\alpha),
+ \label{eq:det-radius}
+\end{equation}
+for a sufficient universal $c_r$.  The clipping threshold is fixed from declared envelopes $(K,M)$; its bias bound is $b_\tau$ in Appendix~\ref{app:proofs}.
+
+A pure empirical radius can be accidentally too small for a deterministic Lepski balance.  We therefore use
+\begin{equation}
+ \rho_t(H)=\max\{\kappa r(H),\min[r(H),\widehat e_t(H)]\}+b_\tau,\qquad \kappa\in(0,1].
+ \label{eq:stabilized-radius}
+\end{equation}
+On the joint certificate event, the minimum of the two valid radii remains valid, while $\rho_t(H)\ge\kappa r(H)$.  Let $\overline\rho_t(H)=\max_{G\in\Hh:G\ge H}\rho_t(G)$.  \ATLAS selects
+\begin{equation}
+ \widehat H_t=\max\left\{H:\|S_t(H)-S_t(h)\|_{\op}
+ \le\overline\rho_t(H)+\overline\rho_t(h)+2\kappa r(h),\ \forall h\le H\right\}.
+ \label{eq:selector}
+\end{equation}
+Finally,
+\begin{equation}
+ \widehat C_t=\Pi_{[I_m,MI_m]}\{S_t(\widehat H_t)\},
+ \label{eq:forecast}
+\end{equation}
+where the spectral projection clips eigenvalues to $[1,M]$.  It preserves positive definiteness, bounds bad-event loss, and does not label every retained eigenvalue a factor.
+
+\begin{assumption}[Conditional sub-Gaussian residuals]
+\label{ass:sg}
+There are declared $K\ge1$ and $M>1$ such that $y_s=C_s^{1/2}\xi_s$, $I\preceq C_s\preceq MI$, $\E_{s-1}\xi_s=0$, $\E_{s-1}\xi_s\xi_s^\top=I$, and
+$\E_{s-1}\exp(\lambda v^\top\xi_s)\le\exp(K^2\lambda^2/2)$ for every unit $v$ and $\lambda\in\R$.
+\end{assumption}
+
+The constants $K,M$ are class envelopes declared before evaluation; the method is not parameter free.  The public-data study estimates conservative calibration envelopes from batches 1--2 and treats its output as predictive evidence, not a formal distribution-free certificate.
+
+\section{Theory}
+\label{sec:theory}
+
+Define the rolling population covariance and local bias
+\begin{equation}
+ \overline C_t(H)=\frac1H\sum_{s=t-H+1}^tC_s,\qquad
+ B_t(H)=\|\overline C_t(H)-C_{t+1}\|_{\op}.
+\end{equation}
+
+\begin{theorem}[Simultaneous certificate]
+\label{thm:certificate}
+Under Assumption~\ref{ass:sg}, for a sub-Gaussian clipping threshold and a sufficient $c_r$, with probability at least $1-\alpha$, simultaneously over $t\le T$ and $H\in\Hh$,
+\begin{equation}
+ \|S_t(H)-\overline C_t(H)\|_{\op}\le\rho_t(H),\qquad
+ \kappa r(H)+b_\tau\le\rho_t(H)\le r(H)+b_\tau.
+ \label{eq:certificate}
+\end{equation}
+\end{theorem}
+
+The proof restarts the matrix empirical-Bernstein supermartingale of \citet{wang2024matrixeb} at each deterministic rolling-window origin, allows varying predictable means, combines the two tails, and intersects it with a standard sub-Gaussian covariance event.  The complete argument and constants appear in Appendix~\ref{app:proofs}.
+
+Let $B_t^\uparrow(H)=\max_{h\le H}B_t(h)$ and
+$H_t^\circ=\max\{H:B_t^\uparrow(H)\le\kappa r(H)\}$.
+
+\begin{theorem}[Adaptive oracle inequality]
+\label{thm:oracle}
+On the event in Theorem~\ref{thm:certificate},
+\begin{equation}
+ \|\widehat C_t-C_{t+1}\|_{\op}\le12\overline\rho_t(H_t^\circ).
+ \label{eq:oracle}
+\end{equation}
+\end{theorem}
+
+The deterministic floor makes $H_t^\circ$ admissible even when the empirical radius is unusually small; the maximal admissible rule then gives $\widehat H_t\ge H_t^\circ$.
+
+Suppose locally
+\begin{equation}
+ \|C_{t-j}-C_{t+1}\|_{\op}\le L_t(j+1)^\beta,\qquad 0<\beta\le1.
+ \label{eq:holder}
+\end{equation}
+Then $B_t(H)\le c_\beta L_tH^\beta$.
+
+\begin{corollary}[Adaptive expected risk]
+\label{cor:rate}
+If the dyadic grid contains the oracle scale and
+$H_t^\star\asymp(K^4M^2d_\alpha/L_t^2)^{1/(2\beta+1)}\gtrsim d_\alpha$, then
+\begin{equation}
+ \E\|\widehat C_t-C_{t+1}\|_{\op}
+ \le C_\beta(K^4M^2d_\alpha)^{\beta/(2\beta+1)}L_t^{1/(2\beta+1)}
+ +C_\beta b_\tau+\alpha(M-1).
+ \label{eq:upper-rate}
+\end{equation}
+\end{corollary}
+
+\begin{theorem}[Same-risk lower bound]
+\label{thm:lower}
+For independent Gaussian streams $C_s=I+\theta_svv^\top$ with unknown unit $v$, $0\le\theta_s\le1/4$, and $|\theta_s-\theta_u|\le L|s-u|^\beta$,
+\begin{equation}
+ \inf_{\widetilde C_t}\sup_P\E_P\|\widetilde C_t-C_{t+1}\|_{\op}
+ \ge cL^{1/(2\beta+1)}m^{\beta/(2\beta+1)}
+ \label{eq:lower-rate}
+\end{equation}
+whenever the history and rate are in the nontrivial interior regime.
+\end{theorem}
+
+Thus, for fixed $(K,M)$, \ATLAS is minimax adaptive up to logarithms in the stated interior regime.  The lower bound packs rank-one directions and places a H\"older bump over the final $h$ observations; the balance $h(Lh^\beta)^2\asymp m$ yields \eqref{eq:lower-rate}.
+
+\section{Experiments}
+\label{sec:experiments}
+
+\subsection{Strict multidimensional Monte Carlo}
+
+We generate bounded conditionally sub-Gaussian streams $y_t=C_t^{1/2}\epsilon_t$ with independent Rademacher coordinates.  Four paths cover stationarity, smooth rotation, birth/death, and a mixed path with rotation, a rank-two burst, a reset, and fast motion.  We use dimensions $m\in\{4,8,16\}$, the complete window grid $\{256,512,1024,2048\}$, and common seeds.  Every forecast uses observations through $t$ and is scored against $C_{t+1}$ and $y_{t+1}$.  Baselines include every fixed window, prequential Hedge, the pilot, and an infeasible local oracle.
+
+\input{generated/mc_table}
+
+The selector lies within $5\%$ of the best single fixed window in \MCWithinFive of scenario--dimension blocks; the median relative gap is \MCMedianGap.  Replication-level paired comparisons record \MCSignificantWins significant operator-error wins and \MCSignificantLosses losses at $|t|>2$.  These statements describe the predeclared grid and do not claim universal dominance.
+
+\input{generated/audit_table}
+
+The certificate achieves \MCPointCoverage pointwise scale--time coverage and \MCPathCoverage whole-path coverage.  The empirical term tightens the deterministic radius in \MCTightening of audited pairs.  Rank certification uses the known simulation drift and produces false-positive rate \MCRankFPR; low exact-rank rate, if present, indicates conservative separation rather than a forecasting failure.
+
+\begin{figure}[t]
+ \centering
+ \includegraphics[width=.49\columnwidth]{selected_window.pdf}\hfill
+ \includegraphics[width=.49\columnwidth]{dimension_scaling.pdf}
+ \caption{Left: selected memory on one mixed-path run. Right: dimension scaling of ATLAS-SB and the infeasible local oracle.}
+ \label{fig:mc}
+\end{figure}
+
+\subsection{Public sensor-drift evaluation}
+
+The UCI Gas Sensor Array Drift at Different Concentrations data contain 13,910 observations, 128 features, six gases, and ten chronological batches \citep{vergara2013uci,vergara2012drift,fonollosa2015dataset}.  Batches 1--2 fix gas/concentration residualization, feature scaling, a rank-\UCIPilotRank pilot, a \UCIMonitorDimension-dimensional monitored residual block, and $(K,M)$ calibration envelopes.  Batches 3--10 are each forecast once.  Because within-batch row order is not documented as measurement time, we forecast the next batch and never use row order as an online clock.
+
+\input{generated/uci_table}
+
+ATLAS-SB's mean next-batch NLL is \UCIAtlasNLL; the best fixed-memory comparator, \UCIBestFixed, has \UCIBestFixedNLL.  A hierarchical bootstrap of the ATLAS-SB-minus-best-fixed difference gives the $95\%$ interval $[\UCIDiffCILow,\UCIDiffCIHigh]$ and an ATLAS-SB win probability of \UCIWinProbability.  We state superiority only if the interval lies below zero; otherwise the result is evidence of competitiveness or a limitation.  Target-batch covariance discrepancy is descriptive because the target sample covariance is not the latent truth.
+
+\begin{figure}[t]
+ \centering
+ \includegraphics[width=.58\columnwidth]{uci_batch_nll.pdf}\hfill
+ \includegraphics[width=.38\columnwidth]{uci_selected_memory.pdf}
+ \caption{Public-data next-batch NLL and selected batch memory.}
+ \label{fig:uci}
+\end{figure}
+
+\section{Diagnostics, Limitations, and Conclusion}
+\label{sec:diagnostics}
+
+If an external drift envelope $\overline B_t(H)\ge B_t(H)$ is available, the total radius
+$\varepsilon_t=\rho_t(\widehat H_t)+\overline B_t(\widehat H_t)$ yields the conservative rank lower bound
+\begin{equation}
+ \underline r_t=\#\{i:\lambda_i(S_t(\widehat H_t))>1+2\varepsilon_t\}\le\rank(T_{t+1}).
+\end{equation}
+A smallest eigenvalue below $1-\varepsilon_t$ rejects the one-sided model.  The stochastic radius alone does not certify rank because it excludes local drift.
+
+The pilot must remain fixed within an episode.  Formal guarantees are conditional on declared valid $(K,M)$ envelopes and complete residual observations.  The PSD correction cannot repair pilot overstatement, cross-block misspecification, or covariance changes inside the pilot span.  The H\"older rate applies in an interior regime; abrupt-change delay is not covered by that minimax statement.  UCI calibration envelopes are empirical and therefore support prediction, not formal finite-sample coverage.  Our Monte Carlo dimensions remain moderate, and the public data supply only eight forecast origins.
+
+Within these limits, \ATLAS closes a practical gap between adaptive covariance estimation and certified deployment around a structured pilot.  Stabilization separates two roles that a single random radius cannot safely play: empirical tightening and deterministic oracle balance.  The resulting method preserves the pilot, produces positive-definite one-step forecasts, and exposes failures rather than silently absorbing them.
+
+\section*{Impact Statement}
+Covariance forecasts affect automated allocation, monitoring, and control.  A conservative positive correction can reduce omitted-risk errors, but it can also delay adaptation and cannot fix an overstated pilot.  We therefore report certificate coverage, model-failure diagnostics, and infeasible-oracle comparisons, and we do not interpret the financial motivation as investment advice.
+
+\clearpage
+\typeout{MAIN_END_PAGE=\number\numexpr\value{page}-1\relax}
+\bibliography{references}
+\bibliographystyle{icml2026}
+
+\clearpage
+\appendix
+\typeout{APPENDIX_START_PAGE=\thepage}
+\input{proofs}
+
+\end{document}

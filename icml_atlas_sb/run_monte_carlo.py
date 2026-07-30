@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
 import math
 from pathlib import Path
 import time
@@ -14,7 +13,6 @@ from atlas_sb import (
     AtlasForecast,
     RadiusConfig,
     atlas_sb_from_statistics,
-    covariance_of_rows,
     expected_gaussian_nll_excess,
     opnorm,
     prepare_rolling_statistics,
@@ -22,12 +20,6 @@ from atlas_sb import (
     spectral_clip,
     sym,
 )
-
-
-@dataclass(frozen=True)
-class Scenario:
-    name: str
-    max_eigenvalue: float
 
 
 def unit_rotation(m: int, angle: float, i: int, j: int) -> np.ndarray:
@@ -92,25 +84,46 @@ def covariance_path(name: str, T: int, m: int) -> Tuple[np.ndarray, np.ndarray]:
 
 
 def sample_bounded_stream(covariances: np.ndarray, seed: int) -> np.ndarray:
-    """Conditionally sub-Gaussian bounded innovations with exact covariance.
-
-    Rademacher innovations make the no-clipping envelope auditable:
-    ||C_t^{1/2} eps_t||^2 <= m lambda_max(C_t).
-    """
-
+    """Bounded conditionally sub-Gaussian innovations with exact covariance."""
     rng = np.random.default_rng(seed)
     T, m, _ = covariances.shape
     observations = np.empty((T, m))
     for t, covariance in enumerate(covariances):
         values, vectors = np.linalg.eigh(covariance)
         root = (vectors * np.sqrt(np.maximum(values, 0.0))) @ vectors.T
-        innovations = rng.choice(np.array([-1.0, 1.0]), size=m)
-        observations[t] = root @ innovations
+        observations[t] = root @ rng.choice(np.array([-1.0, 1.0]), size=m)
     return observations
 
 
 def scenario_M(covariances: np.ndarray) -> float:
     return float(max(np.max(np.linalg.eigvalsh(c)) for c in covariances))
+
+
+def precision_aggregate(
+    forecasts: Dict[int, np.ndarray], weights: np.ndarray
+) -> np.ndarray:
+    """Aggregate experts in precision space.
+
+    Gaussian loss is convex in precision Theta=C^{-1}.  Hence the inverse of
+    the weighted precision inherits the standard exponential-weights loss
+    guarantee, unlike a covariance-space average.
+    """
+    precision = sum(
+        float(weight) * np.linalg.inv(forecasts[window])
+        for weight, window in zip(weights, sorted(forecasts))
+    )
+    return sym(np.linalg.inv(precision))
+
+
+def covariance_aggregate(
+    forecasts: Dict[int, np.ndarray], weights: np.ndarray
+) -> np.ndarray:
+    return sym(
+        sum(
+            float(weight) * forecasts[window]
+            for weight, window in zip(weights, sorted(forecasts))
+        )
+    )
 
 
 def global_fixed_choice(seed_level: pd.DataFrame, metric: str) -> Dict[Tuple[str, int], str]:
@@ -135,7 +148,6 @@ def run_one(
     covariances, ranks = covariance_path(scenario, T, dimension)
     M = max(1.01, scenario_M(covariances))
     observations = sample_bounded_stream(covariances, seed)
-    # Deterministic boundedness: ||y_t||^2 <= m M, so clipping never fires.
     tau = math.sqrt(dimension * M) * (1.0 + 1e-10)
     config = RadiusConfig(
         K=1.0,
@@ -158,25 +170,27 @@ def run_one(
     method_rows: List[dict] = []
     audit_rows: List[dict] = []
     selector_rows: List[dict] = []
-    hedge_log_weights = np.zeros(len(windows))
-    hedge_eta = 0.05
+    log_weights = np.zeros(len(windows))
+    learning_rate = 0.05
     path_covered = True
 
     for t in range(burnin - 1, T - 1):
         start_clock = time.perf_counter()
-        atlas: AtlasForecast = atlas_sb_from_statistics(
+        certified: AtlasForecast = atlas_sb_from_statistics(
             stats, t + 1, windows, config, lower=1.0
         )
-        atlas_ms = 1000.0 * (time.perf_counter() - start_clock)
-        available = sorted(atlas.scatters)
+        available = sorted(certified.scatters)
         fixed_forecasts = {
-            h: spectral_clip(atlas.scatters[h], 1.0, M) for h in available
+            h: spectral_clip(certified.scatters[h], 1.0, M) for h in available
         }
-        weights = np.exp(hedge_log_weights[: len(available)] - np.max(hedge_log_weights[: len(available)]))
-        weights /= np.sum(weights)
-        hedge_forecast = sym(
-            sum(weight * fixed_forecasts[h] for weight, h in zip(weights, available))
+        weights = np.exp(
+            log_weights[: len(available)] - np.max(log_weights[: len(available)])
         )
+        weights /= np.sum(weights)
+        atlas_forecast = precision_aggregate(fixed_forecasts, weights)
+        covariance_mix = covariance_aggregate(fixed_forecasts, weights)
+        atlas_ms = 1000.0 * (time.perf_counter() - start_clock)
+
         target_covariance = covariances[t + 1]
         target_observation = observations[t + 1]
         local_oracle_h = min(
@@ -185,11 +199,13 @@ def run_one(
         )
         forecasts: Dict[str, np.ndarray] = {
             "Pilot": np.eye(dimension),
-            "Hedge": hedge_forecast,
-            "ATLAS-SB": atlas.forecast,
+            "Covariance mix": covariance_mix,
+            "ATLAS-SB": atlas_forecast,
+            "Certified selector": certified.forecast,
             "Local oracle": fixed_forecasts[local_oracle_h],
         }
         forecasts.update({f"Fixed-{h}": fixed_forecasts[h] for h in available})
+        dominant_window = available[int(np.argmax(weights))]
         for method, forecast in forecasts.items():
             method_rows.append(
                 {
@@ -198,10 +214,21 @@ def run_one(
                     "dimension": dimension,
                     "time": t,
                     "method": method,
-                    "selected_window": atlas.selected_window if method == "ATLAS-SB" else np.nan,
-                    "relative_op_error": opnorm(forecast - target_covariance) / opnorm(target_covariance),
-                    "expected_nll_excess": expected_gaussian_nll_excess(forecast, target_covariance),
-                    "realized_nll": realized_gaussian_nll(forecast, target_observation),
+                    "selected_window": (
+                        dominant_window
+                        if method == "ATLAS-SB"
+                        else certified.selected_window
+                        if method == "Certified selector"
+                        else np.nan
+                    ),
+                    "relative_op_error": opnorm(forecast - target_covariance)
+                    / opnorm(target_covariance),
+                    "expected_nll_excess": expected_gaussian_nll_excess(
+                        forecast, target_covariance
+                    ),
+                    "realized_nll": realized_gaussian_nll(
+                        forecast, target_observation
+                    ),
                     "update_ms": atlas_ms if method == "ATLAS-SB" else np.nan,
                 }
             )
@@ -212,8 +239,8 @@ def run_one(
             population_window = sym(
                 (cumulative_covariance[t + 1] - cumulative_covariance[start]) / h
             )
-            error = opnorm(atlas.scatters[h] - population_window)
-            hit = error <= atlas.stabilized_radii[h]
+            error = opnorm(certified.scatters[h] - population_window)
+            hit = error <= certified.stabilized_radii[h]
             all_scale_hits = all_scale_hits and hit
             audit_rows.append(
                 {
@@ -223,27 +250,30 @@ def run_one(
                     "time": t,
                     "window": h,
                     "centered_error": error,
-                    "stabilized_radius": atlas.stabilized_radii[h],
-                    "empirical_radius": atlas.empirical_radii[h],
-                    "deterministic_radius": atlas.deterministic_radii[h],
+                    "stabilized_radius": certified.stabilized_radii[h],
+                    "empirical_radius": certified.empirical_radii[h],
+                    "deterministic_radius": certified.deterministic_radii[h],
                     "coverage": int(hit),
                     "empirical_tightens": int(
-                        atlas.empirical_radii[h] < atlas.deterministic_radii[h]
+                        certified.empirical_radii[h]
+                        < certified.deterministic_radii[h]
                     ),
                 }
             )
         path_covered = path_covered and all_scale_hits
 
-        selected_h = atlas.selected_window
+        selected_h = certified.selected_window
         selected_start = t + 1 - selected_h
         selected_population = sym(
             (cumulative_covariance[t + 1] - cumulative_covariance[selected_start])
             / selected_h
         )
         drift = opnorm(selected_population - target_covariance)
-        total_radius = atlas.stabilized_radii[selected_h] + drift
-        selected_values = np.linalg.eigvalsh(atlas.scatters[selected_h])
-        certified_rank = int(np.sum(selected_values > 1.0 + 2.0 * total_radius))
+        total_radius = certified.stabilized_radii[selected_h] + drift
+        selected_values = np.linalg.eigvalsh(certified.scatters[selected_h])
+        certified_rank = int(
+            np.sum(selected_values > 1.0 + 2.0 * total_radius)
+        )
         true_rank = int(ranks[t + 1])
         selector_rows.append(
             {
@@ -252,6 +282,7 @@ def run_one(
                 "dimension": dimension,
                 "time": t,
                 "selected_window": selected_h,
+                "dominant_predictive_window": dominant_window,
                 "true_rank": true_rank,
                 "certified_rank": certified_rank,
                 "rank_false_positive": int(certified_rank > true_rank),
@@ -262,18 +293,23 @@ def run_one(
             }
         )
 
-        fixed_losses = np.array(
-            [realized_gaussian_nll(fixed_forecasts[h], target_observation) for h in available]
+        expert_losses = np.array(
+            [
+                realized_gaussian_nll(fixed_forecasts[h], target_observation)
+                for h in available
+            ]
         )
-        fixed_losses = np.clip(fixed_losses - np.min(fixed_losses), 0.0, 30.0)
-        hedge_log_weights[: len(available)] -= hedge_eta * fixed_losses
+        expert_losses = np.clip(expert_losses - np.min(expert_losses), 0.0, 30.0)
+        log_weights[: len(available)] -= learning_rate * expert_losses
 
     selector = pd.DataFrame(selector_rows)
     selector["whole_path_coverage"] = int(path_covered)
     return pd.DataFrame(method_rows), pd.DataFrame(audit_rows), selector
 
 
-def aggregate_results(results: pd.DataFrame, audits: pd.DataFrame, selectors: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def aggregate_results(
+    results: pd.DataFrame, audits: pd.DataFrame, selectors: pd.DataFrame
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     seed_level = (
         results.groupby(["seed", "scenario", "dimension", "method"], as_index=False)
         .agg(
@@ -287,14 +323,19 @@ def aggregate_results(results: pd.DataFrame, audits: pd.DataFrame, selectors: pd
         seed_level.groupby(["scenario", "dimension", "method"], as_index=False)
         .agg(
             op_mean=("relative_op_error", "mean"),
-            op_se=("relative_op_error", lambda x: x.std(ddof=1) / math.sqrt(len(x))),
+            op_se=(
+                "relative_op_error",
+                lambda x: x.std(ddof=1) / math.sqrt(len(x)),
+            ),
             nll_mean=("expected_nll_excess", "mean"),
-            nll_se=("expected_nll_excess", lambda x: x.std(ddof=1) / math.sqrt(len(x))),
+            nll_se=(
+                "expected_nll_excess",
+                lambda x: x.std(ddof=1) / math.sqrt(len(x)),
+            ),
             realized_nll_mean=("realized_nll", "mean"),
             update_ms=("update_ms", "mean"),
         )
     )
-
     audit_summary = pd.DataFrame(
         [
             {
@@ -302,15 +343,20 @@ def aggregate_results(results: pd.DataFrame, audits: pd.DataFrame, selectors: pd
                 "whole_path_coverage": float(
                     selectors.groupby(["seed", "scenario", "dimension"])[
                         "whole_path_coverage"
-                    ].first().mean()
+                    ]
+                    .first()
+                    .mean()
                 ),
-                "empirical_tightening_rate": float(audits["empirical_tightens"].mean()),
-                "rank_false_positive_rate": float(selectors["rank_false_positive"].mean()),
+                "empirical_tightening_rate": float(
+                    audits["empirical_tightens"].mean()
+                ),
+                "rank_false_positive_rate": float(
+                    selectors["rank_false_positive"].mean()
+                ),
                 "exact_rank_rate": float(selectors["rank_exact"].mean()),
             }
         ]
     )
-
     choices = global_fixed_choice(seed_level, "relative_op_error")
     paired_rows: List[dict] = []
     for (scenario, dimension), best_method in choices.items():
@@ -336,18 +382,17 @@ def aggregate_results(results: pd.DataFrame, audits: pd.DataFrame, selectors: pd
         )
         merged = atlas.merge(benchmark, on="seed", how="inner")
         for metric in ("op", "nll"):
-            diff = merged[f"atlas_{metric}"] - merged[f"benchmark_{metric}"]
+            difference = merged[f"atlas_{metric}"] - merged[f"benchmark_{metric}"]
+            se = float(difference.std(ddof=1) / math.sqrt(len(difference)))
             paired_rows.append(
                 {
                     "scenario": scenario,
                     "dimension": dimension,
                     "benchmark": best_method,
                     "metric": metric,
-                    "mean_difference": float(diff.mean()),
-                    "se_difference": float(diff.std(ddof=1) / math.sqrt(len(diff))),
-                    "t_stat": float(diff.mean() / (diff.std(ddof=1) / math.sqrt(len(diff))))
-                    if diff.std(ddof=1) > 0
-                    else np.nan,
+                    "mean_difference": float(difference.mean()),
+                    "se_difference": se,
+                    "t_stat": float(difference.mean() / se) if se > 0 else np.nan,
                 }
             )
     return summary, audit_summary, pd.DataFrame(paired_rows)

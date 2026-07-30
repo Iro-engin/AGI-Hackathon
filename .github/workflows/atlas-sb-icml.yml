@@ -1,0 +1,132 @@
+name: ATLAS-SB ICML replication
+
+on:
+  push:
+    paths:
+      - 'icml_atlas_sb/**'
+      - '.github/workflows/atlas-sb-icml.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: ${{ !contains(github.event.head_commit.message || '', '[skip atlas]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      PYTHONHASHSEED: '0'
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: icml_atlas_sb/requirements.txt
+
+      - name: Install Python dependencies
+        run: pip install -r icml_atlas_sb/requirements.txt
+
+      - name: Run strict multidimensional Monte Carlo
+        working-directory: icml_atlas_sb
+        run: |
+          rm -rf generated/monte_carlo
+          python run_monte_carlo.py \
+            --out generated/monte_carlo \
+            --seeds 6 \
+            --T 6000 \
+            --c-det 2.0 \
+            --kappa 0.25 \
+            2>&1 | tee generated_monte_carlo.log
+
+      - name: Run public UCI next-batch analysis
+        working-directory: icml_atlas_sb
+        run: |
+          rm -rf generated/uci
+          python run_uci.py \
+            --archive data/gas_sensor_array_drift.zip \
+            --out generated/uci \
+            --bootstrap 500 \
+            --c-det 2.0 \
+            --kappa 0.25 \
+            2>&1 | tee generated_uci.log
+
+      - name: Generate tables and figures
+        working-directory: icml_atlas_sb
+        run: |
+          mkdir -p paper/generated
+          python make_assets.py \
+            --mc generated/monte_carlo \
+            --uci generated/uci \
+            --out paper/generated \
+            2>&1 | tee generated_assets.log
+
+      - name: Compile ICML paper when source exists
+        if: ${{ hashFiles('icml_atlas_sb/paper/main.tex') != '' }}
+        run: |
+          curl -L --fail --retry 3 \
+            -o /tmp/icml2026.zip \
+            https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip
+          unzip -qo /tmp/icml2026.zip -d /tmp/icml2026
+          STYLE=$(find /tmp/icml2026 -name icml2026.sty -print -quit)
+          BST=$(find /tmp/icml2026 -name icml2026.bst -print -quit)
+          test -n "$STYLE"
+          test -n "$BST"
+          cp "$STYLE" icml_atlas_sb/paper/icml2026.sty
+          cp "$BST" icml_atlas_sb/paper/icml2026.bst
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            texlive-latex-base texlive-latex-extra texlive-fonts-recommended \
+            texlive-science latexmk poppler-utils qpdf ghostscript zip
+          cd icml_atlas_sb/paper
+          latexmk -pdf -file-line-error -halt-on-error -interaction=nonstopmode main.tex
+          mkdir -p ../release
+          cp main.pdf ../release/ATLAS_SB_ICML2026.pdf
+          cp main.tex proofs.tex references.bib icml2026.sty icml2026.bst ../release/
+          cp -r generated ../release/generated
+          grep -E 'MAIN_END_PAGE|APPENDIX_START_PAGE|Output written|Overfull|Underfull|undefined|LaTeX Warning' main.log \
+            > ../release/compile_audit.txt || true
+          pdfinfo main.pdf > ../release/pdfinfo.txt
+          pdffonts main.pdf > ../release/pdffonts.txt
+          qpdf --check main.pdf > ../release/qpdf_check.txt 2>&1
+          cd ../release
+          zip -9 -r ATLAS_SB_ICML2026_source.zip \
+            main.tex proofs.tex references.bib icml2026.sty icml2026.bst generated
+          sha256sum * > SHA256SUMS.txt
+
+      - name: Commit generated results and release
+        run: |
+          git config user.name 'atlas-sb-bot'
+          git config user.email 'atlas-sb-bot@users.noreply.github.com'
+          git add icml_atlas_sb/generated icml_atlas_sb/paper/generated \
+            icml_atlas_sb/generated_monte_carlo.log \
+            icml_atlas_sb/generated_uci.log \
+            icml_atlas_sb/generated_assets.log
+          if [ -d icml_atlas_sb/release ]; then
+            git add icml_atlas_sb/release
+          fi
+          if git diff --cached --quiet; then
+            echo 'No generated changes to commit.'
+          else
+            git commit -m '[skip atlas] Regenerate ATLAS-SB ICML artifacts'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATLAS-SB-ICML-build
+          path: |
+            icml_atlas_sb/generated
+            icml_atlas_sb/paper/generated
+            icml_atlas_sb/release
+            icml_atlas_sb/generated_*.log
+          if-no-files-found: error

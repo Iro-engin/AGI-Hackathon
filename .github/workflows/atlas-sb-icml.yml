@@ -76,6 +76,7 @@ jobs:
         continue-on-error: true
         working-directory: icml_atlas_sb
         run: |
+          rm -rf paper/generated
           mkdir -p paper/generated
           set -o pipefail
           python make_assets.py \
@@ -84,7 +85,7 @@ jobs:
             --out paper/generated \
             2>&1 | tee generated_assets.log
 
-      - name: Compile ICML paper
+      - name: Compile and preflight ICML paper
         id: compile
         if: ${{ steps.assets.outcome == 'success' }}
         continue-on-error: true
@@ -93,6 +94,7 @@ jobs:
           curl -L --fail --retry 3 \
             -o /tmp/icml2026.zip \
             https://media.icml.cc/Conferences/ICML2026/Styles/icml2026.zip
+          rm -rf /tmp/icml2026
           unzip -qo /tmp/icml2026.zip -d /tmp/icml2026
           STYLE=$(find /tmp/icml2026 -name icml2026.sty -print -quit)
           BST=$(find /tmp/icml2026 -name icml2026.bst -print -quit)
@@ -107,18 +109,57 @@ jobs:
           cd icml_atlas_sb/paper
           latexmk -pdf -file-line-error -halt-on-error -interaction=nonstopmode main.tex \
             2>&1 | tee ../generated_compile.log
-          mkdir -p ../release
+          mkdir -p ../release/render
           cp main.pdf ../release/ATLAS_SB_ICML2026.pdf
-          cp main.tex proofs.tex references.bib icml2026.sty icml2026.bst ../release/
+          cp main.tex proofs.tex aggregation_proof.tex references.bib \
+            icml2026.sty icml2026.bst ../release/
           cp -r generated ../release/generated
+          cp ../README.md ../requirements.txt ../atlas_sb.py ../run_monte_carlo.py \
+            ../run_uci.py ../run_uci_fast.py ../make_assets.py ../release/
           grep -E 'MAIN_END_PAGE|APPENDIX_START_PAGE|Output written|Overfull|Underfull|undefined|LaTeX Warning' main.log \
             > ../release/compile_audit.txt || true
           pdfinfo main.pdf > ../release/pdfinfo.txt
           pdffonts main.pdf > ../release/pdffonts.txt
           qpdf --check main.pdf > ../release/qpdf_check.txt 2>&1
+          pdftoppm -png -r 110 main.pdf ../release/render/page >/dev/null 2>&1
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps, ImageDraw
+          pages = sorted(Path('../release/render').glob('page-*.png'))
+          thumbs=[]
+          for path in pages:
+              image=Image.open(path).convert('RGB')
+              image.thumbnail((420,560))
+              canvas=Image.new('RGB',(440,600),'white')
+              canvas.paste(image,((440-image.width)//2,20))
+              ImageDraw.Draw(canvas).text((10,575),path.stem,fill='black')
+              thumbs.append(canvas)
+          cols=3
+          rows=(len(thumbs)+cols-1)//cols
+          sheet=Image.new('RGB',(cols*440,rows*600),'white')
+          for i,image in enumerate(thumbs):
+              sheet.paste(image,((i%cols)*440,(i//cols)*600))
+          sheet.save('../release/contact_sheet.png')
+          PY
+          MAIN=$(grep -o 'MAIN_END_PAGE=[0-9]*' main.log | tail -1 | cut -d= -f2)
+          echo "main_pages=${MAIN}" > ../release/page_limit_audit.txt
+          if [ -z "$MAIN" ] || [ "$MAIN" -gt 8 ]; then
+            echo 'ICML main-text page limit failed' >> ../release/page_limit_audit.txt
+            exit 21
+          fi
+          if grep -q 'Overfull \\hbox' main.log; then
+            echo 'Overfull box detected' >> ../release/page_limit_audit.txt
+            exit 22
+          fi
+          if grep -Eqi 'undefined references|undefined citation' main.log; then
+            echo 'Undefined reference or citation detected' >> ../release/page_limit_audit.txt
+            exit 23
+          fi
           cd ../release
           zip -9 -r ATLAS_SB_ICML2026_source.zip \
-            main.tex proofs.tex references.bib icml2026.sty icml2026.bst generated
+            main.tex proofs.tex aggregation_proof.tex references.bib \
+            icml2026.sty icml2026.bst README.md requirements.txt atlas_sb.py \
+            run_monte_carlo.py run_uci.py run_uci_fast.py make_assets.py generated
           sha256sum * > SHA256SUMS.txt
 
       - name: Record pipeline status
@@ -150,9 +191,7 @@ jobs:
             icml_atlas_sb/generated_compile.log; do
             if [ -e "$path" ]; then git add -f "$path"; fi
           done
-          if git diff --cached --quiet; then
-            echo 'No generated changes to commit.'
-          else
+          if ! git diff --cached --quiet; then
             git commit -m '[skip atlas] Regenerate ATLAS-SB ICML artifacts and diagnostics'
             git pull --rebase origin main
             git push origin HEAD:main
@@ -170,11 +209,3 @@ jobs:
             icml_atlas_sb/status
             icml_atlas_sb/generated_*.log
           if-no-files-found: error
-
-      - name: Fail workflow after diagnostics if needed
-        if: always()
-        run: |
-          test '${{ steps.mc.outcome }}' = 'success'
-          test '${{ steps.uci.outcome }}' = 'success'
-          test '${{ steps.assets.outcome }}' = 'success'
-          test '${{ steps.compile.outcome }}' = 'success'

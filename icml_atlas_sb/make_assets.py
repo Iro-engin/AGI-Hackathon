@@ -17,8 +17,9 @@ MC_ORDER = [
     "Fixed-512",
     "Fixed-1024",
     "Fixed-2048",
-    "Hedge",
+    "Covariance mix",
     "ATLAS-SB",
+    "Certified selector",
     "Local oracle",
 ]
 UCI_ORDER = [
@@ -27,8 +28,9 @@ UCI_ORDER = [
     "Fixed-2-batch",
     "Fixed-4-batch",
     "Expanding",
-    "Hedge",
+    "Covariance mix",
     "ATLAS-SB",
+    "Certified selector",
     "Local oracle",
 ]
 
@@ -50,7 +52,6 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
     results = pd.read_csv(mc_dir / "strict_results.csv")
     audits = pd.read_csv(mc_dir / "coverage_audit.csv")
     selectors = pd.read_csv(mc_dir / "selector_audit.csv")
-    paired = pd.read_csv(mc_dir / "paired_differences.csv")
     seed_level = (
         results.groupby(["seed", "scenario", "dimension", "method"], as_index=False)
         .agg(
@@ -87,12 +88,12 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
     best_nll = float(feasible["nll_mean"].min())
     lines = [
         r"\begin{table}[t]",
-        r"\caption{Strict $t\mapsto t+1$ Monte Carlo, averaged equally over seeds, scenarios, and dimensions (lower is better). Every fixed window in the selector grid is shown.}",
+        r"\caption{Strict $t\mapsto t+1$ Monte Carlo, averaged equally over seeds, paths, and dimensions (lower is better). Every fixed window is shown.}",
         r"\label{tab:mc}",
-        r"\centering\small",
+        r"\centering\scriptsize",
         r"\begin{tabular}{lccc}",
         r"\toprule",
-        r"Method & Rel. operator error & Excess NLL & Select ms \\",
+        r"Method & Rel. operator error & Excess NLL & Update ms \\",
         r"\midrule",
     ]
     for row in rows:
@@ -109,7 +110,7 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         r"\bottomrule",
         r"\end{tabular}",
         r"\vspace{-1mm}",
-        r"\begin{flushleft}\footnotesize $^\dagger$Uses the true next covariance to choose among fixed windows and is infeasible. Errors use the known $C_{t+1}$; no contemporaneous replicate is used.\end{flushleft}",
+        r"\begin{flushleft}\tiny $^\dagger$Uses $C_{t+1}$ to choose a fixed window and is infeasible. ATLAS-SB is the precision aggregate; the certified selector is reported separately.\end{flushleft}",
         r"\end{table}",
     ]
     (output / "mc_table.tex").write_text("\n".join(lines), encoding="utf-8")
@@ -125,7 +126,7 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
     rank_exact = float(selectors["rank_exact"].mean())
     audit_lines = [
         r"\begin{table}[t]",
-        r"\caption{Simulation certificate audit. Rank thresholds add the known local drift.}",
+        r"\caption{Certificate audit in simulation. Rank thresholds add the known local drift.}",
         r"\label{tab:audit}",
         r"\centering\small",
         r"\begin{tabular}{lc}",
@@ -161,9 +162,9 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         )
     blocks = pd.DataFrame(block_rows)
     within_five = float(np.mean(blocks["atlas_gap_pct"] <= 5.0))
+    within_ten = float(np.mean(blocks["atlas_gap_pct"] <= 10.0))
     median_gap = float(blocks["atlas_gap_pct"].median())
-    significant_wins = paired[(paired["metric"] == "op") & (paired["t_stat"] < -2.0)]
-    significant_losses = paired[(paired["metric"] == "op") & (paired["t_stat"] > 2.0)]
+    best_blocks = int(np.sum(blocks["atlas_gap_pct"] <= 0.0))
 
     mixed = selectors[
         (selectors["scenario"] == "mixed")
@@ -171,29 +172,43 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         & (selectors["seed"] == selectors["seed"].min())
     ].sort_values("time")
     fig, ax = plt.subplots(figsize=(5.8, 2.5))
-    ax.plot(mixed["time"], mixed["selected_window"], linewidth=0.9)
+    ax.plot(
+        mixed["time"],
+        mixed["dominant_predictive_window"],
+        linewidth=0.9,
+        label="predictive dominant",
+    )
+    ax.plot(
+        mixed["time"],
+        mixed["selected_window"],
+        linewidth=0.9,
+        linestyle="--",
+        label="certified selector",
+    )
     ax.set_yscale("log", base=2)
     ax.set_xlabel("Forecast origin")
-    ax.set_ylabel("Selected window")
+    ax.set_ylabel("Window")
+    ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(output / "selected_window.pdf", bbox_inches="tight")
     plt.close(fig)
 
     summary = pd.read_csv(mc_dir / "summary.csv")
     fig, ax = plt.subplots(figsize=(4.7, 3.0))
-    for method, marker in (("ATLAS-SB", "o"), ("Local oracle", "s")):
+    for method, marker in (("ATLAS-SB", "o"), ("Local oracle", "s"), ("Certified selector", "^")):
         block = (
             summary[summary["method"] == method]
             .groupby("dimension", as_index=False)["op_mean"]
             .mean()
             .sort_values("dimension")
         )
-        ax.plot(block["dimension"], block["op_mean"], marker=marker, label=method)
+        if not block.empty:
+            ax.plot(block["dimension"], block["op_mean"], marker=marker, label=method)
     ax.set_xscale("log", base=2)
     ax.set_yscale("log")
     ax.set_xlabel("Residual dimension $m$")
     ax.set_ylabel("Relative operator error")
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(output / "dimension_scaling.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -205,9 +220,9 @@ def monte_carlo_assets(mc_dir: Path, output: Path) -> Dict[str, float | str]:
         "mc_rank_fp": rank_fp,
         "mc_rank_exact": rank_exact,
         "mc_within_five": within_five,
+        "mc_within_ten": within_ten,
         "mc_median_gap": median_gap,
-        "mc_significant_wins": int(len(significant_wins)),
-        "mc_significant_losses": int(len(significant_losses)),
+        "mc_best_blocks": best_blocks,
     }
 
 
@@ -219,7 +234,7 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
     lookup = {row["method"]: row for _, row in summary.iterrows()}
     lines = [
         r"\begin{table}[t]",
-        r"\caption{Public UCI gas-sensor drift data: strict next-batch forecasts. Batches 1--4 fix preprocessing, the pilot, and envelopes; batches 5--10 are evaluated once.}",
+        r"\caption{Public UCI gas-sensor drift data: strict next-batch forecasts. Batches 1--4 fix preprocessing, pilot, and envelopes; batches 5--10 are evaluated once.}",
         r"\label{tab:uci}",
         r"\centering\scriptsize",
         r"\begin{tabular}{lccc}",
@@ -259,22 +274,31 @@ def uci_assets(uci_dir: Path, output: Path) -> Dict[str, float | str]:
         win_probability = float(item["atlas_win_probability"])
 
     fig, ax = plt.subplots(figsize=(5.5, 2.8))
-    for method in ("Pilot", best_fixed["method"], "Hedge", "ATLAS-SB"):
+    for method in ("Pilot", best_fixed["method"], "Covariance mix", "ATLAS-SB", "Certified selector"):
         block = results[results["method"] == method].sort_values("target_batch")
-        ax.plot(block["target_batch"], block["mean_nll"], marker="o", label=method)
+        if not block.empty:
+            ax.plot(block["target_batch"], block["mean_nll"], marker="o", label=method)
     ax.set_xlabel("Target batch")
     ax.set_ylabel("Mean Gaussian NLL")
-    ax.legend(fontsize=7)
+    ax.legend(fontsize=6.5)
     fig.tight_layout()
     fig.savefig(output / "uci_batch_nll.pdf", bbox_inches="tight")
     plt.close(fig)
 
-    selected = results[results["method"] == "ATLAS-SB"].sort_values("target_batch")
+    selected = results[results["method"].isin(["ATLAS-SB", "Certified selector"])].sort_values("target_batch")
     fig, ax = plt.subplots(figsize=(5.0, 2.5))
-    ax.step(selected["target_batch"], selected["selected_memory"], where="mid")
+    for method, style in (("ATLAS-SB", "-"), ("Certified selector", "--")):
+        block = selected[selected["method"] == method]
+        ax.step(
+            block["target_batch"],
+            block["selected_memory"],
+            where="mid",
+            linestyle=style,
+            label=method,
+        )
     ax.set_xlabel("Target batch")
     ax.set_ylabel("Selected batches")
-    ax.set_yticks(sorted(selected["selected_memory"].dropna().unique()))
+    ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(output / "uci_selected_memory.pdf", bbox_inches="tight")
     plt.close(fig)
@@ -299,9 +323,9 @@ def write_macros(values: Dict[str, float | str], output: Path) -> None:
         "MCRankFPR": f"{100 * float(values['mc_rank_fp']):.2f}\\%",
         "MCRankExact": f"{100 * float(values['mc_rank_exact']):.1f}\\%",
         "MCWithinFive": f"{100 * float(values['mc_within_five']):.1f}\\%",
+        "MCWithinTen": f"{100 * float(values['mc_within_ten']):.1f}\\%",
         "MCMedianGap": f"{float(values['mc_median_gap']):.1f}\\%",
-        "MCSignificantWins": str(values["mc_significant_wins"]),
-        "MCSignificantLosses": str(values["mc_significant_losses"]),
+        "MCBestBlocks": str(values["mc_best_blocks"]),
         "UCIAtlasNLL": f"{float(values['uci_atlas_nll']):.3f}",
         "UCIBestFixed": latex_escape(str(values["uci_best_fixed"])),
         "UCIBestFixedNLL": f"{float(values['uci_best_fixed_nll']):.3f}",

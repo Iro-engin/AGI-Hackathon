@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - '.github/workflows/publish-atlas-review.yml'
+  pull_request:
+    paths:
+      - '.github/workflows/publish-atlas-review.yml'
 
 permissions:
   contents: write

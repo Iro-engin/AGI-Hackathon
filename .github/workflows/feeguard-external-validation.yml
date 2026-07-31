@@ -104,13 +104,29 @@ jobs:
           set -o pipefail
           npx solhint 'src/**/*.sol' 2>&1 | tee artifacts/solhint.txt
 
-      - name: Slither
+      - name: Slither assessment
+        id: slither
+        continue-on-error: true
         run: |
+          set +e
           python -m pip install --disable-pip-version-check slither-analyzer==0.11.3
-          slither . --compile-force-framework foundry --exclude-dependencies --json artifacts/slither.json > artifacts/slither-console.txt 2>&1 || true
-          python scripts/triage_slither.py artifacts/slither.json --summary artifacts/slither-summary.md
+          install_status=$?
+          echo "$install_status" > artifacts/slither-install-exit.txt
+          if [ "$install_status" -eq 0 ]; then
+            slither . --compile-force-framework foundry --exclude-dependencies --json artifacts/slither.json > artifacts/slither-console.txt 2>&1
+            command_status=$?
+            echo "$command_status" > artifacts/slither-command-exit.txt
+            python scripts/triage_slither.py artifacts/slither.json --summary artifacts/slither-summary.md
+            triage_status=$?
+            echo "$triage_status" > artifacts/slither-triage-exit.txt
+            exit "$triage_status"
+          fi
+          printf '# Slither summary\n\nSlither installation failed.\n' > artifacts/slither-summary.md
+          exit "$install_status"
 
       - name: Ethereum mainnet-fork integration with RPC failover
+        id: mainnet_fork
+        continue-on-error: true
         run: |
           set +e
           : > artifacts/mainnet-fork.txt
@@ -126,13 +142,18 @@ jobs:
             status=${PIPESTATUS[0]}
             if [ "$status" -eq 0 ]; then
               echo "MAINNET_FORK_RPC=$rpc" | tee -a artifacts/mainnet-fork.txt
+              echo 0 > artifacts/mainnet-fork-exit.txt
               exit 0
             fi
           done
+          echo 1 > artifacts/mainnet-fork-exit.txt
           exit 1
 
       - name: Build validation report
         if: always()
+        env:
+          SLITHER_OUTCOME: ${{ steps.slither.outcome }}
+          MAINNET_FORK_OUTCOME: ${{ steps.mainnet_fork.outcome }}
         run: python scripts/build_assessment_report.py
 
       - name: Upload validation artifacts

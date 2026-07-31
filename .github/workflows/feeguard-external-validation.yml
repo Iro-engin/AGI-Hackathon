@@ -18,7 +18,6 @@ jobs:
       run:
         working-directory: feeguard-external-validation
     env:
-      MAINNET_RPC_URL: https://rpcfree.com/ethereum-rpc
       V4_CORE_COMMIT: 46c6834698c48bc4a463a86d8420f4eb1d7f3b75
     steps:
       - name: Checkout
@@ -30,6 +29,7 @@ jobs:
           tar -xzf /tmp/feeguard-validation.tar.gz -C .
           python - <<'PY'
           from pathlib import Path
+
           p = Path('test/FeeGuardHookIntegration.t.sol')
           text = p.read_text()
           text = text.replace('vm.expectRevert(FeeGuardHook.InvalidDynamicPool.selector);', 'vm.expectRevert();')
@@ -38,10 +38,7 @@ jobs:
 
           fork = Path('test/FeeGuardMainnetFork.t.sol')
           text = fork.read_text()
-          text = text.replace(
-              'vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 22_451_931);',
-              'vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));'
-          )
+          text = text.replace('vm.createSelectFork(rpc, PINNED_FORK_BLOCK);', 'vm.createSelectFork(rpc);')
           fork.write_text(text)
           PY
 
@@ -94,11 +91,6 @@ jobs:
           set -o pipefail
           forge test --match-test test_localV4PoolAppliesCommittedFeeAtomicallyAtEffectiveBlock -vvvv 2>&1 | tee artifacts/local-v4-integration.txt
 
-      - name: Ethereum mainnet-fork integration
-        run: |
-          set -o pipefail
-          forge test --match-contract FeeGuardMainnetForkTest -vvvv 2>&1 | tee artifacts/mainnet-fork.txt
-
       - name: Gas report and snapshot
         run: |
           set -o pipefail
@@ -117,6 +109,27 @@ jobs:
           python -m pip install --disable-pip-version-check slither-analyzer==0.11.3
           slither . --compile-force-framework foundry --exclude-dependencies --json artifacts/slither.json > artifacts/slither-console.txt 2>&1 || true
           python scripts/triage_slither.py artifacts/slither.json --summary artifacts/slither-summary.md
+
+      - name: Ethereum mainnet-fork integration with RPC failover
+        run: |
+          set +e
+          : > artifacts/mainnet-fork.txt
+          for rpc in \
+            https://eth-mainnet.g.alchemy.com/public \
+            https://rpc.nodeflare.app/eth/public \
+            https://ethereum-rpc.blockreq.com/v1/rpc/public \
+            https://1rpc.io/eth \
+            https://eth.llamarpc.com
+          do
+            echo "=== Trying $rpc ===" | tee -a artifacts/mainnet-fork.txt
+            MAINNET_RPC_URL="$rpc" forge test --match-contract FeeGuardMainnetForkTest -vvvv 2>&1 | tee -a artifacts/mainnet-fork.txt
+            status=${PIPESTATUS[0]}
+            if [ "$status" -eq 0 ]; then
+              echo "MAINNET_FORK_RPC=$rpc" | tee -a artifacts/mainnet-fork.txt
+              exit 0
+            fi
+          done
+          exit 1
 
       - name: Build validation report
         if: always()

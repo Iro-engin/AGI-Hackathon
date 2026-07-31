@@ -18,7 +18,7 @@ jobs:
       run:
         working-directory: feeguard-external-validation
     env:
-      MAINNET_RPC_URL: https://ethereum-rpc.publicnode.com
+      MAINNET_RPC_URL: https://rpcfree.com/ethereum-rpc
       V4_CORE_COMMIT: 46c6834698c48bc4a463a86d8420f4eb1d7f3b75
     steps:
       - name: Checkout

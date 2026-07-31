@@ -1,0 +1,115 @@
+name: FeeGuard external validation
+
+on:
+  pull_request:
+    paths:
+      - 'feeguard-external-validation/**'
+      - '.github/workflows/feeguard-external-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: feeguard-external-validation
+    env:
+      MAINNET_RPC_URL: https://ethereum-rpc.publicnode.com
+      V4_CORE_COMMIT: 46c6834698c48bc4a463a86d8420f4eb1d7f3b75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+
+      - name: Expand validation harness
+        run: |
+          base64 --decode validation_bundle.tar.gz.b64 > /tmp/feeguard-validation.tar.gz
+          tar -xzf /tmp/feeguard-validation.tar.gz -C .
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09
+        with:
+          version: stable
+
+      - name: Clone pinned Uniswap v4-core and dependencies
+        run: |
+          mkdir -p lib
+          git clone --filter=blob:none --no-checkout https://github.com/Uniswap/v4-core.git lib/v4-core
+          git -C lib/v4-core checkout "$V4_CORE_COMMIT"
+          git -C lib/v4-core submodule update --init --recursive
+
+      - name: Record tool versions
+        run: |
+          mkdir -p artifacts
+          {
+            forge --version
+            cast --version
+            anvil --version
+            git --version
+            python --version
+            node --version
+          } | tee artifacts/tool-versions.txt
+
+      - name: Compile and inspect sizes
+        run: |
+          set -o pipefail
+          forge build --sizes 2>&1 | tee artifacts/build-sizes.txt
+
+      - name: Unit, fuzz, invariant, and local v4 tests
+        run: |
+          set -o pipefail
+          forge test --profile ci --no-match-contract FeeGuardMainnetForkTest -vvv 2>&1 | tee artifacts/foundry-tests.txt
+
+      - name: Operational EIP-712 threshold-signer test
+        run: |
+          set -o pipefail
+          forge test --match-test test_operationalThresholdSigningMedianRateCapAndActivation -vvvv 2>&1 | tee artifacts/operational-signer.txt
+
+      - name: CREATE2 permission-bit address mining
+        run: |
+          set -o pipefail
+          forge test --match-test test_permissionBitsAreMinedAndConstructorEnforcesThem -vvvv 2>&1 | tee artifacts/permission-mining.txt
+
+      - name: Local Uniswap-v4 PoolManager integration
+        run: |
+          set -o pipefail
+          forge test --match-test test_localV4PoolAppliesCommittedFeeAtomicallyAtEffectiveBlock -vvvv 2>&1 | tee artifacts/local-v4-integration.txt
+
+      - name: Ethereum mainnet-fork integration
+        run: |
+          set -o pipefail
+          forge test --match-contract FeeGuardMainnetForkTest -vvvv 2>&1 | tee artifacts/mainnet-fork.txt
+
+      - name: Gas report and snapshot
+        run: |
+          set -o pipefail
+          forge test --gas-report --no-match-contract FeeGuardMainnetForkTest 2>&1 | tee artifacts/gas-report.txt
+          forge snapshot --no-match-contract FeeGuardMainnetForkTest --snap artifacts/.gas-snapshot
+          cat artifacts/.gas-snapshot | tee artifacts/gas-snapshot.txt
+
+      - name: Solhint
+        run: |
+          npm install --no-save solhint@5.0.5
+          set -o pipefail
+          npx solhint 'src/**/*.sol' 2>&1 | tee artifacts/solhint.txt
+
+      - name: Slither
+        run: |
+          python -m pip install --disable-pip-version-check slither-analyzer==0.11.3
+          slither . --compile-force-framework foundry --exclude-dependencies --json artifacts/slither.json > artifacts/slither-console.txt 2>&1 || true
+          python scripts/triage_slither.py artifacts/slither.json --summary artifacts/slither-summary.md
+
+      - name: Build validation report
+        if: always()
+        run: python scripts/build_assessment_report.py
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: feeguard-external-validation
+          path: feeguard-external-validation/artifacts
+          if-no-files-found: error

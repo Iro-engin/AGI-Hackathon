@@ -35,6 +35,14 @@ jobs:
           text = text.replace('vm.expectRevert(FeeGuardHook.InvalidDynamicPool.selector);', 'vm.expectRevert();')
           text = text.replace('vm.expectRevert(FeeGuardHook.ControllerPoolNotInitialized.selector);', 'vm.expectRevert();')
           p.write_text(text)
+
+          fork = Path('test/FeeGuardMainnetFork.t.sol')
+          text = fork.read_text()
+          text = text.replace(
+              'vm.createSelectFork(vm.envString("MAINNET_RPC_URL"), 22_451_931);',
+              'vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));'
+          )
+          fork.write_text(text)
           PY
 
       - name: Install Foundry

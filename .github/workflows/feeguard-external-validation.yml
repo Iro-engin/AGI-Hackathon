@@ -26,7 +26,7 @@ jobs:
 
       - name: Expand validation harness
         run: |
-          base64 --decode validation_bundle.tar.gz.b64 > /tmp/feeguard-validation.tar.gz
+          cat validation_bundle.part-* | base64 --decode > /tmp/feeguard-validation.tar.gz
           tar -xzf /tmp/feeguard-validation.tar.gz -C .
 
       - name: Install Foundry

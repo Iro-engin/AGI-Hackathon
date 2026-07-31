@@ -1,0 +1,22 @@
+[profile.default]
+src = "src"
+test = "test"
+script = "script"
+libs = ["lib"]
+solc_version = "0.8.26"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 20000
+via_ir = false
+ffi = true
+fs_permissions = [{ access = "read-write", path = "./artifacts" }]
+gas_reports = ["FeeGuardController", "FeeGuardHook"]
+remappings = [
+  "v4-core/=lib/v4-core/",
+  "forge-std/=lib/v4-core/lib/forge-std/src/",
+  "solmate/=lib/v4-core/lib/solmate/"
+]
+
+[profile.ci]
+fuzz = { runs = 512 }
+invariant = { runs = 128, depth = 64, fail_on_revert = false }

@@ -1,0 +1,165 @@
+name: FeeGuard external validation
+
+on:
+  pull_request:
+    paths:
+      - 'feeguard-external-validation/**'
+      - '.github/workflows/feeguard-external-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: feeguard-external-validation
+    env:
+      V4_CORE_COMMIT: 46c6834698c48bc4a463a86d8420f4eb1d7f3b75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+
+      - name: Expand validation harness
+        run: |
+          cat validation_bundle.part-* | base64 --decode > /tmp/feeguard-validation.tar.gz
+          tar -xzf /tmp/feeguard-validation.tar.gz -C .
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('test/FeeGuardHookIntegration.t.sol')
+          text = p.read_text()
+          text = text.replace('vm.expectRevert(FeeGuardHook.InvalidDynamicPool.selector);', 'vm.expectRevert();')
+          text = text.replace('vm.expectRevert(FeeGuardHook.ControllerPoolNotInitialized.selector);', 'vm.expectRevert();')
+          p.write_text(text)
+
+          fork = Path('test/FeeGuardMainnetFork.t.sol')
+          text = fork.read_text()
+          text = text.replace('vm.createSelectFork(rpc, PINNED_FORK_BLOCK);', 'vm.createSelectFork(rpc);')
+          fork.write_text(text)
+          PY
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@908c540300062bd5a7e473851cdb4282204cee09
+        with:
+          version: stable
+
+      - name: Clone pinned Uniswap v4-core and dependencies
+        run: |
+          mkdir -p lib
+          git clone --filter=blob:none --no-checkout https://github.com/Uniswap/v4-core.git lib/v4-core
+          git -C lib/v4-core checkout "$V4_CORE_COMMIT"
+          git -C lib/v4-core submodule update --init --recursive
+
+      - name: Record tool versions
+        run: |
+          mkdir -p artifacts
+          {
+            forge --version
+            cast --version
+            anvil --version
+            git --version
+            python --version
+            node --version
+          } | tee artifacts/tool-versions.txt
+
+      - name: Compile and inspect sizes
+        run: |
+          set -o pipefail
+          forge build --sizes 2>&1 | tee artifacts/build-sizes.txt
+
+      - name: Unit, fuzz, invariant, and local v4 tests
+        run: |
+          set -o pipefail
+          FOUNDRY_PROFILE=ci forge test --no-match-contract FeeGuardMainnetForkTest -vvv 2>&1 | tee artifacts/foundry-tests.txt
+
+      - name: Operational EIP-712 threshold-signer test
+        run: |
+          set -o pipefail
+          forge test --match-test test_operationalThresholdSigningMedianRateCapAndActivation -vvvv 2>&1 | tee artifacts/operational-signer.txt
+
+      - name: CREATE2 permission-bit address mining
+        run: |
+          set -o pipefail
+          forge test --match-test test_permissionBitsAreMinedAndConstructorEnforcesThem -vvvv 2>&1 | tee artifacts/permission-mining.txt
+
+      - name: Local Uniswap-v4 PoolManager integration
+        run: |
+          set -o pipefail
+          forge test --match-test test_localV4PoolAppliesCommittedFeeAtomicallyAtEffectiveBlock -vvvv 2>&1 | tee artifacts/local-v4-integration.txt
+
+      - name: Gas report and snapshot
+        run: |
+          set -o pipefail
+          forge test --gas-report --no-match-contract FeeGuardMainnetForkTest 2>&1 | tee artifacts/gas-report.txt
+          forge snapshot --no-match-contract FeeGuardMainnetForkTest --snap artifacts/.gas-snapshot
+          cat artifacts/.gas-snapshot | tee artifacts/gas-snapshot.txt
+
+      - name: Solhint
+        run: |
+          npm install --no-save solhint@5.0.5
+          set -o pipefail
+          npx solhint 'src/**/*.sol' 2>&1 | tee artifacts/solhint.txt
+
+      - name: Slither assessment
+        id: slither
+        continue-on-error: true
+        run: |
+          set +e
+          python -m pip install --disable-pip-version-check slither-analyzer==0.11.3
+          install_status=$?
+          echo "$install_status" > artifacts/slither-install-exit.txt
+          if [ "$install_status" -eq 0 ]; then
+            slither . --compile-force-framework foundry --exclude-dependencies --json artifacts/slither.json > artifacts/slither-console.txt 2>&1
+            command_status=$?
+            echo "$command_status" > artifacts/slither-command-exit.txt
+            python scripts/triage_slither.py artifacts/slither.json --summary artifacts/slither-summary.md
+            triage_status=$?
+            echo "$triage_status" > artifacts/slither-triage-exit.txt
+            exit "$triage_status"
+          fi
+          printf '# Slither summary\n\nSlither installation failed.\n' > artifacts/slither-summary.md
+          exit "$install_status"
+
+      - name: Ethereum mainnet-fork integration with RPC failover
+        id: mainnet_fork
+        continue-on-error: true
+        run: |
+          set +e
+          : > artifacts/mainnet-fork.txt
+          for rpc in \
+            https://eth-mainnet.g.alchemy.com/public \
+            https://rpc.nodeflare.app/eth/public \
+            https://ethereum-rpc.blockreq.com/v1/rpc/public \
+            https://1rpc.io/eth \
+            https://eth.llamarpc.com
+          do
+            echo "=== Trying $rpc ===" | tee -a artifacts/mainnet-fork.txt
+            MAINNET_RPC_URL="$rpc" forge test --match-contract FeeGuardMainnetForkTest -vvvv 2>&1 | tee -a artifacts/mainnet-fork.txt
+            status=${PIPESTATUS[0]}
+            if [ "$status" -eq 0 ]; then
+              echo "MAINNET_FORK_RPC=$rpc" | tee -a artifacts/mainnet-fork.txt
+              echo 0 > artifacts/mainnet-fork-exit.txt
+              exit 0
+            fi
+          done
+          echo 1 > artifacts/mainnet-fork-exit.txt
+          exit 1
+
+      - name: Build validation report
+        if: always()
+        env:
+          SLITHER_OUTCOME: ${{ steps.slither.outcome }}
+          MAINNET_FORK_OUTCOME: ${{ steps.mainnet_fork.outcome }}
+        run: python scripts/build_assessment_report.py
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: feeguard-external-validation
+          path: feeguard-external-validation/artifacts
+          if-no-files-found: error

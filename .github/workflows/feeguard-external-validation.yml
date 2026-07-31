@@ -61,7 +61,7 @@ jobs:
       - name: Unit, fuzz, invariant, and local v4 tests
         run: |
           set -o pipefail
-          forge test --profile ci --no-match-contract FeeGuardMainnetForkTest -vvv 2>&1 | tee artifacts/foundry-tests.txt
+          FOUNDRY_PROFILE=ci forge test --no-match-contract FeeGuardMainnetForkTest -vvv 2>&1 | tee artifacts/foundry-tests.txt
 
       - name: Operational EIP-712 threshold-signer test
         run: |

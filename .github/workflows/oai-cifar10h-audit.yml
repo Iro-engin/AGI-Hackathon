@@ -1,0 +1,55 @@
+name: OAI full CIFAR-10H audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oai_cifar10h_audit/**'
+      - '.github/workflows/oai-cifar10h-audit.yml'
+  push:
+    branches: [oai-cifar10h-audit]
+    paths:
+      - 'oai_cifar10h_audit/**'
+      - '.github/workflows/oai-cifar10h-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install audit dependencies
+        run: pip install numpy scipy matplotlib
+      - name: Download official CIFAR-10H arrays
+        run: |
+          mkdir -p oai_cifar10h_audit/data oai_cifar10h_audit/out
+          curl -L --fail --retry 5 --retry-delay 2 \
+            https://raw.githubusercontent.com/jcpeterson/cifar-10h/master/data/cifar10h-counts.npy \
+            -o oai_cifar10h_audit/data/cifar10h-counts.npy
+          curl -L --fail --retry 5 --retry-delay 2 \
+            https://raw.githubusercontent.com/jcpeterson/cifar-10h/master/data/cifar10h-probs.npy \
+            -o oai_cifar10h_audit/data/cifar10h-probs.npy
+          sha256sum oai_cifar10h_audit/data/* > oai_cifar10h_audit/out/DATA_SHA256SUMS.txt
+      - name: Run exact full-dataset audit
+        env:
+          MPLBACKEND: Agg
+        run: |
+          python oai_cifar10h_audit/audit.py \
+            --counts oai_cifar10h_audit/data/cifar10h-counts.npy \
+            --probs oai_cifar10h_audit/data/cifar10h-probs.npy \
+            --out oai_cifar10h_audit/out \
+            | tee oai_cifar10h_audit/out/audit.log
+          sha256sum oai_cifar10h_audit/out/* > oai_cifar10h_audit/out/OUTPUT_SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oai-cifar10h-full-audit
+          path: oai_cifar10h_audit/out/
+          if-no-files-found: error
+          retention-days: 2
